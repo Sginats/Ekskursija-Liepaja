@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <title>Liepājas Karte</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js?v=9999" defer></script>
+</head>
+<body>
+    <div class="map-container">
+        
+        <div class="ui-layer">
+            <button class="btn back-btn" onclick="location.href='index.html'">Atpakaļ</button>
+            <div id="score-display">Punkti: 0</div>
+
+            <div class="difficulty-legend">
+                <h3>Grūtības pakāpes</h3>
+                <div class="legend-item"><span class="dot point-green"></span> Viegli: Daba un atpūta</div>
+                <div class="legend-item"><span class="dot point-blue"></span> Vidēji: Kultūra un vēsture</div>
+                <div class="legend-item"><span class="dot point-yellow"></span> Eksperts: RTU akadēmija</div>
+                <div class="legend-item"><span class="dot point-red"></span> Izaicinājums: Industrija un osta</div>
+            </div>
+        </div>
+
+        <div class="map-area">
+            <div class="point point-green" style="top: 18%; left: 38%;" data-name="Ziemeļu mols" onclick="startActivity('Mols')"></div>
+            <div class="point point-green" style="top: 22%; left: 45%;" data-name="Karostas cietums" onclick="startActivity('Cietums')"></div>
+            <div class="point point-blue" style="top: 41%; left: 48%;" data-name="Tirdzniecības kanāls" onclick="startActivity('Kanals')"></div>
+            <div class="point point-blue" style="top: 43%; left: 42%;" data-name="Lielais Dzintars" onclick="startActivity('Dzintars')"></div>
+            <div class="point point-yellow" style="top: 46%; left: 44%;" data-name="RTU Liepājas akadēmija" onclick="startActivity('RTU')"></div>
+            <div class="point point-blue" style="top: 47%; left: 39%;" data-name="Liepājas Teātris" onclick="startActivity('Teatris')"></div>
+            <div class="point point-red" style="top: 38%; left: 52%;" data-name="Liepājas osta" onclick="startActivity('Osta')"></div>
+            <div class="point point-green" style="top: 55%; left: 32%;" data-name="Jūrmalas parks" onclick="startActivity('Parks')"></div>
+            <div class="point point-red" style="top: 52%; left: 65%;" data-name="LSEZ ražotne" onclick="startActivity('LSEZ')"></div>
+            <div class="point point-green" style="top: 82%; left: 58%;" data-name="Ezerkrasta taka" onclick="startActivity('Ezerkrasts')"></div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <div id="game-modal" class="modal">
+        <div class="modal-content quiz-layout">
+            <div class="guide-wrapper">
+                <img src="kaija.png" alt="Gids" class="guide-sprite">
+                <div class="speech-bubble">
+                    <p id="guide-hint">Sveiks! Esmu tavs gids.</p>
+                </div>
+            </div>
+            
+            <div class="task-section">
+                <h2 id="task-title">Vieta</h2>
+                <p id="task-desc">Jautājums...</p>
+                <input type="text" id="answer-input" placeholder="Tava atbilde...">
+                <button class="btn" onclick="checkAnswer()">Iesniegt</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-modal" class="modal">
+        <div class="modal-content">
+            <h2>Spēle pabeigta!</h2>
+            <p>Tavs rezultāts: <span id="final-score">0</span> punkti</p>
+            <hr>
+            <input type="text" id="player-name" placeholder="Ievadi savu vārdu" class="btn" style="clip-path: none; width: 80%; margin-bottom: 15px;">
+            <br>
+            <button class="btn" onclick="submitResult()">Saglabāt rezultātu</button>
+        </div>
+    </div>
+
+</body>
+</html>
