@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <title>Liepājas Karte</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js?v=9999" defer></script>
+    <script src="script.js?v=LANGv2" defer></script>
 </head>
 <body>
     <div class="map-container">
         
         <div class="ui-layer">
-            <button class="btn back-btn" onclick="location.href='index.html'">Atpakaļ</button>
+            <button id="btn-back" class="btn back-btn" onclick="location.href='index.html'">Atpakaļ</button>
             <div id="score-display">Punkti: 0</div>
 
             <div class="difficulty-legend">
-                <h3>Grūtības pakāpes</h3>
-                <div class="legend-item"><span class="dot point-green"></span> Viegli: Daba un atpūta</div>
-                <div class="legend-item"><span class="dot point-blue"></span> Vidēji: Kultūra un vēsture</div>
-                <div class="legend-item"><span class="dot point-yellow"></span> Eksperts: RTU akadēmija</div>
-                <div class="legend-item"><span class="dot point-red"></span> Izaicinājums: Industrija un osta</div>
+                <h3 id="legend-map-title">Grūtības pakāpes</h3>
+                <div id="legend-map-green" class="legend-item"><span class="dot point-green"></span> Viegli: Daba un atpūta</div>
+                <div id="legend-map-blue" class="legend-item"><span class="dot point-blue"></span> Vidēji: Kultūra un vēsture</div>
+                <div id="legend-map-yellow" class="legend-item"><span class="dot point-yellow"></span> Eksperts: RTU akadēmija</div>
+                <div id="legend-map-red" class="legend-item"><span class="dot point-red"></span> Izaicinājums: Industrija un osta</div>
             </div>
         </div>
 
@@ -41,7 +41,7 @@
     <div id="game-modal" class="modal">
         <div class="modal-content quiz-layout">
             <div class="guide-wrapper">
-                <img src="kaija.png" alt="Gids" class="guide-sprite">
+                <img src="../atteli/kaija.png" alt="Gids" class="guide-sprite">
                 <div class="speech-bubble">
                     <p id="guide-hint">Sveiks! Esmu tavs gids.</p>
                 </div>
@@ -51,19 +51,19 @@
                 <h2 id="task-title">Vieta</h2>
                 <p id="task-desc">Jautājums...</p>
                 <input type="text" id="answer-input" placeholder="Tava atbilde...">
-                <button class="btn" onclick="checkAnswer()">Iesniegt</button>
+                <button id="btn-submit" class="btn" onclick="checkAnswer()">Iesniegt</button>
             </div>
         </div>
     </div>
 
     <div id="end-modal" class="modal">
         <div class="modal-content">
-            <h2>Spēle pabeigta!</h2>
-            <p>Tavs rezultāts: <span id="final-score">0</span> punkti</p>
+            <h2 id="end-title">Spēle pabeigta!</h2>
+            <p><span id="end-score-text">Tavs rezultāts: </span><span id="final-score">0</span><span id="end-points"> punkti</span></p>
             <hr>
             <input type="text" id="player-name" placeholder="Ievadi savu vārdu" class="btn" style="clip-path: none; width: 80%; margin-bottom: 15px;">
             <br>
-            <button class="btn" onclick="submitResult()">Saglabāt rezultātu</button>
+            <button id="btn-save" class="btn" onclick="submitResult()">Saglabāt rezultātu</button>
         </div>
     </div>
 
