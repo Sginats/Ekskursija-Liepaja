@@ -29,13 +29,14 @@
                             $results[] = [
                                 'name' => $parts[0],
                                 'score' => (int)$parts[1],
-                                'time' => $parts[2]
+                                'time' => $parts[2] 
                             ];
                         }
                     }
 
                     usort($results, function($a, $b) {
-                        return $b['score'] <=> $a['score'];
+                        
+                        return strcmp($a['time'], $b['time']);
                     });
 
                     $top10 = array_slice($results, 0, 10);

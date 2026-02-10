@@ -7,10 +7,10 @@
     <script src="script.js?v=LANGv2" defer></script>
 </head>
 <body>
-    <audio id="hover-sound" src="../skana/hover.mp3" preload="auto"></audio>
-    <audio id="bg-music" loop>
-        <source src="../skana/music.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
+<audio id="bg-music" loop>
+    <source src="skana/music.mp3" type="audio/mpeg">
+</audio>
 
     <div id="main-menu" class="container">
         <h1 class="title" id="main-title">LIEPĀJAS KARTE</h1>
@@ -41,17 +41,19 @@
     </div>
 
     <div id="lobby-modal" class="modal">
-        <div class="modal-content" style="text-align: center;">
-            <h2 id="lobby-title" style="color: #ffaa00;">Lobby</h2>
-            <p id="lobby-text">Tavs istabas kods:</p>
-            <h1 id="lobby-code" style="font-size: 60px; color: #4CAF50; letter-spacing: 5px; margin: 10px 0;">0000</h1>
-            <p id="lobby-wait" style="color: #ccc; font-size: 14px;">Gaidu otru spēlētāju...</p>
-            <div id="loading-spinner" style="margin: 20px auto; width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #ffaa00; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            
-            <button id="btn-start-lobby" class="btn" onclick="location.href='map.html'" style="margin-top: 20px;">Sākt (Demo)</button>
-            <button id="btn-close-lobby" class="btn close-btn" onclick="toggleModal('lobby-modal')">Aizvērt</button>
-        </div>
+    <div class="modal-content" style="text-align: center;">
+        <h2 id="lobby-title" style="color: #ffaa00;">Lobby</h2>
+        <p id="lobby-text">Tavs istabas kods:</p>
+        
+        <h1 id="lobby-code" style="font-size: 60px; color: #4CAF50; letter-spacing: 5px; margin: 10px 0;">....</h1>
+        
+        <p id="lobby-wait" style="color: #ccc; font-size: 14px;">Gaidu otru spēlētāju...</p>
+        
+        <div id="loading-spinner" style="margin: 20px auto; width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #ffaa00; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        
+        <button id="btn-close-lobby" class="btn close-btn" onclick="toggleModal('lobby-modal')">Aizvērt</button>
     </div>
+</div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content settings-layout">

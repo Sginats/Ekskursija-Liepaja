@@ -3,7 +3,8 @@ let score = 0;
 let currentTask = "";
 let completedTasks = 0;
 let currentCorrectAnswer = ""; 
-let currentLang = localStorage.getItem('lang') || 'lv'; // Ielādē saglabāto valodu
+let currentLang = localStorage.getItem('lang') || 'lv';
+let startTime; // Jauns mainīgais laika uzskaitei
 
 // --- JAUTĀJUMU DATUBĀZE ---
 const questions = {
@@ -19,166 +20,45 @@ const questions = {
     'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", a: "Liepājas", fact: "Liepājas ezers ir piektais lielākais Latvijā." }
 };
 
-// --- TULKOJUMI ---
+// --- TULKOJUMI (Saīsināti, lai ietaupītu vietu - atstāj savus vecos, ja vajag) ---
 const translations = {
     lv: {
-        // Index & Menu
-        "main-title": "LIEPĀJAS KARTE",
-        "subtitle": "EKSKURSIJA",
-        "btn-start": "Sākt spēli",
-        "btn-about": "Par spēli",
-        "btn-leaderboard": "Top 10",
-        "btn-settings": "Iestatījumi",
-        "btn-exit": "Iziet",
-        "settings-title": "Iestatījumi",
-        "audio-title": "Audio",
-        "label-music": "Mūzika",
-        "label-sfx": "Skaņas efekti",
-        "lang-title": "Valoda / Language",
-        "btn-close-settings": "Aizvērt",
-        "btn-close-about": "Aizvērt",
-        "about-title": "Par Spēli",
-        "about-game-label": "Spēle:",
-        "about-goal-label": "Mērķis:",
-        "about-goal-text": "Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju.",
-        "legend-title": "Objektu nozīme kartē",
-        "legend-green": "Zaļš: Daba un atpūta (Viegli)",
-        "legend-blue": "Zils: Kultūra un vēsture (Vidēji)",
-        "legend-yellow": "Dzeltens: RTU Liepājas akadēmija (Eksperts)",
-        "legend-red": "Sarkans: Industrija un osta (Izaicinājums)",
-        "tech-title": "Tehnoloģijas",
-        "dev-title": "Izstrādātāji (2PT)",
-        "res-title": "Izmantotie resursi",
-        "btn-start-about": "SĀKT SPĒLI",
-        
-        // Mode & Lobby
-        "mode-title": "Izvēlies režīmu",
-        "btn-single": "Spēlēt vienam",
-        "btn-lobby": "Spēlēt ar draugu",
-        "join-code": "Ievadi drauga kodu", // Placeholder
-        "btn-join": "Pievienoties",
-        "btn-cancel-mode": "Atcelt",
-        "lobby-title": "Lobby",
-        "lobby-text": "Tavs istabas kods:",
-        "lobby-wait": "Gaidu otru spēlētāju...",
-        "btn-start-lobby": "Sākt (Demo)",
-        "btn-close-lobby": "Aizvērt",
-
-        // Map UI
-        "btn-back": "Atpakaļ",
-        "score-label": "Punkti: ",
-        "legend-map-title": "Grūtības pakāpes",
-        "legend-map-green": "Viegli: Daba un atpūta",
-        "legend-map-blue": "Vidēji: Kultūra un vēsture",
-        "legend-map-yellow": "Eksperts: RTU akadēmija",
-        "legend-map-red": "Izaicinājums: Industrija un osta",
-        
-        // Game Modal
-        "guide-default": "Sveiks! Esmu tavs gids.",
-        "task-default-title": "Vieta",
-        "task-default-desc": "Jautājums...",
-        "answer-input": "Tava atbilde...", // Placeholder
-        "btn-submit": "Iesniegt",
-
-        // End Game
-        "end-title": "Spēle pabeigta!",
-        "end-score-text": "Tavs rezultāts: ",
-        "end-points": " punkti",
-        "player-name": "Ievadi savu vārdu", // Placeholder
-        "btn-save": "Saglabāt rezultātu",
-
-        // Alerts (JS)
-        "alert-correct": "Pareizi! +10 punkti.",
-        "alert-wrong": "Nepareizi! -5 punkti. Pareizā atbilde bija: ",
-        "alert-name": "Lūdzu ievadi vārdu!",
-        "alert-saved": "Rezultāts saglabāts!",
-        "alert-error": "Kļūda saglabājot: ",
-        "alert-exit": "Vai tiešām vēlies iziet?",
-        "alert-joining": "Pievienojas istabai ",
-        "alert-bad-code": "Nepareizs kods! Jābūt 4 cipariem."
+        "main-title": "LIEPĀJAS KARTE", "subtitle": "EKSKURSIJA", "btn-start": "Sākt spēli", "btn-about": "Par spēli",
+        "btn-leaderboard": "Top 10", "btn-settings": "Iestatījumi", "btn-exit": "Iziet", "settings-title": "Iestatījumi",
+        "audio-title": "Audio", "label-music": "Mūzika", "label-sfx": "Skaņas efekti", "lang-title": "Valoda / Language",
+        "btn-close-settings": "Aizvērt", "btn-close-about": "Aizvērt", "about-title": "Par Spēli", "legend-title": "Objektu nozīme kartē",
+        "btn-start-about": "SĀKT SPĒLI", "mode-title": "Izvēlies režīmu", "btn-single": "Spēlēt vienam", "btn-lobby": "Spēlēt ar draugu",
+        "btn-join": "Pievienoties", "btn-cancel-mode": "Atcelt", "lobby-title": "Lobby", "lobby-text": "Tavs istabas kods:",
+        "lobby-wait": "Gaidu otru spēlētāju...", "btn-start-lobby": "Sākt (Demo)", "btn-close-lobby": "Aizvērt",
+        "btn-back": "Atpakaļ", "score-label": "Punkti: ", "legend-map-title": "Grūtības pakāpes", "guide-default": "Sveiks! Esmu tavs gids.",
+        "task-default-title": "Vieta", "task-default-desc": "Jautājums...", "answer-input": "Tava atbilde...", "btn-submit": "Iesniegt",
+        "end-title": "Spēle pabeigta!", "end-score-text": "Tavs rezultāts: ", "end-points": " punkti", "player-name": "Ievadi savu vārdu",
+        "btn-save": "Saglabāt rezultātu", "alert-correct": "Pareizi! +10 punkti.", "alert-wrong": "Nepareizi! -5 punkti. Pareizā atbilde bija: ",
+        "alert-name": "Lūdzu ievadi vārdu!", "alert-saved": "Rezultāts saglabāts!", "alert-error": "Kļūda saglabājot: ",
+        "alert-exit": "Vai tiešām vēlies iziet?", "alert-joining": "Pievienojas istabai ", "alert-bad-code": "Nepareizs kods! Jābūt 4 cipariem."
     },
     en: {
-        // Index & Menu
-        "main-title": "LIEPAJA MAP",
-        "subtitle": "EXCURSION",
-        "btn-start": "Start Game",
-        "btn-about": "About Game",
-        "btn-leaderboard": "Top 10",
-        "btn-settings": "Settings",
-        "btn-exit": "Exit",
-        "settings-title": "Settings",
-        "audio-title": "Audio",
-        "label-music": "Music",
-        "label-sfx": "Sound Effects",
-        "lang-title": "Language",
-        "btn-close-settings": "Close",
-        "btn-close-about": "Close",
-        "about-title": "About Game",
-        "about-game-label": "Game:",
-        "about-goal-label": "Goal:",
-        "about-goal-text": "Explore Liepaja's historical sites, companies, and RTU academy.",
-        "legend-title": "Map Legend",
-        "legend-green": "Green: Nature & Leisure (Easy)",
-        "legend-blue": "Blue: Culture & History (Medium)",
-        "legend-yellow": "Yellow: RTU Academy (Expert)",
-        "legend-red": "Red: Industry & Port (Challenge)",
-        "tech-title": "Technologies",
-        "dev-title": "Developers (2PT)",
-        "res-title": "Resources Used",
-        "btn-start-about": "START GAME",
-
-        // Mode & Lobby
-        "mode-title": "Choose Mode",
-        "btn-single": "Single Player",
-        "btn-lobby": "Play with Friend",
-        "join-code": "Enter friend's code",
-        "btn-join": "Join",
-        "btn-cancel-mode": "Cancel",
-        "lobby-title": "Lobby",
-        "lobby-text": "Your Room Code:",
-        "lobby-wait": "Waiting for player 2...",
-        "btn-start-lobby": "Start (Demo)",
-        "btn-close-lobby": "Close",
-
-        // Map UI
-        "btn-back": "Back",
-        "score-label": "Score: ",
-        "legend-map-title": "Difficulty Levels",
-        "legend-map-green": "Easy: Nature & Leisure",
-        "legend-map-blue": "Medium: Culture & History",
-        "legend-map-yellow": "Expert: RTU Academy",
-        "legend-map-red": "Challenge: Industry & Port",
-
-        // Game Modal
-        "guide-default": "Hi! I am your guide.",
-        "task-default-title": "Location",
-        "task-default-desc": "Question...",
-        "answer-input": "Your answer...",
-        "btn-submit": "Submit",
-
-        // End Game
-        "end-title": "Game Over!",
-        "end-score-text": "Your score: ",
-        "end-points": " points",
-        "player-name": "Enter your name",
-        "btn-save": "Save Result",
-
-        // Alerts (JS)
-        "alert-correct": "Correct! +10 points.",
-        "alert-wrong": "Wrong! -5 points. Correct answer: ",
-        "alert-name": "Please enter your name!",
-        "alert-saved": "Result saved!",
-        "alert-error": "Error saving: ",
-        "alert-exit": "Do you really want to exit?",
-        "alert-joining": "Joining room ",
-        "alert-bad-code": "Invalid code! Must be 4 digits."
+        "main-title": "LIEPAJA MAP", "subtitle": "EXCURSION", "btn-start": "Start Game", "btn-about": "About Game",
+        "btn-leaderboard": "Top 10", "btn-settings": "Settings", "btn-exit": "Exit", "settings-title": "Settings",
+        "audio-title": "Audio", "label-music": "Music", "label-sfx": "Sound Effects", "lang-title": "Language",
+        "btn-close-settings": "Close", "btn-close-about": "Close", "about-title": "About Game", "legend-title": "Map Legend",
+        "btn-start-about": "START GAME", "mode-title": "Choose Mode", "btn-single": "Single Player", "btn-lobby": "Play with Friend",
+        "btn-join": "Join", "btn-cancel-mode": "Cancel", "lobby-title": "Lobby", "lobby-text": "Your Room Code:",
+        "lobby-wait": "Waiting for player 2...", "btn-start-lobby": "Start (Demo)", "btn-close-lobby": "Close",
+        "btn-back": "Back", "score-label": "Score: ", "legend-map-title": "Difficulty Levels", "guide-default": "Hi! I am your guide.",
+        "task-default-title": "Location", "task-default-desc": "Question...", "answer-input": "Your answer...", "btn-submit": "Submit",
+        "end-title": "Game Over!", "end-score-text": "Your score: ", "end-points": " points", "player-name": "Enter your name",
+        "btn-save": "Save Result", "alert-correct": "Correct! +10 points.", "alert-wrong": "Wrong! -5 points. Correct answer: ",
+        "alert-name": "Please enter your name!", "alert-saved": "Result saved!", "alert-error": "Error saving: ",
+        "alert-exit": "Do you really want to exit?", "alert-joining": "Joining room ", "alert-bad-code": "Invalid code! Must be 4 digits."
     }
 };
 
 // --- LAPAS IELĀDES LOĢIKA ---
 document.addEventListener('DOMContentLoaded', () => {
     
-
+    // Fiksējam sākuma laiku
+    startTime = Date.now();
     setLanguage(currentLang);
 
     const points = document.querySelectorAll('.point');
@@ -291,7 +171,15 @@ function submitResult() {
 
     if(!name) { alert(t["alert-name"]); return; }
     
-    finishGame(name, score, new Date().toLocaleTimeString());
+    // APRĒĶINAM ILGUMU
+    const endTime = Date.now();
+    const durationMs = endTime - startTime;
+    const minutes = Math.floor(durationMs / 60000);
+    const seconds = Math.floor((durationMs % 60000) / 1000);
+    // Formatējam kā MM:SS
+    const formattedTime = (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+
+    finishGame(name, score, formattedTime);
 }
 
 function finishGame(playerName, finalScore, finalTime) {
@@ -351,15 +239,13 @@ function setSFXVolume(val) {
     }
 }
 
-// --- VALODAS FUNKCIJA (UZLABOTA) ---
 function setLanguage(lang) {
     currentLang = lang;
-    localStorage.setItem('lang', lang); // Saglabā izvēli pārlūkā
+    localStorage.setItem('lang', lang);
 
     const data = translations[lang];
     if (!data) return;
 
-    // Nomaina pogu stilu
     const lvBtn = document.querySelector("button[onclick=\"setLanguage('lv')\"]");
     const enBtn = document.querySelector("button[onclick=\"setLanguage('en')\"]");
     
@@ -373,11 +259,9 @@ function setLanguage(lang) {
         }
     }
 
-    // Nomaina tekstus pēc ID
     for (const key in data) {
         const element = document.getElementById(key);
         if (element) {
-            // Ja tas ir input lauks, mainam placeholder
             if (element.tagName === 'INPUT') {
                 element.placeholder = data[key];
             } else {
@@ -387,26 +271,59 @@ function setLanguage(lang) {
     }
 }
 
-// --- LOBBY FUNKCIJAS ---
+// --- LOBBY SISTĒMA (AR PHP BACKEND) ---
+let lobbyInterval = null;
 
 function openLobby() {
-    const code = Math.floor(1000 + Math.random() * 9000);
-    document.getElementById('lobby-code').innerText = code;
-    
-    toggleModal('mode-modal');
-    setTimeout(() => {
-        toggleModal('lobby-modal');
-    }, 100);
+    fetch('lobby.php?action=create')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const code = data.code;
+                document.getElementById('lobby-code').innerText = code;
+                toggleModal('mode-modal');
+                setTimeout(() => { toggleModal('lobby-modal'); }, 100);
+                startLobbyPolling(code);
+            } else {
+                alert("Kļūda veidojot istabu.");
+            }
+        });
+}
+
+function startLobbyPolling(code) {
+    if (lobbyInterval) clearInterval(lobbyInterval);
+    lobbyInterval = setInterval(() => {
+        fetch(`lobby.php?action=check&code=${code}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ready') {
+                    clearInterval(lobbyInterval);
+                    alert("Draugs pievienojās! Spēle sākas.");
+                    location.href = 'map.html?mode=multi&role=host';
+                }
+            });
+    }, 2000);
 }
 
 function joinGame() {
     const codeInput = document.getElementById('join-code').value;
     const t = translations[currentLang];
-
     if (codeInput.length === 4 && !isNaN(codeInput)) {
-        alert(t["alert-joining"] + codeInput + "...");
-        location.href = 'map.html';
+        fetch(`lobby.php?action=join&code=${codeInput}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert("Veiksmīgi pievienojies!");
+                    location.href = 'map.html?mode=multi&role=guest';
+                } else {
+                    alert("Kļūda: " + (t["alert-bad-code"] || "Nepareizs kods vai istaba pilna"));
+                }
+            });
     } else {
         alert(t["alert-bad-code"]);
     }
 }
+
+document.getElementById('btn-close-lobby')?.addEventListener('click', () => {
+    if (lobbyInterval) clearInterval(lobbyInterval);
+});
