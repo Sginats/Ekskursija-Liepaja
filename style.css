@@ -94,9 +94,9 @@ body {
 
 .map-area {
     position: relative;
-    width: 500px;
-    height: 750px;
-    background-image: url('atteli/map.png');
+    width: 400px;
+    height: 850px;
+    background-image: url('atteli/karte.png');
     background-size: 100% 100%;
     background-repeat: no-repeat;
     border: 3px solid #4a2c2c;
