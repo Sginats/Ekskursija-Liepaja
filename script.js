@@ -4,7 +4,25 @@ let currentTask = "";
 let completedTasks = 0;
 let currentCorrectAnswer = ""; 
 let currentLang = localStorage.getItem('lang') || 'lv';
-let startTime; // Jauns mainīgais laika uzskaitei
+let startTime; 
+let myRole = '';
+let myLobbyCode = '';
+let gameSyncInterval = null;
+let lobbyInterval = null;
+
+// --- OBLIGĀTĀ SECĪBA (Maršruts) ---
+const taskSequence = [
+    'RTU',          // 1. Sākums (Akadēmija)
+    'Dzintars',     // 2. Kultūra
+    'Teatris',      // 3. Kultūra
+    'Kanals',       // 4. Vēsture
+    'Osta',         // 5. Industrija
+    'LSEZ',         // 6. Industrija
+    'Cietums',      // 7. Vēsture
+    'Mols',         // 8. Daba
+    'Ezerkrasts',   // 9. Daba
+    'Parks'         // 10. BEIGAS
+];
 
 // --- JAUTĀJUMU DATUBĀZE ---
 const questions = {
@@ -20,107 +38,212 @@ const questions = {
     'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", a: "Liepājas", fact: "Liepājas ezers ir piektais lielākais Latvijā." }
 };
 
-// --- TULKOJUMI (Saīsināti, lai ietaupītu vietu - atstāj savus vecos, ja vajag) ---
+// --- TULKOJUMI ---
 const translations = {
     lv: {
-        "main-title": "LIEPĀJAS KARTE", "subtitle": "EKSKURSIJA", "btn-start": "Sākt spēli", "btn-about": "Par spēli",
-        "btn-leaderboard": "Top 10", "btn-settings": "Iestatījumi", "btn-exit": "Iziet", "settings-title": "Iestatījumi",
-        "audio-title": "Audio", "label-music": "Mūzika", "label-sfx": "Skaņas efekti", "lang-title": "Valoda / Language",
-        "btn-close-settings": "Aizvērt", "btn-close-about": "Aizvērt", "about-title": "Par Spēli", "legend-title": "Objektu nozīme kartē",
-        "btn-start-about": "SĀKT SPĒLI", "mode-title": "Izvēlies režīmu", "btn-single": "Spēlēt vienam", "btn-lobby": "Spēlēt ar draugu",
-        "btn-join": "Pievienoties", "btn-cancel-mode": "Atcelt", "lobby-title": "Lobby", "lobby-text": "Tavs istabas kods:",
-        "lobby-wait": "Gaidu otru spēlētāju...", "btn-start-lobby": "Sākt (Demo)", "btn-close-lobby": "Aizvērt",
-        "btn-back": "Atpakaļ", "score-label": "Punkti: ", "legend-map-title": "Grūtības pakāpes", "guide-default": "Sveiks! Esmu tavs gids.",
-        "task-default-title": "Vieta", "task-default-desc": "Jautājums...", "answer-input": "Tava atbilde...", "btn-submit": "Iesniegt",
-        "end-title": "Spēle pabeigta!", "end-score-text": "Tavs rezultāts: ", "end-points": " punkti", "player-name": "Ievadi savu vārdu",
-        "btn-save": "Saglabāt rezultātu", "alert-correct": "Pareizi! +10 punkti.", "alert-wrong": "Nepareizi! -5 punkti. Pareizā atbilde bija: ",
-        "alert-name": "Lūdzu ievadi vārdu!", "alert-saved": "Rezultāts saglabāts!", "alert-error": "Kļūda saglabājot: ",
-        "alert-exit": "Vai tiešām vēlies iziet?", "alert-joining": "Pievienojas istabai ", "alert-bad-code": "Nepareizs kods! Jābūt 4 cipariem."
+        "answer-input": "Tava atbilde...",
+        "btn-submit": "Iesniegt",
+        "alert-correct": "Pareizi! +10 punkti.",
+        "alert-wrong": "Nepareizi! -5 punkti. Pareizā atbilde bija: ",
+        "score-label": "Punkti: ",
+        "alert-name": "Lūdzu ievadi vārdu!",
+        "alert-saved": "Rezultāts saglabāts!",
+        "alert-error": "Kļūda saglabājot: ",
+        "alert-exit": "Vai tiešām vēlies iziet?",
+        "alert-bad-code": "Nepareizs kods vai istaba pilna"
     },
     en: {
-        "main-title": "LIEPAJA MAP", "subtitle": "EXCURSION", "btn-start": "Start Game", "btn-about": "About Game",
-        "btn-leaderboard": "Top 10", "btn-settings": "Settings", "btn-exit": "Exit", "settings-title": "Settings",
-        "audio-title": "Audio", "label-music": "Music", "label-sfx": "Sound Effects", "lang-title": "Language",
-        "btn-close-settings": "Close", "btn-close-about": "Close", "about-title": "About Game", "legend-title": "Map Legend",
-        "btn-start-about": "START GAME", "mode-title": "Choose Mode", "btn-single": "Single Player", "btn-lobby": "Play with Friend",
-        "btn-join": "Join", "btn-cancel-mode": "Cancel", "lobby-title": "Lobby", "lobby-text": "Your Room Code:",
-        "lobby-wait": "Waiting for player 2...", "btn-start-lobby": "Start (Demo)", "btn-close-lobby": "Close",
-        "btn-back": "Back", "score-label": "Score: ", "legend-map-title": "Difficulty Levels", "guide-default": "Hi! I am your guide.",
-        "task-default-title": "Location", "task-default-desc": "Question...", "answer-input": "Your answer...", "btn-submit": "Submit",
-        "end-title": "Game Over!", "end-score-text": "Your score: ", "end-points": " points", "player-name": "Enter your name",
-        "btn-save": "Save Result", "alert-correct": "Correct! +10 points.", "alert-wrong": "Wrong! -5 points. Correct answer: ",
-        "alert-name": "Please enter your name!", "alert-saved": "Result saved!", "alert-error": "Error saving: ",
-        "alert-exit": "Do you really want to exit?", "alert-joining": "Joining room ", "alert-bad-code": "Invalid code! Must be 4 digits."
+        "answer-input": "Your answer...",
+        "btn-submit": "Submit",
+        "alert-correct": "Correct! +10 points.",
+        "alert-wrong": "Wrong! -5 points. Correct answer: ",
+        "score-label": "Score: ",
+        "alert-name": "Please enter your name!",
+        "alert-saved": "Result saved!",
+        "alert-error": "Error saving: ",
+        "alert-exit": "Do you really want to exit?",
+        "alert-bad-code": "Invalid code or room full"
     }
 };
 
-// --- LAPAS IELĀDES LOĢIKA ---
+// --- IELĀDE ---
+function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    myRole = params.get('role');
+    myLobbyCode = params.get('code');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Fiksējam sākuma laiku
+    getQueryParams();
     startTime = Date.now();
-    setLanguage(currentLang);
+    
+    if(localStorage.getItem('lang') === 'en') setLanguage('en');
 
-    const points = document.querySelectorAll('.point');
+    updateMapState();
+
     const tooltip = document.getElementById('tooltip');
-
-    if (points.length > 0 && tooltip) {
-        points.forEach(p => {
-            p.addEventListener('mouseover', (e) => {
-                tooltip.innerText = p.getAttribute('data-name');
-                tooltip.style.display = 'block';
-                tooltip.style.left = (e.pageX + 15) + 'px';
-                tooltip.style.top = (e.pageY + 15) + 'px';
-            });
-            p.addEventListener('mousemove', (e) => { 
-                tooltip.style.left = (e.pageX + 15) + 'px';
-                tooltip.style.top = (e.pageY + 15) + 'px';
-            });
-            p.addEventListener('mouseout', () => {
-                tooltip.style.display = 'none';
-            });
+    document.querySelectorAll('.point').forEach(p => {
+        p.addEventListener('mouseover', (e) => {
+            tooltip.innerText = p.getAttribute('data-name');
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.pageX + 15) + 'px';
+            tooltip.style.top = (e.pageY + 15) + 'px';
         });
-    }
-
-    document.querySelectorAll('.btn').forEach(button => {
-        button.addEventListener('mouseenter', () => {
-            const sound = document.getElementById('hover-sound');
-            if(sound) {
-                sound.currentTime = 0;
-                sound.play().catch(() => {}); 
-            }
+        p.addEventListener('mousemove', (e) => { 
+            tooltip.style.left = (e.pageX + 15) + 'px';
+            tooltip.style.top = (e.pageY + 15) + 'px';
+        });
+        p.addEventListener('mouseout', () => {
+            tooltip.style.display = 'none';
         });
     });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape") {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = "none");
+            const gameModal = document.getElementById('game-modal');
+            if (gameModal.style.display !== "block") {
+                 document.querySelectorAll('.modal').forEach(m => m.style.display = "none");
+            }
         }
     });
 });
 
-// --- SPĒLES FUNKCIJAS ---
+// --- KARTES ATJAUNINĀŠANA ---
+function updateMapState() {
+    const points = document.querySelectorAll('.point');
+    
+    points.forEach(point => {
+        const onclickAttr = point.getAttribute('onclick');
+        const type = onclickAttr.match(/'([^']+)'/)[1];
+        const sequenceIndex = taskSequence.indexOf(type);
+        
+        point.style.pointerEvents = "none"; 
+        point.style.opacity = "0.4";
+        point.style.filter = "grayscale(100%)";
+        point.style.animation = "none";
+
+        if (sequenceIndex < completedTasks) {
+           
+            point.style.backgroundColor = "#555"; 
+        } 
+        else if (sequenceIndex === completedTasks) {
+            
+            point.style.pointerEvents = "auto";
+            point.style.opacity = "1";
+            point.style.filter = "none";
+            point.style.animation = "pulse 2s infinite"; 
+        }
+    });
+}
+
+// --- SPĒLES DARBĪBAS ---
 
 function startActivity(type) {
-    currentTask = type;
-    const task = questions[type];
-    const modal = document.getElementById('game-modal');
+
+    const expectedTask = taskSequence[completedTasks];
     
-    if(task && modal) {
-        const pointElement = document.querySelector(`[onclick="startActivity('${type}')"]`);
-        const titleElem = document.getElementById('task-title');
-        if(titleElem) titleElem.innerText = pointElement ? pointElement.getAttribute('data-name') : "Uzdevums";
-        
-        const descElem = document.getElementById('task-desc');
-        if(descElem) descElem.innerText = task.q;
-        
-        const guideHint = document.getElementById('guide-hint');
-        if(guideHint) guideHint.innerText = task.fact;
-        
-        currentCorrectAnswer = task.a;
-        modal.style.display = "block";
-        document.getElementById('answer-input').value = "";
+    if (type !== expectedTask) {
+        alert("Lūdzu pildi uzdevumus secībā! Meklē punktu, kas mirgo.");
+        return;
     }
+
+    currentTask = type;
+
+    if (myRole && myLobbyCode) {
+        showMiniGame(type); 
+    } else {
+        showQuiz(type);
+    }
+}
+
+function showMiniGame(type) {
+    const modal = document.getElementById('game-modal');
+    modal.style.display = "block";
+    const contentDiv = document.querySelector('.task-section');
+
+    if (type === 'Cietums') {
+        let codePart = (myRole === 'host') ? "4 2 _ _" : "_ _ 9 1";
+        contentDiv.innerHTML = `
+            <h2>Uzdevums: Karostas Drošība</h2>
+            <p>Jums jāsaslēdz drošības sistēma kopā!</p>
+            <div style="background:#000; color:#0f0; padding:20px; font-family:monospace; font-size:24px; margin: 10px 0;">KODS: ${codePart}</div>
+            <p>Paprasi draugam viņa daļu un ievadi pilno kodu (4291):</p>
+            <input type="text" id="mini-input" placeholder="4 cipari" class="input-field" style="width: 50%;">
+            <button class="btn" onclick="checkMiniAnswer('4291')">Atbloķēt</button>
+        `;
+    } else {
+        contentDiv.innerHTML = `
+            <h2>Gatavojies jautājumam!</h2>
+            <p>Nospiediet pogu abi reizē, lai sāktu!</p>
+            <button id="btn-mini-action" class="btn" onclick="completeGenericTask()">Esmu Gatavs</button>
+            <p id="partner-status" style="display:none; color:#ffaa00; margin-top:10px;">Gaidam draugu...</p>
+        `;
+    }
+}
+
+function checkMiniAnswer(correct) {
+    const val = document.getElementById('mini-input').value;
+    if (val === correct) {
+         fetch(`lobby.php?action=update_game&code=${myLobbyCode}&role=${myRole}`)
+            .then(() => startSyncCheck(currentTask));
+    } else {
+        alert("Nepareizs kods!");
+    }
+}
+
+function completeGenericTask() {
+    const btn = document.getElementById('btn-mini-action');
+    btn.disabled = true;
+    btn.style.backgroundColor = "green";
+    btn.innerText = "Gaidam...";
+    document.getElementById('partner-status').style.display = 'block';
+    
+    fetch(`lobby.php?action=update_game&code=${myLobbyCode}&role=${myRole}`)
+        .then(() => startSyncCheck(currentTask));
+}
+
+function startSyncCheck(type) {
+    const modalContent = document.querySelector('.task-section');
+    if(!modalContent.innerHTML.includes("loading-spinner") && !document.getElementById('partner-status')) {
+         modalContent.innerHTML = `<h2>Gaidam otru spēlētāju...</h2><div id="loading-spinner" style="margin: 20px auto; width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #ffaa00; border-radius: 50%; animation: spin 1s linear infinite;"></div>`;
+    }
+
+    if (gameSyncInterval) clearInterval(gameSyncInterval);
+
+    gameSyncInterval = setInterval(() => {
+        fetch(`lobby.php?action=get_state&code=${myLobbyCode}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.host_done === true && data.guest_done === true) {
+                    clearInterval(gameSyncInterval);
+                    if (myRole === 'host') {
+                        fetch(`lobby.php?action=reset_task&code=${myLobbyCode}`);
+                    }
+                    setTimeout(() => { showQuiz(type); }, 500);
+                }
+            });
+    }, 1000);
+}
+
+function showQuiz(type) {
+    const modal = document.getElementById('game-modal');
+    modal.style.display = "block"; 
+
+    const task = questions[type];
+    const contentDiv = document.querySelector('.task-section');
+    const t = translations[currentLang];
+    
+    contentDiv.innerHTML = `
+        <h2 id="task-title">${type}</h2>
+        <p id="task-desc">${task.q}</p>
+        <input type="text" id="answer-input" placeholder="${t['answer-input']}" class="input-field">
+        <button id="btn-submit" class="btn" onclick="checkAnswer()">${t['btn-submit']}</button>
+    `;
+
+    const guideHint = document.getElementById('guide-hint');
+    if(guideHint) guideHint.innerText = task.fact;
+    
+    currentCorrectAnswer = task.a;
 }
 
 function checkAnswer() {
@@ -143,25 +266,36 @@ function checkAnswer() {
     if(scoreDisplay) scoreDisplay.innerText = t["score-label"] + score;
     
     completedTasks++;
-    if(modal) modal.style.display = "none";
+    modal.style.display = "none";
     
-    const point = document.querySelector(`[onclick="startActivity('${currentTask}')"]`);
-    if(point) {
-        point.style.pointerEvents = "none";
-        point.style.opacity = "0.3";
-        point.style.backgroundColor = "#555";
-    }
+    updateMapState();
 
-    if (completedTasks === 10) {
+    if (completedTasks === taskSequence.length) {
         showEndGame();
     }
 }
 
+// --- BEIGU EKRĀNS ---
 function showEndGame() {
     const finalScoreElem = document.getElementById('final-score');
     if (finalScoreElem) finalScoreElem.innerText = score;
+    
+    
+    const endTime = Date.now();
+    const durationMs = endTime - startTime;
+    const minutes = Math.floor(durationMs / 60000);
+    const seconds = Math.floor((durationMs % 60000) / 1000);
+    const formattedTime = (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    
+    
+    const pointsText = document.getElementById('end-points');
+    if(pointsText) pointsText.innerText = " punkti. Laiks: " + formattedTime;
+
     const endModal = document.getElementById('end-modal');
     if (endModal) endModal.style.display = "block";
+    
+    
+    window.finalTimeStr = formattedTime;
 }
 
 function submitResult() {
@@ -171,15 +305,7 @@ function submitResult() {
 
     if(!name) { alert(t["alert-name"]); return; }
     
-    // APRĒĶINAM ILGUMU
-    const endTime = Date.now();
-    const durationMs = endTime - startTime;
-    const minutes = Math.floor(durationMs / 60000);
-    const seconds = Math.floor((durationMs % 60000) / 1000);
-    // Formatējam kā MM:SS
-    const formattedTime = (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
-
-    finishGame(name, score, formattedTime);
+    finishGame(name, score, window.finalTimeStr);
 }
 
 function finishGame(playerName, finalScore, finalTime) {
@@ -202,6 +328,7 @@ function finishGame(playerName, finalScore, finalTime) {
     });
 }
 
+// --- MENU UN IESTATĪJUMI ---
 function toggleModal(id) {
     const modal = document.getElementById(id);
     if(modal) {
@@ -220,60 +347,13 @@ function exitGame() {
     }
 }
 
-function setMusicVolume(val) {
-    const music = document.getElementById('bg-music');
-    if (music) {
-        music.volume = val / 100;
-        if (val > 0 && music.paused) music.play().catch(()=>{});
-    }
-}
-
-function setSFXVolume(val) {
-    const sfx = document.getElementById('hover-sound');
-    if (sfx) {
-        sfx.volume = val / 100;
-        if(val > 0) {
-            sfx.currentTime = 0;
-            sfx.play().catch(()=>{});
-        }
-    }
-}
-
 function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('lang', lang);
-
-    const data = translations[lang];
-    if (!data) return;
-
-    const lvBtn = document.querySelector("button[onclick=\"setLanguage('lv')\"]");
-    const enBtn = document.querySelector("button[onclick=\"setLanguage('en')\"]");
     
-    if(lvBtn && enBtn) {
-        if(lang === 'lv') {
-            lvBtn.classList.add('active');
-            enBtn.classList.remove('active');
-        } else {
-            enBtn.classList.add('active');
-            lvBtn.classList.remove('active');
-        }
-    }
-
-    for (const key in data) {
-        const element = document.getElementById(key);
-        if (element) {
-            if (element.tagName === 'INPUT') {
-                element.placeholder = data[key];
-            } else {
-                element.innerText = data[key];
-            }
-        }
-    }
 }
 
-// --- LOBBY SISTĒMA (AR PHP BACKEND) ---
-let lobbyInterval = null;
-
+// --- LOBBY ---
 function openLobby() {
     fetch('lobby.php?action=create')
         .then(response => response.json())
@@ -299,7 +379,7 @@ function startLobbyPolling(code) {
                 if (data.status === 'ready') {
                     clearInterval(lobbyInterval);
                     alert("Draugs pievienojās! Spēle sākas.");
-                    location.href = 'map.html?mode=multi&role=host';
+                    location.href = `map.html?mode=multi&role=host&code=${code}`;
                 }
             });
     }, 2000);
@@ -307,20 +387,19 @@ function startLobbyPolling(code) {
 
 function joinGame() {
     const codeInput = document.getElementById('join-code').value;
-    const t = translations[currentLang];
     if (codeInput.length === 4 && !isNaN(codeInput)) {
         fetch(`lobby.php?action=join&code=${codeInput}`)
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
                     alert("Veiksmīgi pievienojies!");
-                    location.href = 'map.html?mode=multi&role=guest';
+                    location.href = `map.html?mode=multi&role=guest&code=${codeInput}`;
                 } else {
-                    alert("Kļūda: " + (t["alert-bad-code"] || "Nepareizs kods vai istaba pilna"));
+                    alert("Kļūda!");
                 }
             });
     } else {
-        alert(t["alert-bad-code"]);
+        alert("Nepareizs kods!");
     }
 }
 

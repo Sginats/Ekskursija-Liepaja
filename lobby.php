@@ -3,65 +3,59 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
 $file = 'lobbies.json';
+if (!file_exists($file)) file_put_contents($file, json_encode([]));
 
-// Ja fails neeksistē, izveidojam tukšu
-if (!file_exists($file)) {
-    file_put_contents($file, json_encode([]));
-}
+$action = $_GET['action'] ?? '';
+$code = $_GET['code'] ?? '';
+$role = $_GET['role'] ?? '';
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
-$code = isset($_GET['code']) ? $_GET['code'] : '';
+$lobbies = json_decode(file_get_contents($file), true) ?? [];
 
-// Ielādējam esošās istabas
-$lobbies = json_decode(file_get_contents($file), true);
-if (!is_array($lobbies)) $lobbies = [];
-
-// --- 1. IZVEIDOT ISTABU (CREATE) ---
 if ($action == 'create') {
-    // Ģenerē jaunu kodu, ja nav norādīts
     if (!$code) $code = rand(1000, 9999);
-    
     $lobbies[$code] = [
-        'status' => 'waiting', // Gaida spēlētāju
+        'status' => 'waiting',
+        'host_task_done' => false,
+        'guest_task_done' => false,
         'created_at' => time()
     ];
-    
-    saveLobbies($file, $lobbies);
+    file_put_contents($file, json_encode($lobbies));
     echo json_encode(['status' => 'success', 'code' => $code]);
-}
-
-// --- 2. PIEVIENOTIES ISTABAI (JOIN) ---
+} 
 elseif ($action == 'join') {
     if (isset($lobbies[$code]) && $lobbies[$code]['status'] == 'waiting') {
-        $lobbies[$code]['status'] = 'ready'; // Istaba ir pilna
-        saveLobbies($file, $lobbies);
+        $lobbies[$code]['status'] = 'ready';
+        file_put_contents($file, json_encode($lobbies));
         echo json_encode(['status' => 'success']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Istaba neeksistē vai ir pilna']);
-    }
-}
-
-// --- 3. PĀRBAUDĪT STATUSU (CHECK) - Priekš Hostētāja ---
-elseif ($action == 'check') {
-    if (isset($lobbies[$code])) {
-        echo json_encode(['status' => $lobbies[$code]['status']]);
     } else {
         echo json_encode(['status' => 'error']);
     }
-}
-
-else {
-    echo json_encode(['status' => 'error', 'message' => 'Nezināma darbība']);
-}
-
-// Palīgfunkcija saglabāšanai
-function saveLobbies($file, $data) {
-    // Dzēšam vecās istabas (vecākas par 1 stundu), lai fails neuzpūšas
-    foreach ($data as $c => $info) {
-        if (time() - $info['created_at'] > 3600) {
-            unset($data[$c]);
-        }
+} 
+elseif ($action == 'check') {
+    echo json_encode(['status' => $lobbies[$code]['status'] ?? 'error']);
+} 
+elseif ($action == 'update_game') {
+    if (isset($lobbies[$code])) {
+        if ($role == 'host') $lobbies[$code]['host_task_done'] = true;
+        if ($role == 'guest') $lobbies[$code]['guest_task_done'] = true;
+        file_put_contents($file, json_encode($lobbies));
+        echo json_encode(['status' => 'success']);
     }
-    file_put_contents($file, json_encode($data));
+} 
+elseif ($action == 'get_state') {
+    if (isset($lobbies[$code])) {
+        echo json_encode([
+            'host_done' => $lobbies[$code]['host_task_done'],
+            'guest_done' => $lobbies[$code]['guest_task_done']
+        ]);
+    }
+} 
+elseif ($action == 'reset_task') {
+    if (isset($lobbies[$code])) {
+        $lobbies[$code]['host_task_done'] = false;
+        $lobbies[$code]['guest_task_done'] = false;
+        file_put_contents($file, json_encode($lobbies));
+        echo json_encode(['status' => 'reset']);
+    }
 }
 ?>
