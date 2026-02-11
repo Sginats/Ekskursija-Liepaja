@@ -24,13 +24,17 @@
             <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
     </div>
-
-    <div id="mode-modal" class="modal">
+<div id="mode-modal" class="modal">
         <div class="modal-content" style="text-align: center;">
             <h2 id="mode-title" style="color: #ffaa00;">Izvēlies režīmu</h2>
+            
+            <input type="text" id="start-player-name" placeholder="Tavs Vārds..." class="input-field" style="text-align: center; width: 60%; margin-bottom: 10px; font-weight: bold;">
+
             <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
-                <button id="btn-single" class="btn" onclick="location.href='map.html'">Spēlēt vienam</button>
+                <button id="btn-single" class="btn" onclick="startSingleGame()">Spēlēt vienam</button>
+                
                 <button id="btn-lobby" class="btn" onclick="openLobby()">Spēlēt ar draugu</button>
+                
                 <div style="margin-top: 10px; border-top: 1px solid #4a2c2c; width: 100%; padding-top: 10px;">
                     <input type="text" id="join-code" placeholder="Ievadi drauga kodu" class="input-field" style="text-align: center; width: 200px;">
                     <button id="btn-join" class="btn" onclick="joinGame()" style="width: 200px; margin-top: 5px;">Pievienoties</button>
@@ -59,10 +63,10 @@
         <div class="modal-content settings-layout">
             <h2 id="settings-title" style="color: #ffaa00; margin-top: 0;">Iestatījumi</h2>
             <h3 id="audio-title" class="section-title">Audio</h3>
-            <label id="label-music">Mūzika</label>
-            <input type="range" min="0" max="100" value="50" oninput="setMusicVolume(this.value)">
-            <label id="label-sfx">Skaņas efekti</label>
-            <input type="range" min="0" max="100" value="100" oninput="setSFXVolume(this.value)">
+            <label>Mūzika</label>
+                <input type="range" min="0" max="100" value="30" oninput="setMusicVolume(this.value)">
+            <label>Efekti</label>
+                <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
             <h3 id="lang-title" class="section-title" style="margin-top: 20px;">Valoda / Language</h3>
             <div class="lang-switch">
                 <button class="lang-btn active" onclick="setLanguage('lv')">LAT</button>
