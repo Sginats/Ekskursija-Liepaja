@@ -110,7 +110,7 @@ body {
     position: relative;
     height: 85vh; 
     width: calc(85vh * 0.66); 
-    background-image: url('atteli/map.png');
+    background-image: url('atteli/maps.png');
     background-size: 100% 100%; 
     background-repeat: no-repeat;
     background-position: center;
@@ -361,4 +361,15 @@ input[type=range] {
     background-color: #4a3333;
     outline: none;
     box-shadow: 0 0 10px #ffaa00;
+}
+.authors-corner {
+    position: fixed;
+    bottom: 10px;
+    left: 20px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    z-index: 50;
+    pointer-events: none;
+    text-shadow: 1px 1px 2px black;
 }
