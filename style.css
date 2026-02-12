@@ -373,3 +373,44 @@ input[type=range] {
     pointer-events: none;
     text-shadow: 1px 1px 2px black;
 }
+
+/* Leaderboard */
+.container p{
+    color: #aaa; 
+    margin-bottom: 20px; 
+    font-style: italic;
+}
+.tabulaLead{
+    margin: 20px auto; 
+    border-collapse: collapse; 
+    width: 80%; 
+    max-width: 600px; 
+    background: rgba(42, 26, 26, 0.8);
+}
+#tabulaiTR{
+    border-bottom: 2px solid #ffaa00; 
+    background: rgba(255, 170, 0, 0.1);
+}
+#nummurs{
+    padding: 12px; 
+    text-align: center; 
+    color: #ffaa00; 
+    width: 60px;
+}
+#vardi{
+    padding: 12px; 
+    text-align: left; 
+    color: #ffaa00;
+}
+#laiki{
+    padding: 12px; 
+    text-align: center; 
+    color: #ffaa00; 
+    width: 100px;
+}
+#punkti{
+    padding: 12px; 
+    text-align: center; 
+    color: #ffaa00; 
+    width: 100px;
+}
