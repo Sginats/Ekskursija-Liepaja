@@ -109,15 +109,15 @@ body {
 .map-area {
     position: relative;
     height: 85vh; 
-    width: calc(85vh * 0.66); 
-    background-image: url('atteli/maps.png');
+    width: 42vh; 
+    background-image: url('atteli/map.png');
     background-size: 100% 100%; 
     background-repeat: no-repeat;
     background-position: center;
     border: 5px solid #4a2c2c;
     box-shadow: 0 0 50px rgba(0,0,0,0.9);
     border-radius: 8px;
-    z-index: 1;
+    z-index: 2;
 }
 
 .point {

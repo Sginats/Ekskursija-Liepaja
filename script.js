@@ -288,7 +288,7 @@ async function showQuiz(type) {
 
 function checkAns(correct) {
     const val = document.getElementById('ans-in').value;
-    if(val.toLowerCase() === correct.toLowerCase()) score += 10; else score -= 5;
+    if(val.toLowerCase() === correct.toLowerCase()) score += 10; else if(score>0) score -= 5;
     document.getElementById('score-display').innerText = "Punkti: " + score;
     document.getElementById('game-modal').style.display = 'none';
     completedTasks++;
