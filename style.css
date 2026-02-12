@@ -357,3 +357,8 @@ input[type=range] {
     z-index: 10;
     text-align: left;
 }
+#start-player-name:focus {
+    background-color: #4a3333;
+    outline: none;
+    box-shadow: 0 0 10px #ffaa00;
+}
