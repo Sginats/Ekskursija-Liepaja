@@ -85,16 +85,55 @@
     </div>
 
     <div id="about-modal" class="modal" style="z-index: 3000;">
-        <div class="modal-content">
-            <h2 id="about-title">Par Spēli</h2>
+        <div class="modal-content about-layout">
+            <h2 id="about-title" style="text-align: center; color: #ffaa00; text-transform: uppercase; margin-top: 0;">Par Spēli</h2>
+            
             <div class="info-box">
-                <p id="about-autori">Autori: Niks Šenvalds, Dans Bitenieks</p>
+                <p><strong id="about-game-label">Spēle:</strong> "Mācību ekskursija Liepājā"</p>
+                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju, pildot interaktīvus uzdevumus.</span></p>
             </div>
-            <h3 id="res-title">Resursi</h3>
-            <ul>
-                <li id="res-1">Karte: OpenStreetMap</li>
-                <li id="res-2">Kaija: Autoru zīmējums</li>
+
+            <h3 id="legend-title" class="section-title">Objektu nozīme kartē</h3>
+            <ul class="legend-list">
+                <li id="legend-green"><span class="dot point-green"></span> Zaļš: Daba un atpūta</li>
+                <li id="legend-blue"><span class="dot point-blue"></span> Zils: Kultūra un vēsture</li>
+                <li id="legend-yellow"><span class="dot point-yellow"></span> Dzeltens: RTU Liepājas akadēmija</li>
+                <li id="legend-red"><span class="dot point-red"></span> Sarkans: Industrija un osta</li>
             </ul>
+
+            <div class="two-columns">
+                <div>
+                    <h3 id="tech-title" class="section-title">Tehnoloģijas</h3>
+                    <ul class="tech-list">
+                        <li>HTML5 / CSS3</li>
+                        <li>JavaScript</li>
+                        <li>PHP (Datu bāze)</li>
+                        <li>WebSocket (Real-time)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 id="dev-title" class="section-title">Izstrādātāji (2PT)</h3>
+                    <ul class="author-list">
+                        <li>Niks Šenvalds</li>
+                        <li>Dans Bitenieks</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 id="res-title" class="section-title" style="margin-top: 15px;">Izmantotie resursi</h3>
+            <div class="resources-list">
+                <p><strong>Attēli:</strong></p>
+                <ul>
+                    <li>Karte: OpenStreetMap</li>
+                    <li>Kaija (Gids): Autoru zīmējums</li>
+                    <li>Fons: Freepik</li>
+                </ul>
+                <p><strong>Informācija:</strong></p>
+                <ul>
+                    <li>Fakti par Liepāju: liepaja.lv, rtu.lv</li>
+                </ul>
+            </div>
+
             <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
         </div>
     </div>

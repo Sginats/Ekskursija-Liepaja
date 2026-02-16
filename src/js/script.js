@@ -262,7 +262,7 @@ function validateName() {
     const nameInput = document.getElementById('start-player-name');
     if (!nameInput) return globalName;
     let name = nameInput.value.trim();
-    if (!name) { alert("Lūdzu ievadi Vārdu!"); return null; }
+    if (!name) { showNotification("Lūdzu ievadi Vārdu!", 'warning'); return null; }
     if (name.length > 8) name = name.substring(0, 8); // Force limit
     return name;
 }
@@ -280,7 +280,7 @@ function openLobby() {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'create' }));
     } else {
-        alert("Serveris nav pieejams!");
+        showNotification("Serveris nav pieejams!", 'error');
     }
 }
 
@@ -294,7 +294,7 @@ function joinGame() {
         myLobbyCode = codeInput;
         ws.send(JSON.stringify({ action: 'join', code: codeInput }));
     } else {
-        alert("Serveris nav pieejams!");
+        showNotification("Serveris nav pieejams!", 'error');
     }
 }
 
@@ -318,7 +318,7 @@ function updateMapState() {
 }
 
 function startActivity(type) {
-    if (type !== taskSequence[completedTasks]) { alert("Secība!"); return; }
+    if (type !== taskSequence[completedTasks]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
     currentTask = type;
     
     if (type === 'Osta') startBoatGame();
