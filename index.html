@@ -2,9 +2,12 @@
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Liepājas Ekskursija</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="src/js/script.js?v=FINAL" defer></script>
+    <link rel="stylesheet" href="style.css?v=20260216194225">
+    <script src="src/js/script.js?v=20260216194225" defer></script>
 </head>
 <body>
     <audio id="hover-sound" src="assets/skana/hover.mp3" preload="auto"></audio>
@@ -79,10 +82,16 @@
             <label id="vol-sfx">Skaņas efekti</label>
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
 
-            <h3 id="lang-title" class="section-title">Valoda</h3>
-            <div class="lang-switch">
-                <button class="lang-btn active" onclick="setLanguage('lv')">LATVIEŠU</button>
-                <button class="lang-btn" onclick="setLanguage('en')">ENGLISH</button>
+            <h3 class="section-title">🎵 Spotify Playlist</h3>
+            <div class="spotify-player-minimal">
+                <button id="spotify-play-btn" class="spotify-btn-large" onclick="toggleSpotifyPlayback()">
+                    <span style="font-size: 24px; margin-right: 8px;">▶️</span>
+                    <span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>
+                </button>
+                <p class="spotify-info">Liepājas Ekskursija Playlist</p>
+                <div id="spotify-embed-container" style="display: none; margin-top: 15px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(29, 185, 84, 0.2);">
+                    <!-- Spotify embed will be inserted here -->
+                </div>
             </div>
 
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>

@@ -20,4 +20,17 @@ RewriteEngine On
     
     # Prevent MIME type sniffing
     Header set X-Content-Type-Options "nosniff"
+    
+    # Cache Control - Prevent caching of HTML, CSS, and JavaScript files
+    # This ensures users always get the latest version
+    <FilesMatch "\.(html|htm|css|js)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # Allow caching for static assets like images and audio files
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|mp3|wav|ogg)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
 </IfModule>
