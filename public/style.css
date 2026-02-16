@@ -4,7 +4,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('atteli/background.jpg');
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('../assets/atteli/background.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -110,7 +110,7 @@ body {
     position: relative;
     height: 85vh; 
     width: 42vh; 
-    background-image: url('atteli/map.png');
+    background-image: url('../assets/atteli/map.png');
     background-size: 100% 100%; 
     background-repeat: no-repeat;
     background-position: center;

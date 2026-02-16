@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <title>Liepājas Karte</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js?v=<?php echo time(); ?>" defer></script>
+    <script src="../src/js/script.js?v=<?php echo time(); ?>" defer></script>
 </head>
 <body>
-    <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
+    <audio id="hover-sound" src="../assets/skana/hover.mp3" preload="auto"></audio>
     <audio id="bg-music" loop>
-        <source src="skana/music.mp3" type="audio/mpeg">
+        <source src="../assets/skana/music.mp3" type="audio/mpeg">
     </audio>
 
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 2px solid #ffaa00;">
@@ -55,7 +55,7 @@
     <div id="game-modal" class="modal">
         <div class="modal-content quiz-layout">
             <div class="guide-wrapper">
-                <img src="atteli/kaija.png" alt="Gids" class="guide-sprite">
+                <img src="../assets/atteli/kaija.png" alt="Gids" class="guide-sprite">
                 <div class="speech-bubble">
                     <p id="guide-hint">Sveiks! Esmu tavs gids.</p>
                 </div>

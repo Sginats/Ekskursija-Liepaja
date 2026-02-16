@@ -128,7 +128,7 @@ function connectWebSocket() {
 
 async function translateText(text, targetLang) {
     try {
-        const response = await fetch(`translate.php?text=${encodeURIComponent(text)}&target=${targetLang}`);
+        const response = await fetch(`../src/php/translate.php?text=${encodeURIComponent(text)}&target=${targetLang}`);
         const data = await response.json();
         if (data && data.translations && data.translations[0]) {
             return data.translations[0].text;
@@ -297,7 +297,7 @@ function checkAns(correct) {
 }
 
 function showEndGame() { finishGame(globalName, score, "N/A"); }
-function finishGame(n, s, t) { location.href='leaderboard.php'; }
+function finishGame(n, s, t) { location.href='../src/php/leaderboard.php'; }
 function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
 function exitGame() { window.close(); }
 function setMusicVolume(v) { document.getElementById('bg-music').volume = v/100; }

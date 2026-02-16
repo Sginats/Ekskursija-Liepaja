@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <title>Liepājas Ekskursija</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js?v=FINAL" defer></script>
+    <script src="../src/js/script.js?v=FINAL" defer></script>
 </head>
 <body>
-    <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
+    <audio id="hover-sound" src="../assets/skana/hover.mp3" preload="auto"></audio>
     <audio id="bg-music" loop>
-        <source src="skana/music.mp3" type="audio/mpeg">
+        <source src="../assets/skana/music.mp3" type="audio/mpeg">
     </audio>
 
     <div id="main-menu" class="container">
@@ -19,7 +19,7 @@
         <div class="button-group">
             <button class="btn" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
             <button class="btn" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button class="btn" id="btn-leaderboard" onclick="location.href='leaderboard.php'">Top 10</button>
+            <button class="btn" id="btn-leaderboard" onclick="location.href='../src/php/leaderboard.php'">Top 10</button>
             <button class="btn" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
             <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
