@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Top 10 Rezultāti</title>
-    <link rel="stylesheet" href="../../public/style.css">
+    <link rel="stylesheet" href="../../style.css">
 </head>
 <body>
     <audio id="bg-music" loop>
-        <source src="../../public/skana/music.mp3" type="audio/mpeg">
+        <source src="../../skana/music.mp3" type="audio/mpeg">
     </audio>
     <div class="container">
         <h1 class="title">🏆 Top 10 Rezultāti</h1>
@@ -58,7 +58,7 @@
                 ?>
             </tbody>
         </table>
-        <button class="btn" onclick="location.href='../../public/index.html'">Atpakaļ</button>
+        <button class="btn" onclick="location.href='../../index.html'">Atpakaļ</button>
     </div>
     <script>
         // Initialize background music

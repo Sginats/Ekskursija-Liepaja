@@ -269,7 +269,7 @@ function validateName() {
 
 function startSingleGame() {
     const name = validateName();
-    if (name) location.href = `../../public/map.html?name=${encodeURIComponent(name)}`;
+    if (name) location.href = `map.html?name=${encodeURIComponent(name)}`;
 }
 
 function openLobby() {
