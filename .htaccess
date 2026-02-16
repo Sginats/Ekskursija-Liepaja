@@ -1,0 +1,23 @@
+# Prevent directory listing
+Options -Indexes
+
+# Enable mod_rewrite
+RewriteEngine On
+
+# Protect sensitive files from direct access
+<FilesMatch "\.(txt|json|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Security headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # XSS protection
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Prevent MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

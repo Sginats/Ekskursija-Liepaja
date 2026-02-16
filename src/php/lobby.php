@@ -2,7 +2,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-$file = 'lobbies.json';
+$file = __DIR__ . '/../data/lobbies.json';
 if (!file_exists($file)) file_put_contents($file, json_encode([]));
 
 $action = $_GET['action'] ?? '';
@@ -12,7 +12,10 @@ $role = $_GET['role'] ?? '';
 $lobbies = json_decode(file_get_contents($file), true) ?? [];
 
 if ($action == 'create') {
-    if (!$code) $code = rand(1000, 9999);
+    // Validate code is numeric and 4 digits
+    $code = preg_replace('/[^0-9]/', '', $code);
+    if (!$code || strlen($code) != 4) $code = rand(1000, 9999);
+    
     $lobbies[$code] = [
         'status' => 'waiting',
         'host_task_done' => false,
