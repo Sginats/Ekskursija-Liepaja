@@ -19,7 +19,7 @@
         <div class="button-group">
             <button class="btn" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
             <button class="btn" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button class="btn" id="btn-leaderboard" onclick="location.href='leaderboard.php'">Top 10</button>
+            <button class="btn" id="btn-leaderboard" onclick="location.href='src/php/leaderboard.php'">Top 10</button>
             <button class="btn" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
             <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
@@ -129,6 +129,13 @@
 
             <button id="btn-start-about" class="btn" onclick="toggleModal('mode-modal')" style="width: 100%; margin-top: 20px; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">SĀKT SPĒLI</button>
             <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
+        </div>
+    </div>
+
+    <div id="notification-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <p id="notification-message" style="font-size: 18px; margin: 20px 0;"></p>
+            <button class="btn" onclick="closeNotification()" style="width: 100%; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">OK</button>
         </div>
     </div>
 </body>
