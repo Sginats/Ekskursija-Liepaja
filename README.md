@@ -131,30 +131,55 @@ Ekskursija-Liepaja/
 
 ## 🚀 Instalācija un palaišana
 
-1. **Klonēt repozitoriju:**
-   ```bash
-   git clone https://github.com/Sginats/Ekskursija-Liepaja.git
-   cd Ekskursija-Liepaja
-   ```
+⚠️ **SVARĪGI: Tev vajag tikai PHP! Node.js nav obligāts.**
 
-2. **Palaist WebSocket serveri (multiplayer režīmam):**
+### Ātrā palaišana (Ieteicams):
+
+Palaid vienu komandu:
+```bash
+php -S localhost:8000
+```
+
+Atvēr pārlūkprogrammā:
+```
+http://localhost:8000/index.html
+```
+
+✅ **Viss darbojas!** Multiplayer, leaderboard, viss!
+
+### Papildus opcija: WebSocket (tikai localhost):
+
+**⚠️ WebSocket darbojas TIKAI lokāli, NEVAR izmantot uz hostinga!**
+
+Ja vēlies ātrāku multiplayer lokāli:
+
+1. **1. terminālis - WebSocket:**
    ```bash
    npm install
    node src/js/server.js
    ```
 
-3. **Palaist ar lokālu serveri:**
+2. **2. terminālis - PHP:**
    ```bash
-   # Izmantojiet jebkuru web serveri, piemēram:
    php -S localhost:8000
-   # vai
-   python -m http.server 8000
    ```
 
-4. **Atvērt pārlūkprogrammā:**
+3. **Atvērt pārlūkprogrammā:**
    ```
    http://localhost:8000/index.html
    ```
+
+**Pilnu problēmu risinājumu skatīt [SETUP.md](SETUP.md) failā.**
+
+---
+
+## 📊 Multiplayer sistēma
+
+Projekts izmanto **hibrīdu pieeju**:
+- **PHP polling** (noklusējums) - Darbojas uz jebkura hostinga
+- **WebSocket** (localhost) - Ātrāks, bet tikai lokālai izstrādei
+
+Sistēma automātiski izvēlas labāko pieejamo variantu.
 
 ---
 
