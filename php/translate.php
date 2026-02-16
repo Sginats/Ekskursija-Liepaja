@@ -30,7 +30,7 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 $response = curl_exec($ch);
 
-if(curl_errno($ch)){
+if (curl_errno($ch)) {
     http_response_code(502);
     echo json_encode(['error' => 'Translation service temporarily unavailable.']);
 } else {
