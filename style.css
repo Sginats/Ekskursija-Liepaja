@@ -28,7 +28,6 @@ body {
     font-size: 80px; 
     margin: 0; 
     line-height: 1;
-    animation: pulse 3s infinite ease-in-out;
     background: linear-gradient(135deg, #ffffff, #ffaa00, #ffffff);
     background-size: 200% 200%;
     -webkit-background-clip: text;
@@ -436,7 +435,7 @@ input[type=range] {
 }
 
 /* Leaderboard */
-.container p{
+.container p {
     color: #aaa; 
     margin-bottom: 20px; 
     font-style: italic;

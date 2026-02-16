@@ -31,16 +31,24 @@
                     foreach ($lines as $line) {
                         $parts = explode("|", $line);
                         if (count($parts) >= 3) {
+                            // Convert time to seconds for proper sorting
+                            $timeParts = explode(':', $parts[2]);
+                            $timeInSeconds = 0;
+                            if (count($timeParts) === 3) {
+                                $timeInSeconds = (int)$timeParts[0] * 3600 + (int)$timeParts[1] * 60 + (int)$timeParts[2];
+                            }
+                            
                             $results[] = [
                                 'name' => $parts[0],
                                 'score' => (int)$parts[1],
-                                'time' => $parts[2] 
+                                'time' => $parts[2],
+                                'timeInSeconds' => $timeInSeconds
                             ];
                         }
                     }
 
                     usort($results, function($a, $b) {
-                        return strcmp($a['time'], $b['time']);
+                        return $a['timeInSeconds'] - $b['timeInSeconds'];
                     });
 
                     $top10 = array_slice($results, 0, 10);
