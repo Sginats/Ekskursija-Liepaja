@@ -72,14 +72,22 @@ document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
     startTime = Date.now();
     
-    // Show connection status indicator on pages that use WebSocket
-    const statusIndicator = document.getElementById('connection-status');
-    if (statusIndicator && (window.location.pathname.includes('index.html') || window.location.pathname.includes('map.html'))) {
-        statusIndicator.style.display = 'block';
-    }
+    // Only connect WebSocket if on index.html (for lobby creation/joining)
+    // or if we have multiplayer parameters (role and code)
+    const pathname = window.location.pathname;
+    const needsWebSocket = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
+                          (myRole && myLobbyCode);
     
-    // Establish WebSocket connection for multiplayer
-    connectWebSocket();
+    if (needsWebSocket) {
+        // Show connection status indicator on pages that use WebSocket
+        const statusIndicator = document.getElementById('connection-status');
+        if (statusIndicator) {
+            statusIndicator.style.display = 'block';
+        }
+        
+        // Establish WebSocket connection for multiplayer
+        connectWebSocket();
+    }
 
     // Apply language translations if not Latvian
     if(currentLang !== 'lv') {
@@ -345,19 +353,112 @@ function startActivity(type) {
 
 // --- 7. MINI SPĒLES & QUIZ ---
 
+// Boat race game configuration
+const BOAT_RACE_CONFIG = {
+    REQUIRED_PRESSES: 10,
+    EXCELLENT_TIME: 3,
+    GOOD_TIME: 5,
+    SLOW_TIME: 10,
+    EXCELLENT_POINTS: 15,
+    GOOD_POINTS: 12,
+    NORMAL_POINTS: 10,
+    SLOW_POINTS: 5
+};
+
+let boatRaceActive = false;
+let boatStartTime = 0;
+let boatSpaceCount = 0;
+let boatInterval = null;
+
 function startBoatGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>Ostas Regate</h2><p>Spied SPACE!</p>
+        <h2>Ostas Regate</h2>
+        <p>Spied SPACE taustiņu ${BOAT_RACE_CONFIG.REQUIRED_PRESSES} reizes pēc iespējas ātrāk!</p>
         <h3 id="boat-timer">0.00 s</h3>
+        <p id="boat-progress">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
         <button class="btn" onclick="initBoatRace()">SĀKT</button>`;
 }
-// (Laivu loģika saīsināta, lai ietilptu, bet funkcijas paliek tās pašas kā iepriekš)
-function initBoatRace() { 
-    /* ...Tava laivu loģika šeit... */ 
-    setTimeout(() => { score+=10; document.getElementById('score-display').innerText="Punkti: "+score; closeBoatGame(); }, 3000); // Īsā versija testam
+
+function initBoatRace() {
+    boatRaceActive = true;
+    boatStartTime = Date.now();
+    boatSpaceCount = 0;
+    
+    // Remove any existing listener to prevent duplicates
+    document.removeEventListener('keydown', handleBoatKeyPress);
+    
+    document.querySelector('.task-section').innerHTML = `
+        <h2>Ostas Regate</h2>
+        <p style="color: #ffaa00; font-size: 24px; font-weight: bold;">SPIED SPACE!</p>
+        <h3 id="boat-timer">0.00 s</h3>
+        <p id="boat-progress" style="font-size: 20px;">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>`;
+    
+    // Update timer
+    boatInterval = setInterval(() => {
+        if (boatRaceActive) {
+            const elapsed = ((Date.now() - boatStartTime) / 1000).toFixed(2);
+            const timerEl = document.getElementById('boat-timer');
+            if (timerEl) timerEl.innerText = elapsed + ' s';
+        }
+    }, 50);
+    
+    // Listen for spacebar
+    document.addEventListener('keydown', handleBoatKeyPress);
 }
-function closeBoatGame() { document.getElementById('game-modal').style.display = 'none'; completedTasks++; updateMapState(); if(completedTasks===10) showEndGame(); }
+
+function handleBoatKeyPress(e) {
+    if (!boatRaceActive) return;
+    
+    if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        boatSpaceCount++;
+        
+        const progressEl = document.getElementById('boat-progress');
+        if (progressEl) progressEl.innerText = `Spiedienu skaits: ${boatSpaceCount}/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}`;
+        
+        if (boatSpaceCount >= BOAT_RACE_CONFIG.REQUIRED_PRESSES) {
+            finishBoatRace();
+        }
+    }
+}
+
+function finishBoatRace() {
+    boatRaceActive = false;
+    clearInterval(boatInterval);
+    document.removeEventListener('keydown', handleBoatKeyPress);
+    
+    const finalTime = ((Date.now() - boatStartTime) / 1000).toFixed(2);
+    
+    // Award points based on speed using configuration
+    let points = BOAT_RACE_CONFIG.NORMAL_POINTS;
+    if (finalTime < BOAT_RACE_CONFIG.EXCELLENT_TIME) {
+        points = BOAT_RACE_CONFIG.EXCELLENT_POINTS;
+    } else if (finalTime < BOAT_RACE_CONFIG.GOOD_TIME) {
+        points = BOAT_RACE_CONFIG.GOOD_POINTS;
+    } else if (finalTime > BOAT_RACE_CONFIG.SLOW_TIME) {
+        points = BOAT_RACE_CONFIG.SLOW_POINTS;
+    }
+    
+    score += points;
+    document.getElementById('score-display').innerText = "Punkti: " + score;
+    
+    document.querySelector('.task-section').innerHTML = `
+        <h2>Pabeigts!</h2>
+        <p>Tavs laiks: ${finalTime} sekundes</p>
+        <p style="color: #ffaa00;">+${points} punkti!</p>
+        <button class="btn" onclick="closeBoatGame()">Turpināt</button>`;
+}
+
+function closeBoatGame() { 
+    boatRaceActive = false;
+    if (boatInterval) clearInterval(boatInterval);
+    document.removeEventListener('keydown', handleBoatKeyPress);
+    document.getElementById('game-modal').style.display = 'none'; 
+    completedTasks++; 
+    updateMapState(); 
+    if(completedTasks === 10) showEndGame(); 
+}
 
 
 function showMiniGame(type) {

@@ -719,6 +719,30 @@ input[type=range] {
         max-width: 90%;
         padding: 20px;
     }
+    
+    /* Map page responsive */
+    .map-area {
+        height: 70vh;
+        width: calc(70vh * 0.5); /* Maintain aspect ratio based on height */
+    }
+    
+    .difficulty-legend {
+        top: auto;
+        bottom: 20px;
+        left: 10px;
+        width: auto;
+        max-width: 200px;
+        font-size: 12px;
+        padding: 10px;
+    }
+    
+    .quiz-layout {
+        flex-direction: column;
+    }
+    
+    .guide-sprite {
+        width: 80px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -734,6 +758,22 @@ input[type=range] {
     .btn {
         width: 90%;
         font-size: 14px;
+    }
+    
+    .map-area {
+        height: 60vh;
+        width: calc(60vh * 0.5); /* Maintain aspect ratio based on height */
+    }
+    
+    .point {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .authors-corner {
+        font-size: 12px;
+        bottom: 5px;
+        left: 10px;
     }
 }
 
