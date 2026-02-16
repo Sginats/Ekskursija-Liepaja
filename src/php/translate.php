@@ -2,7 +2,12 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-$authKey = getenv('DEEPL_AUTH_KEY') ?: "b18a3986-b10e-4d34-90f8-c8915aa9119a:fx"; 
+$authKey = getenv('DEEPL_AUTH_KEY');
+
+if (!$authKey) {
+    echo json_encode(['error' => 'Translation service not configured. Please set DEEPL_AUTH_KEY environment variable.']);
+    exit;
+} 
 
 $text = $_GET['text'] ?? '';
 $targetLang = $_GET['target'] ?? 'EN';
