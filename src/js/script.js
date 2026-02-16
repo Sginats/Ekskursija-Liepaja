@@ -128,7 +128,7 @@ function connectWebSocket() {
 
 async function translateText(text, targetLang) {
     try {
-        const response = await fetch(`translate.php?text=${encodeURIComponent(text)}&target=${targetLang}`);
+        const response = await fetch(`../php/translate.php?text=${encodeURIComponent(text)}&target=${targetLang}`);
         const data = await response.json();
         if (data && data.translations && data.translations[0]) {
             return data.translations[0].text;
@@ -171,14 +171,15 @@ function getQueryParams() {
 function validateName() {
     const nameInput = document.getElementById('start-player-name');
     if (!nameInput) return globalName;
-    const name = nameInput.value.trim();
+    let name = nameInput.value.trim();
     if (!name) { alert("Lūdzu ievadi Vārdu!"); return null; }
+    if (name.length > 8) name = name.substring(0, 8); // Force limit
     return name;
 }
 
 function startSingleGame() {
     const name = validateName();
-    if (name) location.href = `map.html?name=${encodeURIComponent(name)}`;
+    if (name) location.href = `../../public/map.html?name=${encodeURIComponent(name)}`;
 }
 
 function openLobby() {
@@ -282,7 +283,7 @@ async function showQuiz(type) {
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
-        <input id="ans-in"><button class="btn" onclick="checkAns('${task.a}')">OK</button>
+        <input id="ans-in" maxlength="50"><button class="btn" onclick="checkAns('${task.a}')">OK</button>
     `;
 }
 
@@ -296,8 +297,13 @@ function checkAns(correct) {
     if(completedTasks === 10) showEndGame();
 }
 
-function showEndGame() { finishGame(globalName, score, "N/A"); }
-function finishGame(n, s, t) { location.href='leaderboard.php'; }
+function showEndGame() { 
+    // Validate score is within reasonable range before submitting
+    if (score > 100) score = 100;
+    if (score < -50) score = -50;
+    finishGame(globalName, score, "N/A"); 
+}
+function finishGame(n, s, t) { location.href='../php/leaderboard.php'; }
 function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
 function exitGame() { window.close(); }
 function setMusicVolume(v) { document.getElementById('bg-music').volume = v/100; }

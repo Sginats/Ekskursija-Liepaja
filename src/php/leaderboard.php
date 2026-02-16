@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Top 10 Rezultāti</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../public/style.css">
 </head>
 <body>
     <div class="container">
@@ -20,7 +20,7 @@
             </thead>
             <tbody>
                 <?php
-                $file = __DIR__ . "/leaderboard.txt";
+                $file = __DIR__ . "/../data/leaderboard.txt";
                 
                 if (file_exists($file)) {
                     $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -55,7 +55,7 @@
                 ?>
             </tbody>
         </table>
-        <button class="btn" onclick="location.href='index.html'">Atpakaļ</button>
+        <button class="btn" onclick="location.href='../../public/index.html'">Atpakaļ</button>
     </div>
 </body>
 </html>

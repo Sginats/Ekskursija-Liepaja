@@ -1,0 +1,18 @@
+# Security headers for PHP backend files
+<IfModule mod_headers.c>
+    # Only allow AJAX requests (check for XMLHttpRequest header)
+    Header set X-Frame-Options "DENY"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Add CORS headers (already in PHP but reinforcing here)
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type"
+</IfModule>
+
+# Prevent access to .txt and .json files in this directory if any exist
+<FilesMatch "\.(txt|json|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

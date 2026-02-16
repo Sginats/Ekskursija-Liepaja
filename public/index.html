@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Liepājas Ekskursija</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js?v=FINAL" defer></script>
+    <script src="../src/js/script.js?v=FINAL" defer></script>
 </head>
 <body>
     <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
@@ -19,7 +19,7 @@
         <div class="button-group">
             <button class="btn" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
             <button class="btn" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button class="btn" id="btn-leaderboard" onclick="location.href='leaderboard.php'">Top 10</button>
+            <button class="btn" id="btn-leaderboard" onclick="location.href='../src/php/leaderboard.php'">Top 10</button>
             <button class="btn" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
             <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
@@ -33,13 +33,13 @@
         <div class="modal-content" style="text-align: center;">
             <h2 id="mode-title" style="color: #ffaa00;">Izvēlies režīmu</h2>
             
-            <input type="text" id="start-player-name" placeholder="Tavs Vārds..." class="input-field" style="text-align: center; width: 60%; margin-bottom: 10px; font-weight: bold;">
+            <input type="text" id="start-player-name" placeholder="Tavs Vārds..." class="input-field" style="text-align: center; width: 60%; margin-bottom: 10px; font-weight: bold;" maxlength="8">
 
             <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
                 <button id="btn-single" class="btn" onclick="startSingleGame()">Spēlēt vienam</button>
                 <button id="btn-lobby" class="btn" onclick="openLobby()">Spēlēt ar draugu</button>
                 <div style="margin-top: 10px; border-top: 1px solid #4a2c2c; width: 100%; padding-top: 10px;">
-                    <input type="text" id="join-code" placeholder="Ievadi drauga kodu" class="input-field" style="text-align: center; width: 200px;">
+                    <input type="text" id="join-code" placeholder="Ievadi drauga kodu" class="input-field" style="text-align: center; width: 200px;" maxlength="8">
                     <button id="btn-join" class="btn" onclick="joinGame()" style="width: 200px; margin-top: 5px;">Pievienoties</button>
                 </div>
             </div>
