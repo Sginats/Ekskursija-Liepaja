@@ -131,6 +131,23 @@ Ekskursija-Liepaja/
 
 ## 🚀 Instalācija un palaišana
 
+⚠️ **SVARĪGI: Ja redzi WebSocket vai PHP kļūdas, lasi [SETUP.md](SETUP.md) failu!**
+
+### Ātrā palaišana (Recommended):
+
+**Linux/Mac:**
+```bash
+chmod +x start-server.sh
+./start-server.sh
+```
+
+**Windows:**
+```bash
+start-server.bat
+```
+
+### Manuālā palaišana:
+
 1. **Klonēt repozitoriju:**
    ```bash
    git clone https://github.com/Sginats/Ekskursija-Liepaja.git
@@ -143,18 +160,17 @@ Ekskursija-Liepaja/
    node src/js/server.js
    ```
 
-3. **Palaist ar lokālu serveri:**
+3. **Palaist ar lokālu PHP serveri (jaunā termināļa logā):**
    ```bash
-   # Izmantojiet jebkuru web serveri, piemēram:
    php -S localhost:8000
-   # vai
-   python -m http.server 8000
    ```
 
 4. **Atvērt pārlūkprogrammā:**
    ```
    http://localhost:8000/index.html
    ```
+
+**Pilnu problēmu risinājumu skatīt [SETUP.md](SETUP.md) failā.**
 
 ---
 
