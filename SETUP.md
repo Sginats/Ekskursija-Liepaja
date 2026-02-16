@@ -20,87 +20,82 @@ GET https://liepajaprojekts.gamer.gd/php/leaderboard.php [HTTP/1.1 404 Not Found
 
 ## ⚡ Ātrā palaišana / Quick Start
 
-### 1️⃣ Instalē nepieciešamos rīkus / Install Required Tools
+### 🎯 VIENKĀRŠĀKAIS VEIDS (Tikai PHP)
 
-#### Node.js (Obligāti / Required)
-- Lejupielādē: https://nodejs.org/
-- Nepieciešams WebSocket servera darbībai / Needed for WebSocket server
+**Tu vajag tikai PHP!** Node.js nav nepieciešams.
 
-#### PHP (Ieteicams / Recommended)  
+### 1️⃣ Instalē PHP (Obligāti / Required)  
 - Lejupielādē: https://www.php.net/downloads
-- Nepieciešams leaderboard darbībai / Needed for leaderboard functionality
-- Bez PHP leaderboard **nedarbosies** / Without PHP, leaderboard **won't work**
+- Nepieciešams leaderboard un multiplayer darbībai
 
-Pārbaudi instalāciju / Check installation:
+Pārbaudi instalāciju:
 ```bash
-node --version
-npm --version
 php --version
 ```
 
-### 2️⃣ Vienkāršākais veids - izmanto startup skriptu / Easiest Way - Use Startup Script
+### 2️⃣ Palaid vienu komandu:
 
 **Linux/Mac:**
-```bash
-chmod +x start-server.sh
-./start-server.sh
-```
-
-**Windows:**
-```bash
-start-server.bat
-```
-
-Tas automātiski:
-- ✅ Instalē atkarības (npm install)
-- ✅ Palaiž WebSocket serveri (port 8080)
-- ✅ Palaiž PHP web serveri (port 8000)
-- ✅ Izveido leaderboard.txt failu
-
-### 3️⃣ Vai manuāli / Or Manually
-
-**A. Instalē atkarības:**
-```bash
-npm install
-```
-
-**B. Palaid WebSocket serveri (1. termināļa logs):**
-```bash
-node src/js/server.js
-```
-
-Tu redzēsi:
-```
-🚀 Professional WebSocket server started on port 8080!
-Features: Auto-reconnect, Heartbeat, Lobby cleanup
-```
-
-**C. Palaid PHP web serveri (2. termināļa logs):**
 ```bash
 php -S localhost:8000
 ```
 
-### 4️⃣ Atvēr pārlūkprogrammā / Open in Browser
+**Windows:**
+```bash
+php -S localhost:8000
+```
+
+### 3️⃣ Atvēr pārlūkprogrammā:
 
 ```
 http://localhost:8000/index.html
 ```
 
+✅ **Tas ir viss! Tagad viss darbojas:**
+- ✅ Viena spēlētāja režīms
+- ✅ Multiplayer režīms (PHP polling)
+- ✅ Leaderboard
+- ✅ Rezultātu saglabāšana
+
 ---
 
-## 🎮 Kas tagad darbosies? / What Works Now?
+## 🚀 Papildus: Node.js (Tikai lokālai izstrādei)
 
-### ✅ Ar abiem serveriem / With Both Servers:
-- 🎯 Viena spēlētāja režīms
-- 👥 Multiplayer režīms (2 spēlētāji)
-- 🏆 Leaderboard (Top 10 rezultāti)
-- 💾 Rezultātu saglabāšana
+**⚠️ Node.js WebSocket serveris darbojas TIKAI uz localhost!**  
+**⚠️ To NEVAR izmantot uz parasta hostinga!**
 
-### ⚠️ Bez PHP servera / Without PHP Server:
-- ✅ Viena spēlētāja režīms
-- ✅ Multiplayer režīms
-- ❌ Leaderboard **nedarbosies**
-- ❌ Rezultātu saglabāšana **nedarbosies**
+Ja vēlies ātrāku multiplayer savienojumu lokāli:
+
+### 1️⃣ Instalē Node.js
+- Lejupielādē: https://nodejs.org/
+
+### 2️⃣ Palaid abus serverus
+
+**1. terminālis - WebSocket serveris:**
+```bash
+npm install
+node src/js/server.js
+```
+
+**2. terminālis - PHP serveris:**
+```bash
+php -S localhost:8000
+```
+
+Sistēma automātiski izmantos WebSocket, ja tas ir pieejams.
+
+---
+
+## 🎮 Kas darbojas bez Node.js?
+
+### ✅ Ar tikai PHP serveri:
+- 🎯 Viena spēlētāja režīms - **Pilnībā darbojas**
+- 👥 Multiplayer režīms - **Darbojas** (PHP polling, 2s latence)
+- 🏆 Leaderboard - **Darbojas**
+- 💾 Rezultātu saglabāšana - **Darbojas**
+
+### ⚡ Ar PHP + Node.js (tikai localhost):
+- 👥 Multiplayer - **Ātrāks** (real-time WebSocket, <100ms latence)
 
 ---
 

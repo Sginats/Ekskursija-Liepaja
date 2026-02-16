@@ -51,6 +51,18 @@ body {
     letter-spacing: 8px;
     text-shadow: 2px 2px 5px rgba(0,0,0,1);
     font-weight: bold;
+    animation: fadeInDown 1s ease-out;
+}
+
+@keyframes fadeInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes pulse {
@@ -63,6 +75,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    width: 100%;
+    align-items: center;
+    animation: fadeInUp 1.2s ease-out;
+}
     width: 100%;
     align-items: center;
 }
@@ -82,6 +98,25 @@ body {
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     position: relative;
     overflow: hidden;
+    animation: slideInFromRight 0.6s ease-out backwards;
+}
+
+/* Staggered animation for buttons */
+.btn:nth-child(1) { animation-delay: 0.1s; }
+.btn:nth-child(2) { animation-delay: 0.2s; }
+.btn:nth-child(3) { animation-delay: 0.3s; }
+.btn:nth-child(4) { animation-delay: 0.4s; }
+.btn:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideInFromRight {
+    0% {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .btn::before {
@@ -342,26 +377,65 @@ input[type=range] {
 
 .input-field {
     width: 100%;
-    padding: 12px;
+    padding: 15px 20px;
     margin: 10px 0;
     border: 2px solid #553333;
-    background: linear-gradient(135deg, #332222, #2a1a1a);
+    background: linear-gradient(135deg, #2a1a1a, #1a1010);
     color: white;
-    border-radius: 8px;
+    border-radius: 12px;
     box-sizing: border-box;
     transition: all 0.3s ease;
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    box-shadow: 
+        inset 0 2px 8px rgba(0, 0, 0, 0.4),
+        0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .input-field:focus {
     outline: none;
     border-color: #ffaa00;
-    background: #3a2525;
-    box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+    background: linear-gradient(135deg, #3a2525, #2a1a1a);
+    box-shadow: 
+        inset 0 2px 8px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(255, 170, 0, 0.5),
+        0 0 40px rgba(255, 170, 0, 0.2);
+    transform: translateY(-2px);
 }
 
 .input-field::placeholder {
     color: #888;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* Styled input wrapper for better presentation */
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 15px 0;
+}
+
+.input-label {
+    display: block;
+    color: #ffaa00;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.input-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ffaa00;
+    font-size: 20px;
+    pointer-events: none;
 }
 
 .lang-switch {
@@ -432,8 +506,24 @@ input[type=range] {
     z-index: 50;
     pointer-events: none;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-    opacity: 0.9;
+    opacity: 0;
+    animation: fadeInFloat 2s ease-out 1s forwards;
     transition: opacity 0.3s ease;
+}
+
+@keyframes fadeInFloat {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 0.9;
+        transform: translateY(0);
+    }
+}
+
+.authors-corner:hover {
+    opacity: 1;
 }
 
 /* Leaderboard */
@@ -682,18 +772,25 @@ input[type=range] {
 /* Mobile-first breakpoints */
 @media (max-width: 768px) {
     .title {
-        font-size: 48px;
+        font-size: 42px;
     }
     
     .subtitle {
-        font-size: 24px;
-        letter-spacing: 4px;
+        font-size: 20px;
+        letter-spacing: 3px;
+        margin-bottom: 30px;
+    }
+    
+    .button-group {
+        gap: 12px;
+        padding: 0 20px;
     }
     
     .btn {
-        width: 80%;
-        padding: 12px 30px;
-        font-size: 16px;
+        width: 100%;
+        max-width: 280px;
+        padding: 14px 25px;
+        font-size: 15px;
     }
     
     .connection-status {
@@ -712,18 +809,30 @@ input[type=range] {
     .notification {
         min-width: auto;
         max-width: 100%;
+        font-size: 14px;
     }
     
     .modal-content {
-        width: 90%;
-        max-width: 90%;
-        padding: 20px;
+        width: 92%;
+        max-width: 92%;
+        padding: 25px 20px;
+        margin: 20px;
+    }
+    
+    .modal-content h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .input-field {
+        font-size: 16px;
+        padding: 14px 18px;
     }
     
     /* Map page responsive */
     .map-area {
         height: 70vh;
-        width: calc(70vh * 0.5); /* Maintain aspect ratio based on height */
+        width: calc(70vh * 0.5);
     }
     
     .difficulty-legend {
@@ -731,9 +840,9 @@ input[type=range] {
         bottom: 20px;
         left: 10px;
         width: auto;
-        max-width: 200px;
-        font-size: 12px;
-        padding: 10px;
+        max-width: 180px;
+        font-size: 11px;
+        padding: 8px;
     }
     
     .quiz-layout {
@@ -743,37 +852,130 @@ input[type=range] {
     .guide-sprite {
         width: 80px;
     }
+    
+    #score-display {
+        font-size: 18px;
+        padding: 10px 18px;
+    }
 }
 
 @media (max-width: 480px) {
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
     .title {
-        font-size: 36px;
+        font-size: 32px;
     }
     
     .subtitle {
-        font-size: 18px;
+        font-size: 16px;
         letter-spacing: 2px;
+        margin-bottom: 25px;
+    }
+    
+    .button-group {
+        gap: 10px;
+        padding: 0 15px;
+        width: 100%;
     }
     
     .btn {
-        width: 90%;
+        width: 100%;
+        max-width: 100%;
         font-size: 14px;
+        padding: 12px 20px;
+        white-space: nowrap;
+    }
+    
+    .modal {
+        padding: 10px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        padding: 20px 15px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-content h2 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .input-field {
+        font-size: 15px;
+        padding: 12px 15px;
     }
     
     .map-area {
         height: 60vh;
-        width: calc(60vh * 0.5); /* Maintain aspect ratio based on height */
+        width: calc(60vh * 0.5);
     }
     
     .point {
         width: 18px;
         height: 18px;
+        border-width: 2px;
     }
     
     .authors-corner {
-        font-size: 12px;
+        font-size: 11px;
         bottom: 5px;
         left: 10px;
+        padding: 5px 10px;
+    }
+    
+    #score-display {
+        font-size: 16px;
+        padding: 8px 15px;
+        top: 15px;
+        right: 15px;
+    }
+    
+    /* Fix modal buttons stacking */
+    .modal-content .btn {
+        margin: 5px 0;
+    }
+    
+    /* Improve lobby code display on small screens */
+    #lobby-code {
+        font-size: 36px !important;
+    }
+    
+    /* Better spacing for join section */
+    #join-code {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    #btn-join {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Very small screens (smaller phones) */
+@media (max-width: 360px) {
+    .title {
+        font-size: 28px;
+    }
+    
+    .subtitle {
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+    
+    .btn {
+        font-size: 13px;
+        padding: 10px 15px;
+    }
+    
+    .modal-content {
+        padding: 15px 10px;
     }
 }
 

@@ -20,6 +20,9 @@ let ws = null;
 // --- CONFIGURATION ---
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const POLL_INTERVAL = 2000; // Poll every 2 seconds
+const WS_TIMEOUT = 2000; // WebSocket connection timeout (short since it's unlikely to work)
+let connectionMode = 'php-polling'; // Default to PHP polling (works everywhere)
 
 // Task completion sequence - defines the order in which locations must be visited
 const taskSequence = [
@@ -75,18 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Only connect WebSocket if on index.html (for lobby creation/joining)
     // or if we have multiplayer parameters (role and code)
     const pathname = window.location.pathname;
-    const needsWebSocket = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
+    const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
                           (myRole && myLobbyCode);
     
-    if (needsWebSocket) {
-        // Show connection status indicator on pages that use WebSocket
+    if (needsConnection) {
+        // Show connection status indicator on pages that use multiplayer
         const statusIndicator = document.getElementById('connection-status');
         if (statusIndicator) {
             statusIndicator.style.display = 'block';
         }
         
-        // Establish WebSocket connection for multiplayer
-        connectWebSocket();
+        // Smart connection: Try WebSocket first, fallback to PHP polling
+        initSmartConnection();
     }
 
     // Apply language translations if not Latvian
@@ -127,7 +130,137 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- 3. WEBSOCKET FUNKCIJAS (PROFESSIONAL IMPLEMENTATION) ---
+// --- 3. SMART CONNECTION MANAGER (MODERN HYBRID APPROACH) ---
+
+/**
+ * Smart connection initialization
+ * Uses PHP polling by default (works on any hosting)
+ * Only tries WebSocket if on localhost (for development)
+ */
+async function initSmartConnection() {
+    console.log("🔍 Initializing multiplayer connection...");
+    updateConnectionStatus('reconnecting');
+    
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+    
+    // Only try WebSocket on localhost
+    if (isLocalhost) {
+        console.log("🏠 Localhost detected, trying WebSocket first...");
+        const wsAvailable = await tryWebSocketConnection();
+        
+        if (wsAvailable) {
+            console.log("✅ Using WebSocket mode (real-time, fastest)");
+            connectionMode = 'websocket';
+            updateConnectionStatus('connected');
+            showNotification('🚀 WebSocket Režīms (Dev)', 'success', 2000);
+            return;
+        } else {
+            console.log("⚠️ WebSocket unavailable, using PHP polling");
+        }
+    }
+    
+    // Use PHP polling (default for production)
+    console.log("✅ Using PHP polling mode (works everywhere)");
+    connectionMode = 'php-polling';
+    initPHPPolling();
+    showNotification('✨ Multiplayer gatavs!', 'success', 2000);
+}
+
+/**
+ * Try to establish WebSocket connection with timeout
+ * Returns true if successful, false otherwise
+ */
+function tryWebSocketConnection() {
+    return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+            if (ws) {
+                ws.close();
+            }
+            resolve(false);
+        }, WS_TIMEOUT);
+        
+        try {
+            const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                clearTimeout(timeout);
+                setupWebSocketHandlers();
+                resolve(true);
+            };
+            
+            ws.onerror = () => {
+                clearTimeout(timeout);
+                resolve(false);
+            };
+            
+            ws.onclose = () => {
+                if (connectionMode === 'websocket') {
+                    // Only try to reconnect if we were using WebSocket mode
+                    console.log("WebSocket disconnected, attempting reconnection...");
+                    setTimeout(() => {
+                        if (connectionMode === 'websocket') {
+                            connectWebSocket();
+                        }
+                    }, 2000);
+                }
+            };
+        } catch (error) {
+            clearTimeout(timeout);
+            console.error("WebSocket connection failed:", error);
+            resolve(false);
+        }
+    });
+}
+
+/**
+ * Setup WebSocket event handlers
+ */
+function setupWebSocketHandlers() {
+    ws.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            handleWebSocketMessage(data);
+        } catch (e) {
+            console.error("Error parsing WebSocket message:", e);
+        }
+    };
+}
+
+/**
+ * Handle WebSocket messages
+ */
+function handleWebSocketMessage(data) {
+    if (data.type === 'created') {
+        myLobbyCode = data.code;
+        const lobbyCodeEl = document.getElementById('lobby-code');
+        if (lobbyCodeEl) lobbyCodeEl.innerText = myLobbyCode;
+        toggleModal('mode-modal');
+        setTimeout(() => { toggleModal('lobby-modal'); }, 100);
+    }
+    else if (data.type === 'start_game') {
+        myRole = data.role;
+        showNotification(`Spēle sākas! Tava loma: ${myRole}`, 'success');
+        setTimeout(() => {
+            location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
+        }, 1500);
+    }
+    else if (data.type === 'sync_complete') {
+        const statusEl = document.getElementById('partner-status');
+        if (statusEl) statusEl.innerText = "Partneris gatavs!";
+        setTimeout(() => { showQuiz(currentTask); }, 1000);
+    }
+    else if (data.type === 'error') {
+        showNotification(data.msg, 'error');
+    }
+    else if (data.type === 'pong') {
+        // Heartbeat response
+        console.log('WebSocket alive');
+    }
+}
+
+// --- LEGACY WEBSOCKET FUNCTIONS (KEPT FOR COMPATIBILITY) ---
 
 let wsReconnectAttempts = 0;
 const wsMaxReconnectAttempts = 5;
@@ -239,6 +372,143 @@ function updateConnectionStatus(status) {
     indicator.title = statusText[status] || '';
 }
 
+// --- PHP POLLING ALTERNATIVE (NO NODE.JS REQUIRED) ---
+
+let pollInterval = null;
+let phpPolling = false;
+
+/**
+ * Initialize PHP-based polling system (alternative to WebSockets)
+ * This allows multiplayer to work with only PHP server running
+ */
+function initPHPPolling() {
+    console.log("🔄 Using PHP polling mode (no WebSocket server required)");
+    phpPolling = true;
+    updateConnectionStatus('connected');
+}
+
+/**
+ * Create lobby using PHP
+ */
+function createLobbyPHP() {
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    fetch(`src/php/lobby.php?action=create&code=${code}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                myLobbyCode = data.code;
+                const lobbyCodeEl = document.getElementById('lobby-code');
+                if (lobbyCodeEl) lobbyCodeEl.innerText = myLobbyCode;
+                toggleModal('mode-modal');
+                setTimeout(() => { toggleModal('lobby-modal'); }, 100);
+                
+                // Start polling for guest to join
+                startLobbyPolling();
+            }
+        })
+        .catch(error => {
+            console.error('Error creating lobby:', error);
+            showNotification('Neizdevās izveidot lobby', 'error');
+        });
+}
+
+/**
+ * Join lobby using PHP
+ */
+function joinLobbyPHP(code) {
+    fetch(`src/php/lobby.php?action=join&code=${code}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                myLobbyCode = code;
+                myRole = 'guest';
+                showNotification('Pievienojies lobby!', 'success');
+                setTimeout(() => {
+                    location.href = `map.html?mode=multi&role=guest&code=${code}&name=${encodeURIComponent(globalName)}`;
+                }, 1500);
+            } else {
+                showNotification('Lobby nav atrasts vai jau pilns', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error joining lobby:', error);
+            showNotification('Neizdevās pievienoties', 'error');
+        });
+}
+
+/**
+ * Poll lobby status waiting for guest
+ */
+function startLobbyPolling() {
+    let pollCount = 0;
+    const maxPolls = 60; // Poll for 2 minutes max
+    
+    pollInterval = setInterval(() => {
+        pollCount++;
+        
+        if (pollCount > maxPolls) {
+            clearInterval(pollInterval);
+            showNotification('Laiks beidzies, lobby aizvērts', 'error');
+            return;
+        }
+        
+        fetch(`src/php/lobby.php?action=check&code=${myLobbyCode}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ready') {
+                    clearInterval(pollInterval);
+                    myRole = 'host';
+                    showNotification('Spēlētājs pievienojās!', 'success');
+                    setTimeout(() => {
+                        location.href = `map.html?mode=multi&role=host&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
+                    }, 1500);
+                }
+            })
+            .catch(error => console.error('Polling error:', error));
+    }, POLL_INTERVAL);
+}
+
+/**
+ * Notify partner about task completion (PHP version)
+ */
+function notifyPartnerPHP(role, code) {
+    fetch(`src/php/lobby.php?action=update_game&code=${code}&role=${role}`)
+        .then(response => response.json())
+        .then(() => {
+            // Start polling to check if both players are done
+            checkBothPlayersDonePHP(code);
+        })
+        .catch(error => console.error('Error notifying partner:', error));
+}
+
+/**
+ * Check if both players completed task (PHP version)
+ */
+function checkBothPlayersDonePHP(code) {
+    const checkInterval = setInterval(() => {
+        fetch(`src/php/lobby.php?action=get_state&code=${code}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.host_done && data.guest_done) {
+                    clearInterval(checkInterval);
+                    const statusEl = document.getElementById('partner-status');
+                    if (statusEl) statusEl.innerText = "Partneris gatavs!";
+                    
+                    // Reset for next task
+                    fetch(`src/php/lobby.php?action=reset_task&code=${code}`)
+                        .then(() => {
+                            setTimeout(() => { showQuiz(currentTask); }, 1000);
+                        });
+                }
+            })
+            .catch(error => console.error('Error checking state:', error));
+    }, 1000);
+    
+    // Stop checking after 30 seconds
+    setTimeout(() => clearInterval(checkInterval), 30000);
+}
+
 // --- 4. DEEPL TULKOŠANA ---
 
 async function translateText(text, targetLang) {
@@ -302,10 +572,12 @@ function openLobby() {
     if (!name) return;
     globalName = name;
     
-    if (ws && ws.readyState === WebSocket.OPEN) {
+    if (connectionMode === 'php-polling') {
+        createLobbyPHP();
+    } else if (connectionMode === 'websocket' && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'create' }));
     } else {
-        showNotification("Serveris nav pieejams!", 'error');
+        showNotification("Savienojums nav pieejams! Lūdzu, uzgaidiet...", 'error');
     }
 }
 
@@ -314,12 +586,19 @@ function joinGame() {
     if (!name) return;
     globalName = name;
     const codeInput = document.getElementById('join-code').value;
+    
+    if (!codeInput || codeInput.length !== 4) {
+        showNotification("Lūdzu, ievadi derīgu 4-ciparu kodu!", 'error');
+        return;
+    }
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
+    if (connectionMode === 'php-polling') {
+        joinLobbyPHP(codeInput);
+    } else if (connectionMode === 'websocket' && ws && ws.readyState === WebSocket.OPEN) {
         myLobbyCode = codeInput;
         ws.send(JSON.stringify({ action: 'join', code: codeInput }));
     } else {
-        showNotification("Serveris nav pieejams!", 'error');
+        showNotification("Savienojums nav pieejams! Lūdzu, uzgaidiet...", 'error');
     }
 }
 

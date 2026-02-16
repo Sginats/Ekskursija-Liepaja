@@ -131,46 +131,55 @@ Ekskursija-Liepaja/
 
 ## 🚀 Instalācija un palaišana
 
-⚠️ **SVARĪGI: Ja redzi WebSocket vai PHP kļūdas, lasi [SETUP.md](SETUP.md) failu!**
+⚠️ **SVARĪGI: Tev vajag tikai PHP! Node.js nav obligāts.**
 
-### Ātrā palaišana (Recommended):
+### Ātrā palaišana (Ieteicams):
 
-**Linux/Mac:**
+Palaid vienu komandu:
 ```bash
-chmod +x start-server.sh
-./start-server.sh
+php -S localhost:8000
 ```
 
-**Windows:**
-```bash
-start-server.bat
+Atvēr pārlūkprogrammā:
+```
+http://localhost:8000/index.html
 ```
 
-### Manuālā palaišana:
+✅ **Viss darbojas!** Multiplayer, leaderboard, viss!
 
-1. **Klonēt repozitoriju:**
-   ```bash
-   git clone https://github.com/Sginats/Ekskursija-Liepaja.git
-   cd Ekskursija-Liepaja
-   ```
+### Papildus opcija: WebSocket (tikai localhost):
 
-2. **Palaist WebSocket serveri (multiplayer režīmam):**
+**⚠️ WebSocket darbojas TIKAI lokāli, NEVAR izmantot uz hostinga!**
+
+Ja vēlies ātrāku multiplayer lokāli:
+
+1. **1. terminālis - WebSocket:**
    ```bash
    npm install
    node src/js/server.js
    ```
 
-3. **Palaist ar lokālu PHP serveri (jaunā termināļa logā):**
+2. **2. terminālis - PHP:**
    ```bash
    php -S localhost:8000
    ```
 
-4. **Atvērt pārlūkprogrammā:**
+3. **Atvērt pārlūkprogrammā:**
    ```
    http://localhost:8000/index.html
    ```
 
 **Pilnu problēmu risinājumu skatīt [SETUP.md](SETUP.md) failā.**
+
+---
+
+## 📊 Multiplayer sistēma
+
+Projekts izmanto **hibrīdu pieeju**:
+- **PHP polling** (noklusējums) - Darbojas uz jebkura hostinga
+- **WebSocket** (localhost) - Ātrāks, bet tikai lokālai izstrādei
+
+Sistēma automātiski izvēlas labāko pieejamo variantu.
 
 ---
 
