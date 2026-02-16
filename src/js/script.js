@@ -1,4 +1,11 @@
-// --- 1. GLOBĀLIE MAINĪGIE ---
+// ============================================================================
+// LIEPĀJAS EKSKURSIJA - GAME LOGIC
+// ============================================================================
+// Main game script handling map interactions, WebSocket connections,
+// quiz system, and user interface management.
+// ============================================================================
+
+// --- GLOBAL STATE MANAGEMENT ---
 let score = 0;
 let currentTask = "";
 let completedTasks = 0;
@@ -8,17 +15,19 @@ let startTime;
 let myRole = '';
 let myLobbyCode = '';
 let globalName = "Anonīms";
-let ws = null; // WebSocket mainīgais
+let ws = null;
 
-// WebSocket configuration
+// --- CONFIGURATION ---
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
+// Task completion sequence - defines the order in which locations must be visited
 const taskSequence = [
     'RTU', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
+// Question database with answers and interesting facts
 const questions = {
     'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", a: "1954", fact: "Šeit mācās gudrākie prāti!" },
     'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", a: "1800", fact: "Turi cepuri! Mols sargā ostu." },
@@ -32,7 +41,7 @@ const questions = {
     'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", a: "Liepājas", fact: "Piektais lielākais ezers Latvijā." }
 };
 
-// Statiskie teksti (ko tulkosim)
+// UI text translations (Latvian base)
 const uiTexts = {
     "main-title": "LIEPĀJAS KARTE",
     "subtitle": "EKSKURSIJA",
@@ -50,9 +59,16 @@ const uiTexts = {
     "btn-cancel-mode": "Atcelt"
 };
 
-// --- 2. IELĀDE ---
+// ============================================================================
+// INITIALIZATION & EVENT LISTENERS
+// ============================================================================
 
+/**
+ * Main initialization function - runs when DOM is fully loaded
+ * Sets up WebSocket connection, tooltips, audio, and translations
+ */
 document.addEventListener('DOMContentLoaded', () => {
+    // Parse URL parameters for multiplayer mode
     getQueryParams();
     startTime = Date.now();
     
@@ -62,17 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
         statusIndicator.style.display = 'block';
     }
     
-    // WebSockets pieslēgums
+    // Establish WebSocket connection for multiplayer
     connectWebSocket();
 
-    // Tulkošana ielādējot
+    // Apply language translations if not Latvian
     if(currentLang !== 'lv') {
         translateInterface(currentLang);
     }
     
+    // Initialize map point states if on map page
     if(document.querySelector('.point')) updateMapState();
 
-    // Tooltipi
+    // Setup tooltip system for map points
     const tooltip = document.getElementById('tooltip');
     if (tooltip) {
         document.querySelectorAll('.point').forEach(p => {
@@ -90,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Skaņas
+    // Initialize background music with user interaction requirement
     const music = document.getElementById('bg-music');
     if (music) {
         music.volume = 0.3;
@@ -262,14 +279,14 @@ function validateName() {
     const nameInput = document.getElementById('start-player-name');
     if (!nameInput) return globalName;
     let name = nameInput.value.trim();
-    if (!name) { alert("Lūdzu ievadi Vārdu!"); return null; }
+    if (!name) { showNotification("Lūdzu ievadi Vārdu!", 'warning'); return null; }
     if (name.length > 8) name = name.substring(0, 8); // Force limit
     return name;
 }
 
 function startSingleGame() {
     const name = validateName();
-    if (name) location.href = `../../public/map.html?name=${encodeURIComponent(name)}`;
+    if (name) location.href = `map.html?name=${encodeURIComponent(name)}`;
 }
 
 function openLobby() {
@@ -280,7 +297,7 @@ function openLobby() {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'create' }));
     } else {
-        alert("Serveris nav pieejams!");
+        showNotification("Serveris nav pieejams!", 'error');
     }
 }
 
@@ -294,7 +311,7 @@ function joinGame() {
         myLobbyCode = codeInput;
         ws.send(JSON.stringify({ action: 'join', code: codeInput }));
     } else {
-        alert("Serveris nav pieejams!");
+        showNotification("Serveris nav pieejams!", 'error');
     }
 }
 
@@ -318,7 +335,7 @@ function updateMapState() {
 }
 
 function startActivity(type) {
-    if (type !== taskSequence[completedTasks]) { alert("Secība!"); return; }
+    if (type !== taskSequence[completedTasks]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
     currentTask = type;
     
     if (type === 'Osta') startBoatGame();

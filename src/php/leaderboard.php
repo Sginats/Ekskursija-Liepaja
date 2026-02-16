@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Top 10 Rezultāti</title>
-    <link rel="stylesheet" href="../../public/style.css">
+    <link rel="stylesheet" href="../../style.css">
 </head>
 <body>
     <audio id="bg-music" loop>
-        <source src="../../public/skana/music.mp3" type="audio/mpeg">
+        <source src="../../skana/music.mp3" type="audio/mpeg">
     </audio>
     <div class="container">
         <h1 class="title">🏆 Top 10 Rezultāti</h1>
@@ -31,25 +31,34 @@
                     foreach ($lines as $line) {
                         $parts = explode("|", $line);
                         if (count($parts) >= 3) {
+                            // Convert time to seconds for proper sorting
+                            $timeParts = explode(':', $parts[2]);
+                            $timeInSeconds = 0;
+                            if (count($timeParts) === 3) {
+                                $timeInSeconds = (int)$timeParts[0] * 3600 + (int)$timeParts[1] * 60 + (int)$timeParts[2];
+                            }
+                            
                             $results[] = [
                                 'name' => $parts[0],
                                 'score' => (int)$parts[1],
-                                'time' => $parts[2] 
+                                'time' => $parts[2],
+                                'timeInSeconds' => $timeInSeconds
                             ];
                         }
                     }
 
                     usort($results, function($a, $b) {
-                        
-                        return strcmp($a['time'], $b['time']);
+                        return $a['timeInSeconds'] - $b['timeInSeconds'];
                     });
 
                     $top10 = array_slice($results, 0, 10);
+                    $position = 1;
                     foreach ($top10 as $row) {
                         echo "<tr>";
+                        echo "<td>" . $position++ . "</td>";
                         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                        echo "<td>{$row['score']}</td>";
                         echo "<td>{$row['time']}</td>";
+                        echo "<td>{$row['score']}</td>";
                         echo "</tr>";
                     }
                 } else {
@@ -58,7 +67,7 @@
                 ?>
             </tbody>
         </table>
-        <button class="btn" onclick="location.href='../../public/index.html'">Atpakaļ</button>
+        <button class="btn" onclick="location.href='../../index.html'">Atpakaļ</button>
     </div>
     <script>
         // Initialize background music
