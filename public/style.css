@@ -328,6 +328,7 @@ input[type=range] {
 .lang-btn:hover, .lang-btn:focus { background: #ffaa00; color: #221111; }
 
 .close-btn {
+    width: 100%;
     margin-top: 20px;
 }
 
