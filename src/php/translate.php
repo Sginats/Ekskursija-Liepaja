@@ -3,18 +3,17 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
 $authKey = getenv('DEEPL_AUTH_KEY');
-
-if (!$authKey) {
-    http_response_code(503);
-    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
-    exit;
-}
-
 $text = $_GET['text'] ?? '';
 $targetLang = $_GET['target'] ?? 'EN';
 
 if (!$text) {
     echo json_encode(['translations' => [['text' => '']]]);
+    exit;
+}
+
+// If no API key is configured, return original text (fallback mode)
+if (!$authKey) {
+    echo json_encode(['translations' => [['text' => $text]]]);
     exit;
 }
 
@@ -31,8 +30,8 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 
 if (curl_errno($ch)) {
-    http_response_code(502);
-    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
+    // On error, fallback to original text
+    echo json_encode(['translations' => [['text' => $text]]]);
 } else {
     echo $response;
 }
