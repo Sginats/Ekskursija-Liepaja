@@ -5,6 +5,7 @@ header("Content-Type: application/json");
 $authKey = getenv('DEEPL_AUTH_KEY');
 
 if (!$authKey) {
+    http_response_code(503);
     echo json_encode(['error' => 'Translation service not configured. Please set DEEPL_AUTH_KEY environment variable.']);
     exit;
 } 
@@ -30,6 +31,7 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 
 if(curl_errno($ch)){
+    http_response_code(502);
     echo json_encode(['error' => curl_error($ch)]);
 } else {
     echo $response;
