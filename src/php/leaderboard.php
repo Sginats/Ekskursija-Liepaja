@@ -40,16 +40,17 @@
                     }
 
                     usort($results, function($a, $b) {
-                        
                         return strcmp($a['time'], $b['time']);
                     });
 
                     $top10 = array_slice($results, 0, 10);
+                    $position = 1;
                     foreach ($top10 as $row) {
                         echo "<tr>";
+                        echo "<td>" . $position++ . "</td>";
                         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                        echo "<td>{$row['score']}</td>";
                         echo "<td>{$row['time']}</td>";
+                        echo "<td>{$row['score']}</td>";
                         echo "</tr>";
                     }
                 } else {
