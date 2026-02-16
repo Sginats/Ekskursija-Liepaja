@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Liepājas Ekskursija</title>
     <link rel="stylesheet" href="style.css">
-    <script src="../src/js/script.js?v=FINAL" defer></script>
+    <script src="src/js/script.js?v=FINAL" defer></script>
 </head>
 <body>
     <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
@@ -22,7 +22,7 @@
         <div class="button-group">
             <button class="btn" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
             <button class="btn" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button class="btn" id="btn-leaderboard" onclick="location.href='../src/php/leaderboard.php'">Top 10</button>
+            <button class="btn" id="btn-leaderboard" onclick="location.href='src/php/leaderboard.php'">Top 10</button>
             <button class="btn" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
             <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
@@ -81,13 +81,22 @@
         </div>
     </div>
 
-        <div id="about-modal" class="modal">
+    <div id="about-modal" class="modal">
         <div class="modal-content about-layout">
             <h2 id="about-title" style="text-align: center; color: #ffaa00; text-transform: uppercase; margin-top: 0;">Par Spēli</h2>
             
             <div class="info-box">
                 <p><strong id="about-game-label">Spēle:</strong> "Mācību ekskursija Liepājā"</p>
-                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju, pildot interaktīvus uzdevumus.</span></p>
+                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju, pildot interaktīvus uzdevumus un sacenšoties par labākajiem rezultātiem.</span></p>
+                <p><strong>Īpašības:</strong></p>
+                <ul style="margin: 5px 0 0 20px; font-size: 14px;">
+                    <li>10 unikālas apmeklējuma vietas</li>
+                    <li>Interaktīvi jautājumi ar faktu uzrādīšanu</li>
+                    <li>Punktu sistēma (+10 par pareizu, -5 par nepareizu)</li>
+                    <li>Reāllaika vairāku spēlētāju režīms</li>
+                    <li>Top 10 rezultātu tabula</li>
+                    <li>Valodu atbalsts (LV/EN)</li>
+                </ul>
             </div>
 
             <h3 id="legend-title" class="section-title">Objektu nozīme kartē</h3>
@@ -103,8 +112,10 @@
                     <h3 id="tech-title" class="section-title">Tehnoloģijas</h3>
                     <ul class="tech-list">
                         <li>HTML5 / CSS3</li>
-                        <li>JavaScript</li>
-                        <li>PHP (Datu bāze)</li>
+                        <li>JavaScript (ES6+)</li>
+                        <li>PHP (Backend)</li>
+                        <li>WebSocket (Real-time)</li>
+                        <li>Node.js (Server)</li>
                     </ul>
                 </div>
                 <div>
