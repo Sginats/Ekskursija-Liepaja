@@ -588,3 +588,181 @@ input[type=range] {
         transform: scale(1);
     }
 }
+
+/* --- RESPONSIVE DESIGN IMPROVEMENTS --- */
+
+/* Mobile-first breakpoints */
+@media (max-width: 768px) {
+    .title {
+        font-size: 48px;
+    }
+    
+    .subtitle {
+        font-size: 24px;
+        letter-spacing: 4px;
+    }
+    
+    .btn {
+        width: 80%;
+        padding: 12px 30px;
+        font-size: 16px;
+    }
+    
+    .connection-status {
+        top: 10px;
+        right: 10px;
+        font-size: 10px;
+        padding: 6px 12px;
+    }
+    
+    .notification-container {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .notification {
+        min-width: auto;
+        max-width: 100%;
+    }
+    
+    .modal-content {
+        width: 90%;
+        max-width: 90%;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 36px;
+    }
+    
+    .subtitle {
+        font-size: 18px;
+        letter-spacing: 2px;
+    }
+    
+    .btn {
+        width: 90%;
+        font-size: 14px;
+    }
+}
+
+/* Tablet breakpoint */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .title {
+        font-size: 64px;
+    }
+    
+    .subtitle {
+        font-size: 32px;
+    }
+    
+    .btn {
+        width: 300px;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1920px) {
+    .title {
+        font-size: 100px;
+    }
+    
+    .subtitle {
+        font-size: 50px;
+    }
+    
+    .btn {
+        width: 300px;
+        font-size: 20px;
+    }
+}
+
+/* --- ENHANCED FLEXBOX LAYOUTS --- */
+
+/* Improved button group with better spacing */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+    padding: 0 20px;
+}
+
+/* Flex utility classes for reusability */
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+/* Gap utilities */
+.gap-xs { gap: 5px; }
+.gap-sm { gap: 10px; }
+.gap-md { gap: 15px; }
+.gap-lg { gap: 20px; }
+.gap-xl { gap: 30px; }
+
+/* --- ACCESSIBILITY IMPROVEMENTS --- */
+
+/* Focus visible for keyboard navigation */
+.btn:focus-visible {
+    outline: 3px solid #ffaa00;
+    outline-offset: 2px;
+}
+
+input:focus-visible {
+    outline: 2px solid #ffaa00;
+    outline-offset: 1px;
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn {
+        border-width: 3px;
+    }
+    
+    .connection-status {
+        border-width: 3px;
+    }
+    
+    .notification {
+        border-left-width: 6px;
+    }
+}
