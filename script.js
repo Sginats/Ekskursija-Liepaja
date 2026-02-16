@@ -110,8 +110,10 @@ function connectWebSocket() {
         }
         else if (data.type === 'start_game') {
             myRole = data.role;
-            alert("Spēle sākas! Tava loma: " + myRole);
-            location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
+            showNotification("Spēle sākas! Tava loma: " + myRole);
+            setTimeout(() => {
+                location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
+            }, 2000);
         }
         else if (data.type === 'sync_complete') {
             // Kad abi pabeiguši mini-spēli
@@ -119,7 +121,7 @@ function connectWebSocket() {
             setTimeout(() => { showQuiz(currentTask); }, 1000);
         }
         else if (data.type === 'error') {
-            alert(data.msg);
+            showNotification(data.msg);
         }
     };
 }
@@ -172,7 +174,7 @@ function validateName() {
     const nameInput = document.getElementById('start-player-name');
     if (!nameInput) return globalName;
     const name = nameInput.value.trim();
-    if (!name) { alert("Lūdzu ievadi Vārdu!"); return null; }
+    if (!name) { showNotification("Lūdzu ievadi Vārdu!"); return null; }
     return name;
 }
 
@@ -189,7 +191,7 @@ function openLobby() {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'create' }));
     } else {
-        alert("Serveris nav pieejams!");
+        showNotification("Serveris nav pieejams!");
     }
 }
 
@@ -203,7 +205,7 @@ function joinGame() {
         myLobbyCode = codeInput;
         ws.send(JSON.stringify({ action: 'join', code: codeInput }));
     } else {
-        alert("Serveris nav pieejams!");
+        showNotification("Serveris nav pieejams!");
     }
 }
 
@@ -227,7 +229,7 @@ function updateMapState() {
 }
 
 function startActivity(type) {
-    if (type !== taskSequence[completedTasks]) { alert("Secība!"); return; }
+    if (type !== taskSequence[completedTasks]) { showNotification("Secība!"); return; }
     currentTask = type;
     
     if (type === 'Osta') startBoatGame();
@@ -302,3 +304,19 @@ function toggleModal(id) { document.getElementById(id).style.display = document.
 function exitGame() { window.close(); }
 function setMusicVolume(v) { document.getElementById('bg-music').volume = v/100; }
 function setSFXVolume(v) { document.getElementById('hover-sound').volume = v/100; }
+
+function showNotification(message) {
+    const modal = document.getElementById('notification-modal');
+    const messageEl = document.getElementById('notification-message');
+    if (modal && messageEl) {
+        messageEl.textContent = message;
+        modal.style.display = 'block';
+    }
+}
+
+function closeNotification() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
