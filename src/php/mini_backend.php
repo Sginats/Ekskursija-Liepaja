@@ -4,7 +4,7 @@ header("Content-Type: application/json");
 
 $action = $_GET['action'] ?? '';
 $game = $_GET['game'] ?? 'unknown';
-$file = __DIR__ . "/mini_lb_" . preg_replace('/[^a-z0-9]/', '', $game) . ".txt";
+$file = __DIR__ . "/../data/mini_lb_" . preg_replace('/[^a-z0-9]/', '', $game) . ".txt";
 
 if ($action == 'save') {
     $name = $_GET['name'] ?? 'Anonīms';

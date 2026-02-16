@@ -20,7 +20,7 @@
             </thead>
             <tbody>
                 <?php
-                $file = __DIR__ . "/leaderboard.txt";
+                $file = __DIR__ . "/../data/leaderboard.txt";
                 
                 if (file_exists($file)) {
                     $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

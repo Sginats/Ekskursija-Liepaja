@@ -2,7 +2,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-$file = 'lobbies.json';
+$file = __DIR__ . '/../data/lobbies.json';
 if (!file_exists($file)) file_put_contents($file, json_encode([]));
 
 $action = $_GET['action'] ?? '';

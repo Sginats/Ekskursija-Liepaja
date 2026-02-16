@@ -32,7 +32,7 @@ if ($name !== null && $score !== null) {
     $time = htmlspecialchars($time ? $time : '00:00:00');
 
     $line = $name . "|" . $score . "|" . $time . "\n";
-    $file = __DIR__ . "/leaderboard.txt";
+    $file = __DIR__ . "/../data/leaderboard.txt";
 
     if (file_put_contents($file, $line, FILE_APPEND | LOCK_EX) !== false) {
         echo "Success";
