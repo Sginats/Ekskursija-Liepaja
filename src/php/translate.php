@@ -2,7 +2,13 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-$authKey = "b18a3986-b10e-4d34-90f8-c8915aa9119a:fx"; 
+$authKey = getenv('DEEPL_AUTH_KEY');
+
+if (!$authKey) {
+    http_response_code(503);
+    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
+    exit;
+}
 
 $text = $_GET['text'] ?? '';
 $targetLang = $_GET['target'] ?? 'EN';
@@ -21,13 +27,12 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
     'target_lang' => $targetLang
 ]));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
 $response = curl_exec($ch);
 
-if(curl_errno($ch)){
-    echo json_encode(['error' => curl_error($ch)]);
+if (curl_errno($ch)) {
+    http_response_code(502);
+    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
 } else {
     echo $response;
 }
