@@ -8,7 +8,7 @@ if (!$authKey) {
     http_response_code(503);
     echo json_encode(['error' => 'Translation service temporarily unavailable.']);
     exit;
-} 
+}
 
 $text = $_GET['text'] ?? '';
 $targetLang = $_GET['target'] ?? 'EN';
@@ -32,7 +32,7 @@ $response = curl_exec($ch);
 
 if(curl_errno($ch)){
     http_response_code(502);
-    echo json_encode(['error' => curl_error($ch)]);
+    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
 } else {
     echo $response;
 }
