@@ -22,7 +22,11 @@ const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const POLL_INTERVAL = 2000; // Poll every 2 seconds
 const WS_TIMEOUT = 2000; // WebSocket connection timeout (short since it's unlikely to work)
-let connectionMode = 'php-polling'; // Default to PHP polling (works everywhere)
+
+// Connection mode constants
+const CONNECTION_MODE_PHP = 'php-polling';
+const CONNECTION_MODE_WS = 'websocket';
+let connectionMode = CONNECTION_MODE_PHP; // Default to PHP polling (works everywhere)
 
 // Task completion sequence - defines the order in which locations must be visited
 const taskSequence = [
@@ -142,7 +146,7 @@ async function initSmartConnection() {
     updateConnectionStatus('reconnecting');
     
     const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     
     // Only try WebSocket on localhost
     if (isLocalhost) {
@@ -151,7 +155,7 @@ async function initSmartConnection() {
         
         if (wsAvailable) {
             console.log("✅ Using WebSocket mode (real-time, fastest)");
-            connectionMode = 'websocket';
+            connectionMode = CONNECTION_MODE_WS;
             updateConnectionStatus('connected');
             showNotification('🚀 WebSocket Režīms (Dev)', 'success', 2000);
             return;
@@ -162,7 +166,7 @@ async function initSmartConnection() {
     
     // Use PHP polling (default for production)
     console.log("✅ Using PHP polling mode (works everywhere)");
-    connectionMode = 'php-polling';
+    connectionMode = CONNECTION_MODE_PHP;
     initPHPPolling();
     showNotification('✨ Multiplayer gatavs!', 'success', 2000);
 }
@@ -196,11 +200,11 @@ function tryWebSocketConnection() {
             };
             
             ws.onclose = () => {
-                if (connectionMode === 'websocket') {
+                if (connectionMode === CONNECTION_MODE_WS) {
                     // Only try to reconnect if we were using WebSocket mode
                     console.log("WebSocket disconnected, attempting reconnection...");
                     setTimeout(() => {
-                        if (connectionMode === 'websocket') {
+                        if (connectionMode === CONNECTION_MODE_WS) {
                             connectWebSocket();
                         }
                     }, 2000);
@@ -572,9 +576,9 @@ function openLobby() {
     if (!name) return;
     globalName = name;
     
-    if (connectionMode === 'php-polling') {
+    if (connectionMode === CONNECTION_MODE_PHP) {
         createLobbyPHP();
-    } else if (connectionMode === 'websocket' && ws && ws.readyState === WebSocket.OPEN) {
+    } else if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'create' }));
     } else {
         showNotification("Savienojums nav pieejams! Lūdzu, uzgaidiet...", 'error');
@@ -592,9 +596,9 @@ function joinGame() {
         return;
     }
 
-    if (connectionMode === 'php-polling') {
+    if (connectionMode === CONNECTION_MODE_PHP) {
         joinLobbyPHP(codeInput);
-    } else if (connectionMode === 'websocket' && ws && ws.readyState === WebSocket.OPEN) {
+    } else if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
         myLobbyCode = codeInput;
         ws.send(JSON.stringify({ action: 'join', code: codeInput }));
     } else {
