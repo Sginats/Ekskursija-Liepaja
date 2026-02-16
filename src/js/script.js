@@ -125,12 +125,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize background music with user interaction requirement
     const music = document.getElementById('bg-music');
     if (music) {
-        music.volume = 0.3;
+        // Load saved volume or use default
+        const savedMusicVolume = localStorage.getItem('musicVolume');
+        music.volume = savedMusicVolume ? savedMusicVolume / 100 : 0.3;
         const playAudio = () => {
             music.play().catch(() => {});
             document.removeEventListener('click', playAudio);
         };
         document.addEventListener('click', playAudio);
+    }
+
+    // Load saved SFX volume
+    const sfx = document.getElementById('hover-sound');
+    if (sfx) {
+        const savedSFXVolume = localStorage.getItem('sfxVolume');
+        sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
+    }
+
+    // Set volume slider values from localStorage
+    const musicSlider = document.querySelector('input[oninput*="setMusicVolume"]');
+    if (musicSlider) {
+        const savedMusicVolume = localStorage.getItem('musicVolume');
+        musicSlider.value = savedMusicVolume || 30;
+    }
+
+    const sfxSlider = document.querySelector('input[oninput*="setSFXVolume"]');
+    if (sfxSlider) {
+        const savedSFXVolume = localStorage.getItem('sfxVolume');
+        sfxSlider.value = savedSFXVolume || 50;
     }
 });
 
@@ -829,8 +851,20 @@ function finishGame(name, finalScore, time) {
 }
 function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
 function exitGame() { window.close(); }
-function setMusicVolume(v) { document.getElementById('bg-music').volume = v/100; }
-function setSFXVolume(v) { document.getElementById('hover-sound').volume = v/100; }
+function setMusicVolume(v) { 
+    const music = document.getElementById('bg-music');
+    if (music) {
+        music.volume = v/100;
+        localStorage.setItem('musicVolume', v);
+    }
+}
+function setSFXVolume(v) { 
+    const sfx = document.getElementById('hover-sound');
+    if (sfx) {
+        sfx.volume = v/100;
+        localStorage.setItem('sfxVolume', v);
+    }
+}
 
 // --- NOTIFICATION SYSTEM (TOAST) ---
 
