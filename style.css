@@ -723,7 +723,7 @@ input[type=range] {
     /* Map page responsive */
     .map-area {
         height: 70vh;
-        width: 35vh;
+        width: calc(70vh * 0.5); /* Maintain aspect ratio based on height */
     }
     
     .difficulty-legend {
@@ -762,7 +762,7 @@ input[type=range] {
     
     .map-area {
         height: 60vh;
-        width: 30vh;
+        width: calc(60vh * 0.5); /* Maintain aspect ratio based on height */
     }
     
     .point {
