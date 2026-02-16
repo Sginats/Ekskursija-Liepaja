@@ -17,6 +17,11 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 
+// --- SPOTIFY CONFIGURATION ---
+// TODO: Update this with your actual Spotify playlist URL
+// Format: https://open.spotify.com/playlist/YOUR_PLAYLIST_ID
+const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M';
+
 // --- CONFIGURATION ---
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -796,7 +801,7 @@ async function showQuiz(type) {
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
-        <input id="ans-in" placeholder="Tavs atbilde..." maxlength="50"><button class="btn" onclick="checkAns('${task.a}')">Iesniegt</button>
+        <input id="ans-in" placeholder="Tava atbilde..." maxlength="50"><button class="btn" onclick="checkAns('${task.a}')">Iesniegt</button>
     `;
 }
 
@@ -892,10 +897,7 @@ function toggleSpotifyPlayback() {
     if (container.style.display === 'none') {
         // First time - load the Spotify embed
         if (!container.innerHTML.trim()) {
-            // TODO: Replace with actual Spotify playlist URL provided by user
-            // Format: https://open.spotify.com/playlist/YOUR_PLAYLIST_ID
-            const spotifyPlaylistUrl = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M'; // Placeholder - Today's Top Hits
-            const playlistId = spotifyPlaylistUrl.split('/').pop().split('?')[0];
+            const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
             
             container.innerHTML = `<iframe 
                 src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
