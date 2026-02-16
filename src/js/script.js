@@ -506,12 +506,44 @@ function checkAns(correct) {
 }
 
 function showEndGame() { 
+    // Calculate elapsed time
+    const endTime = Date.now();
+    const elapsedSeconds = Math.floor((endTime - startTime) / 1000);
+    const hours = Math.floor(elapsedSeconds / 3600);
+    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+    const seconds = elapsedSeconds % 60;
+    const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
     // Validate score is within reasonable range before submitting
     if (score > 100) score = 100;
     if (score < -50) score = -50;
-    finishGame(globalName, score, "N/A"); 
+    
+    finishGame(globalName, score, formattedTime); 
 }
-function finishGame(n, s, t) { location.href='../php/leaderboard.php'; }
+
+function finishGame(name, finalScore, time) { 
+    // Save score to database
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('score', finalScore);
+    formData.append('time', time);
+    
+    fetch('src/php/save_score.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log('Score saved:', data);
+        // Redirect to leaderboard
+        location.href = 'src/php/leaderboard.php';
+    })
+    .catch(error => {
+        console.error('Error saving score:', error);
+        // Still redirect even if save fails
+        location.href = 'src/php/leaderboard.php';
+    });
+}
 function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
 function exitGame() { window.close(); }
 function setMusicVolume(v) { document.getElementById('bg-music').volume = v/100; }

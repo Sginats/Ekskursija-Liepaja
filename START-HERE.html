@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kā sākt spēli - Liepājas Ekskursija</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .error-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .info-box {
+            background: #d1ecf1;
+            border-left: 5px solid #17a2b8;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        h2 {
+            color: #333;
+            margin: 25px 0 15px 0;
+            font-size: 1.5em;
+        }
+        
+        h3 {
+            color: #555;
+            margin: 15px 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        p, li {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        pre code {
+            background: none;
+            color: #f8f8f8;
+            padding: 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        ol, ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .current-url {
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px dashed #dc3545;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .button-group {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Kā sākt spēli?</h1>
+        
+        <div class="error-box">
+            <h3><span class="emoji">⚠️</span>PROBLĒMA ATRASTA!</h3>
+            <p><strong>Tu mēģini spēlēt caur attālinātu serveri, bet serveris nedarbojas!</strong></p>
+            <p>Pašreizējais URL:</p>
+            <div class="current-url" id="current-url">
+                <code></code>
+            </div>
+            <p>Tev jāpalaiž spēle <strong>uz sava datora</strong> (lokāli).</p>
+        </div>
+
+        <div class="info-box">
+            <h3><span class="emoji">💡</span>Kāpēc tas nedarbojas?</h3>
+            <p>Projekts ir veidots tā, lai to varētu palaist uz jebkura datora. Tas nozīmē:</p>
+            <ul>
+                <li>WebSocket serveris jāpalaiž uz <strong>TAVA</strong> datora</li>
+                <li>PHP serveris jāpalaiž uz <strong>TAVA</strong> datora</li>
+                <li>Pēc tam jāatver spēle caur <code>http://localhost:8000</code></li>
+            </ul>
+        </div>
+
+        <h2><span class="emoji">📋</span>Soli pa solim instrukcija</h2>
+
+        <h3><span class="step-number">1</span>Instalē nepieciešamos rīkus</h3>
+        <ul>
+            <li><strong>Node.js</strong> - <a href="https://nodejs.org/" target="_blank">lejupielādēt</a> (obligāti)</li>
+            <li><strong>PHP</strong> - <a href="https://www.php.net/downloads" target="_blank">lejupielādēt</a> (ieteicams)</li>
+        </ul>
+
+        <h3><span class="step-number">2</span>Atver termināli/Command Prompt</h3>
+        <ul>
+            <li><strong>Windows:</strong> Spied Win+R, ieraksti <code>cmd</code>, spied Enter</li>
+            <li><strong>Mac:</strong> Spied Cmd+Space, ieraksti <code>terminal</code></li>
+            <li><strong>Linux:</strong> Ctrl+Alt+T</li>
+        </ul>
+
+        <h3><span class="step-number">3</span>Ej uz projekta mapi</h3>
+        <pre><code>cd path/to/Ekskursija-Liepaja</code></pre>
+
+        <h3><span class="step-number">4</span>Palaid serveri</h3>
+        
+        <p><strong>Vienkāršākais veids - izmanto gatavo skriptu:</strong></p>
+        
+        <p><strong>Windows:</strong></p>
+        <pre><code>start-server.bat</code></pre>
+        
+        <p><strong>Linux/Mac:</strong></p>
+        <pre><code>chmod +x start-server.sh
+./start-server.sh</code></pre>
+
+        <div class="success-box">
+            <h3><span class="emoji">✅</span>Kad serveris darbojas...</h3>
+            <p>Tu redzēsi šādu ziņu:</p>
+            <pre><code>🚀 Professional WebSocket server started on port 8080!
+🌐 Starting PHP web server on port 8000...
+   Open in browser: http://localhost:8000/index.html</code></pre>
+        </div>
+
+        <h3><span class="step-number">5</span>Atvēr spēli pārlūkā</h3>
+        <p>Iekopē šo adresi pārlūkprogrammā:</p>
+        <pre><code>http://localhost:8000/index.html</code></pre>
+
+        <div class="warning-box">
+            <h3><span class="emoji">⚠️</span>SVARĪGI!</h3>
+            <ul>
+                <li>Neaizver termināļa logu, kamēr spēlē!</li>
+                <li>Obligāti izmanto <code>localhost</code>, NEVIS attālinātu serveri</li>
+                <li>Ja kaut kas nedarbojas, lasi <code>SETUP.md</code> failu</li>
+            </ul>
+        </div>
+
+        <div class="button-group">
+            <a href="SETUP.md" class="btn btn-secondary" target="_blank">📖 Pilna dokumentācija</a>
+            <a href="README.md" class="btn btn-secondary" target="_blank">📘 Par projektu</a>
+        </div>
+
+        <h2><span class="emoji">❓</span>Joprojām nedarbojas?</h2>
+        <ol>
+            <li>Pārbaudi, vai Node.js ir instalēts: <code>node --version</code></li>
+            <li>Pārbaudi, vai PHP ir instalēts: <code>php --version</code></li>
+            <li>Pārbaudi, vai ports 8080 nav aizņemts</li>
+            <li>Pārbaudi, vai esi pareizajā projekta mapē</li>
+            <li>Lasi pilnu problēmu risināšanas ceļvedi <code>SETUP.md</code> failā</li>
+        </ol>
+
+        <div class="info-box">
+            <p><strong>💬 Vajag palīdzību?</strong> Izlasi <code>SETUP.md</code> failu - tur ir detalizētas instrukcijas un problēmu risinājumi!</p>
+        </div>
+    </div>
+
+    <script>
+        // Show current URL
+        document.getElementById('current-url').querySelector('code').textContent = window.location.href;
+    </script>
+</body>
+</html>
