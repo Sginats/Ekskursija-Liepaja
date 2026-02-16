@@ -7,13 +7,18 @@ $envFile = __DIR__ . '/../../.env';
 if (file_exists($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
+        $line = trim($line);
+        // Skip comments and empty lines
+        if (empty($line) || $line[0] === '#') continue;
         if (strpos($line, '=') !== false) {
             list($key, $value) = explode('=', $line, 2);
             $key = trim($key);
             $value = trim($value);
-            putenv("$key=$value");
-            $_ENV[$key] = $value;
+            // Only allow alphanumeric keys with underscores (security)
+            if (preg_match('/^[A-Z_][A-Z0-9_]*$/', $key)) {
+                putenv("$key=$value");
+                $_ENV[$key] = $value;
+            }
         }
     }
 }
