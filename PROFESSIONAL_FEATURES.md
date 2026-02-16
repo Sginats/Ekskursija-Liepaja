@@ -195,29 +195,29 @@ Professional button states for async operations:
 
 ## 🔒 Security Features
 
-### Environment Variable Validation
-```javascript
-// Only allows uppercase letters, numbers, and underscores
-if (preg_match('/^[A-Z_][A-Z0-9_]*$/', $key)) {
-    putenv("$key=$value");
-}
-```
-
-**Prevents:**
-- Environment variable injection
-- Malicious key names
-- Code execution attacks
-
 ### WebSocket Message Validation
 ```javascript
 try {
     const data = JSON.parse(message);
     // Validate action types
     // Check required fields
+    if (!['create', 'join', 'update_task', 'ping'].includes(data.action)) {
+        throw new Error('Invalid action');
+    }
 } catch (e) {
-    // Handle malformed messages
+    console.error("Invalid message:", e);
+    ws.send(JSON.stringify({ 
+        type: 'error', 
+        msg: 'Servera kļūda. Lūdzu, mēģini vēlreiz.' 
+    }));
 }
 ```
+
+**Prevents:**
+- Malformed JSON messages
+- Invalid action types
+- Code injection attacks
+- Unauthorized operations
 
 ## 📊 Performance Optimizations
 

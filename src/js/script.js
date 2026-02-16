@@ -10,6 +10,10 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null; // WebSocket mainīgais
 
+// WebSocket configuration
+const WS_PORT = 8080;
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
 const taskSequence = [
     'RTU', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
@@ -117,9 +121,7 @@ function connectWebSocket() {
 
     try {
         // Use environment-aware WebSocket URL
-        const wsUrl = window.location.protocol === 'https:' 
-            ? 'wss://' + window.location.hostname + ':8080'
-            : 'ws://' + (window.location.hostname || 'localhost') + ':8080';
+        const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
         
         ws = new WebSocket(wsUrl);
         
@@ -142,7 +144,7 @@ function connectWebSocket() {
                 }
                 else if (data.type === 'start_game') {
                     myRole = data.role;
-                    showNotification("Spēle sākas! Tava loma: " + myRole, 'success');
+                    showNotification(`Spēle sākas! Tava loma: ${myRole}`, 'success');
                     setTimeout(() => {
                         location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
                     }, 1500);

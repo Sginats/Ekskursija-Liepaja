@@ -14,7 +14,7 @@ const HEARTBEAT_INTERVAL = 30000;
 const CLEANUP_INTERVAL = 600000; // 10 minutes
 const LOBBY_TIMEOUT = 3600000; // 1 hour
 
-const interval = setInterval(function ping() {
+const heartbeatInterval = setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
         if (ws.isAlive === false) {
             console.log('Terminating inactive client');
@@ -25,8 +25,10 @@ const interval = setInterval(function ping() {
     });
 }, HEARTBEAT_INTERVAL);
 
+// Cleanup interval on server close
 wss.on('close', function close() {
-    clearInterval(interval);
+    clearInterval(heartbeatInterval);
+    console.log('WebSocket server closed, cleanup completed');
 });
 
 console.log("🚀 Professional WebSocket server started on port 8080!");
