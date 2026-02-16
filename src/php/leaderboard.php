@@ -6,6 +6,9 @@
     <link rel="stylesheet" href="../../public/style.css">
 </head>
 <body>
+    <audio id="bg-music" loop>
+        <source src="../../public/skana/music.mp3" type="audio/mpeg">
+    </audio>
     <div class="container">
         <h1 class="title">🏆 Top 10 Rezultāti</h1>
         <p>Ātrākie spēlētāji Liepājas ekskursijā</p>
@@ -57,5 +60,17 @@
         </table>
         <button class="btn" onclick="location.href='../../public/index.html'">Atpakaļ</button>
     </div>
+    <script>
+        // Initialize background music
+        const music = document.getElementById('bg-music');
+        if (music) {
+            music.volume = 0.3;
+            const playAudio = () => {
+                music.play().catch(() => {});
+                document.removeEventListener('click', playAudio);
+            };
+            document.addEventListener('click', playAudio);
+        }
+    </script>
 </body>
 </html>
