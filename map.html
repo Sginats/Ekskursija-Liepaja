@@ -74,15 +74,28 @@
     <div id="settings-modal" class="modal" style="z-index: 3000;">
         <div class="modal-content">
             <h2 id="settings-title">Iestatījumi</h2>
+            
+            <h3 class="section-title">Audio</h3>
             <label id="vol-music">Mūzika</label>
             <input type="range" min="0" max="100" value="30" oninput="setMusicVolume(this.value)">
             <label id="vol-sfx">Skaņas efekti</label>
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
-            <h3 id="lang-title">Valoda</h3>
-            <div class="lang-switch">
-                <button class="lang-btn" onclick="setLanguage('lv')">LATVIEŠU</button>
-                <button class="lang-btn" onclick="setLanguage('en')">ENGLISH</button>
+            
+            <h3 class="section-title">🎵 Spotify Playlist</h3>
+            <div class="spotify-player-minimal">
+                <div class="spotify-controls">
+                    <button id="spotify-play-btn" class="spotify-btn" onclick="toggleSpotifyPlayback()">
+                        <span id="spotify-icon">▶️</span> Play Spotify
+                    </button>
+                    <div class="spotify-info">
+                        <small style="color: #1DB954;">Liepājas Ekskursija Playlist</small>
+                    </div>
+                </div>
+                <div id="spotify-embed-container" style="display: none; margin-top: 15px; border-radius: 8px; overflow: hidden;">
+                    <!-- Spotify embed will be inserted here -->
+                </div>
             </div>
+            
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
         </div>
     </div>

@@ -96,10 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
         initSmartConnection();
     }
 
-    // Apply language translations if not Latvian
-    if(currentLang !== 'lv') {
-        translateInterface(currentLang);
-    }
+    // Language switching disabled - using Latvian only
+    // Spotify player integration replaces language switcher
     
     // Initialize map point states if on map page
     if(document.querySelector('.point')) updateMapState();
@@ -745,7 +743,10 @@ function finishBoatRace() {
         points = BOAT_RACE_CONFIG.SLOW_POINTS;
     }
     
-    score += points;
+    // Enforce score limits: min 0, max 100
+    if (score < 0) score = 0;
+    if (score > 100) score = 100;
+    
     document.getElementById('score-display').innerText = "Punkti: " + score;
     
     document.querySelector('.task-section').innerHTML = `
@@ -802,7 +803,16 @@ async function showQuiz(type) {
 
 function checkAns(correct) {
     const val = document.getElementById('ans-in').value;
-    if(val.toLowerCase() === correct.toLowerCase()) score += 10; else if(score>0) score -= 5;
+    if(val.toLowerCase() === correct.toLowerCase()) {
+        score += 10;
+    } else {
+        score -= 5;
+    }
+    
+    // Enforce score limits: min 0, max 100
+    if (score < 0) score = 0;
+    if (score > 100) score = 100;
+    
     document.getElementById('score-display').innerText = "Punkti: " + score;
     document.getElementById('game-modal').style.display = 'none';
     completedTasks++;
@@ -819,9 +829,9 @@ function showEndGame() {
     const seconds = elapsedSeconds % 60;
     const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
-    // Validate score is within reasonable range before submitting
+    // Enforce score limits: min 0, max 100
+    if (score < 0) score = 0;
     if (score > 100) score = 100;
-    if (score < -50) score = -50;
     
     finishGame(globalName, score, formattedTime); 
 }
@@ -863,6 +873,51 @@ function setSFXVolume(v) {
     if (sfx) {
         sfx.volume = v/100;
         localStorage.setItem('sfxVolume', v);
+    }
+}
+
+// --- SPOTIFY PLAYER INTEGRATION ---
+
+/**
+ * Toggle Spotify playlist playback
+ * Creates a minimalistic embedded player on first play
+ */
+function toggleSpotifyPlayback() {
+    const container = document.getElementById('spotify-embed-container');
+    const button = document.getElementById('spotify-play-btn');
+    const icon = document.getElementById('spotify-icon');
+    
+    if (container.style.display === 'none') {
+        // First time - load the Spotify embed
+        if (!container.innerHTML.trim()) {
+            // TODO: Replace with actual Spotify playlist URL
+            // Format: https://open.spotify.com/playlist/YOUR_PLAYLIST_ID
+            const spotifyPlaylistUrl = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M'; // Example playlist
+            const playlistId = spotifyPlaylistUrl.split('/').pop().split('?')[0];
+            
+            container.innerHTML = `<iframe 
+                src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
+                width="100%" 
+                height="80" 
+                frameBorder="0" 
+                allowfullscreen="" 
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                loading="lazy">
+            </iframe>`;
+            
+            // Pause local music when Spotify starts
+            const localMusic = document.getElementById('bg-music');
+            if (localMusic) {
+                localMusic.pause();
+            }
+        }
+        container.style.display = 'block';
+        icon.textContent = '⏸️';
+        button.innerHTML = '<span id="spotify-icon">⏸️</span> Hide Spotify';
+    } else {
+        container.style.display = 'none';
+        icon.textContent = '▶️';
+        button.innerHTML = '<span id="spotify-icon">▶️</span> Play Spotify';
     }
 }
 
