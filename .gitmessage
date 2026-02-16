@@ -1,0 +1,13 @@
+# Commit ziņojumu vadlīnijas
+# 
+# Izmantojiet latviešu valodu commit ziņojumiem
+# Piemēri:
+#   Labots: Novērsta kļūda relatīvajos ceļos
+#   Pievienots: Jauna funkcionalitāte kartei
+#   Atjaunināts: Dokumentācija README failā
+#   Dzēsts: Novecojušas bibliotēkas
+#
+# Commit formāts:
+#   Pirmā rinda: Īss apraksts (līdz 50 simboliem)
+#   Tukša rinda
+#   Detalizēts apraksts (ja nepieciešams)
