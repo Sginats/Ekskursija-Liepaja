@@ -18,11 +18,18 @@ if ($name === null) {
 }
 
 if ($name !== null && $score !== null) {
+    // Validate and sanitize name
+    $name = preg_replace('/[^a-zA-Z0-9āčēģīķļņšūž\s]/u', '', $name);
+    $name = substr($name, 0, 8);
     $name = htmlspecialchars($name);
-    $score = intval($score);
-    $time = htmlspecialchars($time ? $time : '00:00:00');
-
     if ($name == "") $name = "Nezinams";
+    
+    // Validate score range
+    $score = intval($score);
+    if ($score > 100) $score = 100; // Max 10 questions × 10 points
+    if ($score < -50) $score = -50; // Minimum possible score
+    
+    $time = htmlspecialchars($time ? $time : '00:00:00');
 
     $line = $name . "|" . $score . "|" . $time . "\n";
     $file = __DIR__ . "/leaderboard.txt";

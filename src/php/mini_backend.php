@@ -8,7 +8,17 @@ $file = __DIR__ . "/mini_lb_" . preg_replace('/[^a-z0-9]/', '', $game) . ".txt";
 
 if ($action == 'save') {
     $name = $_GET['name'] ?? 'Anonīms';
+    // Validate and sanitize name
+    $name = preg_replace('/[^a-zA-Z0-9āčēģīķļņšūž\s]/u', '', $name);
+    $name = substr($name, 0, 8);
+    if ($name == "") $name = "Anonīms";
+    
     $time = $_GET['time'] ?? '99.99';
+    // Validate time is reasonable (between 0.01 and 300 seconds)
+    $time = floatval($time);
+    if ($time < 0.01) $time = 0.01;
+    if ($time > 300) $time = 300;
+    
     $line = "$name|$time\n";
     file_put_contents($file, $line, FILE_APPEND | LOCK_EX);
     echo json_encode(['status' => 'saved']);

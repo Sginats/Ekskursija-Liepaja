@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Top 10 Rezultāti</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../public/style.css">
 </head>
 <body>
     <div class="container">
@@ -55,7 +55,7 @@
                 ?>
             </tbody>
         </table>
-        <button class="btn" onclick="location.href='index.html'">Atpakaļ</button>
+        <button class="btn" onclick="location.href='../../public/index.html'">Atpakaļ</button>
     </div>
 </body>
 </html>
