@@ -109,7 +109,7 @@ body {
 .map-area {
     position: relative;
     height: 85vh; 
-    width: calc(85vh * 0.66); 
+    width: 42vh; 
     background-image: url('atteli/map.png');
     background-size: 100% 100%; 
     background-repeat: no-repeat;
@@ -117,7 +117,7 @@ body {
     border: 5px solid #4a2c2c;
     box-shadow: 0 0 50px rgba(0,0,0,0.9);
     border-radius: 8px;
-    z-index: 1;
+    z-index: 2;
 }
 
 .point {
@@ -361,4 +361,56 @@ input[type=range] {
     background-color: #4a3333;
     outline: none;
     box-shadow: 0 0 10px #ffaa00;
+}
+.authors-corner {
+    position: fixed;
+    bottom: 10px;
+    left: 20px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    z-index: 50;
+    pointer-events: none;
+    text-shadow: 1px 1px 2px black;
+}
+
+/* Leaderboard */
+.container p{
+    color: #aaa; 
+    margin-bottom: 20px; 
+    font-style: italic;
+}
+.tabulaLead{
+    margin: 20px auto; 
+    border-collapse: collapse; 
+    width: 80%; 
+    max-width: 600px; 
+    background: rgba(42, 26, 26, 0.8);
+}
+#tabulaiTR{
+    border-bottom: 2px solid #ffaa00; 
+    background: rgba(255, 170, 0, 0.1);
+}
+#nummurs{
+    padding: 12px; 
+    text-align: center; 
+    color: #ffaa00; 
+    width: 60px;
+}
+#vardi{
+    padding: 12px; 
+    text-align: left; 
+    color: #ffaa00;
+}
+#laiki{
+    padding: 12px; 
+    text-align: center; 
+    color: #ffaa00; 
+    width: 100px;
+}
+#punkti{
+    padding: 12px; 
+    text-align: center; 
+    color: #ffaa00; 
+    width: 100px;
 }

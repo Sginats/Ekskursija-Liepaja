@@ -7,13 +7,15 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="title">Top 10</h1>
-        <table style="margin: 20px auto; border-collapse: collapse; width: 80%; background: rgba(42, 26, 26, 0.8);">
+        <h1 class="title">🏆 Top 10 Rezultāti</h1>
+        <p>Ātrākie spēlētāji Liepājas ekskursijā</p>
+        <table class="tabulaLead">
             <thead>
-                <tr style="border-bottom: 2px solid #ffaa00;">
-                    <th>Vārds</th>
-                    <th>Punkti</th>
-                    <th>Laiks</th>
+                <tr id="tabulaiTR">
+                    <th id="nummurs">#</th>
+                    <th id="vardi">Vārds</th>
+                    <th id="laiki">Laiks</th>
+                    <th id="punkti">Punkti</th>
                 </tr>
             </thead>
             <tbody>
