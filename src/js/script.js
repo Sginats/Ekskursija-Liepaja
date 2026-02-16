@@ -18,9 +18,8 @@ let globalName = "Anonīms";
 let ws = null;
 
 // --- SPOTIFY CONFIGURATION ---
-// TODO: Update this with your actual Spotify playlist URL
-// Format: https://open.spotify.com/playlist/YOUR_PLAYLIST_ID
-const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M';
+// Spotify playlist URL for the game
+const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/2FJVi4yazmR6yUDFkOu9ep';
 
 // --- CONFIGURATION ---
 const WS_PORT = 8080;
