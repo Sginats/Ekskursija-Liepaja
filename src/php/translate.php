@@ -2,19 +2,39 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-$authKey = getenv('DEEPL_AUTH_KEY');
-
-if (!$authKey) {
-    http_response_code(503);
-    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
-    exit;
+// Load .env file
+$envFile = __DIR__ . '/../../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        // Skip comments and empty lines
+        if (empty($line) || $line[0] === '#') continue;
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            // Only allow alphanumeric keys with underscores (security)
+            if (preg_match('/^[A-Z_][A-Z0-9_]*$/', $key)) {
+                putenv("$key=$value");
+                $_ENV[$key] = $value;
+            }
+        }
+    }
 }
 
+$authKey = getenv('DEEPL_AUTH_KEY');
 $text = $_GET['text'] ?? '';
 $targetLang = $_GET['target'] ?? 'EN';
 
 if (!$text) {
     echo json_encode(['translations' => [['text' => '']]]);
+    exit;
+}
+
+// If no API key is configured, return original text (fallback mode)
+if (!$authKey) {
+    echo json_encode(['translations' => [['text' => $text]]]);
     exit;
 }
 
@@ -31,8 +51,8 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 
 if (curl_errno($ch)) {
-    http_response_code(502);
-    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
+    // On error, fallback to original text
+    echo json_encode(['translations' => [['text' => $text]]]);
 } else {
     echo $response;
 }

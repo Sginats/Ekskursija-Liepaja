@@ -10,6 +10,10 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null; // WebSocket mainīgais
 
+// WebSocket configuration
+const WS_PORT = 8080;
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
 const taskSequence = [
     'RTU', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
@@ -52,6 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
     startTime = Date.now();
     
+    // Show connection status indicator on pages that use WebSocket
+    const statusIndicator = document.getElementById('connection-status');
+    if (statusIndicator && (window.location.pathname.includes('index.html') || window.location.pathname.includes('map.html'))) {
+        statusIndicator.style.display = 'block';
+    }
+    
     // WebSockets pieslēgums
     connectWebSocket();
 
@@ -92,36 +102,116 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- 3. WEBSOCKET FUNKCIJAS ---
+// --- 3. WEBSOCKET FUNKCIJAS (PROFESSIONAL IMPLEMENTATION) ---
 
+let wsReconnectAttempts = 0;
+const wsMaxReconnectAttempts = 5;
+const wsBaseReconnectDelay = 1000;
+let wsReconnectTimeout = null;
+
+/**
+ * Connect to WebSocket server with automatic reconnection
+ * Uses exponential backoff for reconnection attempts
+ */
 function connectWebSocket() {
-    ws = new WebSocket('ws://localhost:8080');
-    
-    ws.onopen = () => console.log("WebSocket savienots!");
-    
-    ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+    // Prevent multiple simultaneous connection attempts
+    if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+        return;
+    }
+
+    try {
+        // Use environment-aware WebSocket URL
+        const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
         
-        if (data.type === 'created') {
-            myLobbyCode = data.code;
-            document.getElementById('lobby-code').innerText = myLobbyCode;
-            toggleModal('mode-modal');
-            setTimeout(() => { toggleModal('lobby-modal'); }, 100);
-        }
-        else if (data.type === 'start_game') {
-            myRole = data.role;
-            alert("Spēle sākas! Tava loma: " + myRole);
-            location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
-        }
-        else if (data.type === 'sync_complete') {
-            // Kad abi pabeiguši mini-spēli
-            document.getElementById('partner-status').innerText = "Partneris gatavs!";
-            setTimeout(() => { showQuiz(currentTask); }, 1000);
-        }
-        else if (data.type === 'error') {
-            alert(data.msg);
-        }
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+            console.log("WebSocket savienots!");
+            wsReconnectAttempts = 0; // Reset reconnection counter
+            updateConnectionStatus('connected');
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'created') {
+                    myLobbyCode = data.code;
+                    const lobbyCodeEl = document.getElementById('lobby-code');
+                    if (lobbyCodeEl) lobbyCodeEl.innerText = myLobbyCode;
+                    toggleModal('mode-modal');
+                    setTimeout(() => { toggleModal('lobby-modal'); }, 100);
+                }
+                else if (data.type === 'start_game') {
+                    myRole = data.role;
+                    showNotification(`Spēle sākas! Tava loma: ${myRole}`, 'success');
+                    setTimeout(() => {
+                        location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
+                    }, 1500);
+                }
+                else if (data.type === 'sync_complete') {
+                    const statusEl = document.getElementById('partner-status');
+                    if (statusEl) statusEl.innerText = "Partneris gatavs!";
+                    setTimeout(() => { showQuiz(currentTask); }, 1000);
+                }
+                else if (data.type === 'error') {
+                    showNotification(data.msg, 'error');
+                }
+            } catch (e) {
+                console.error("Error parsing WebSocket message:", e);
+            }
+        };
+        
+        ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
+            updateConnectionStatus('error');
+        };
+        
+        ws.onclose = (event) => {
+            console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
+            updateConnectionStatus('disconnected');
+            
+            // Attempt reconnection with exponential backoff
+            if (wsReconnectAttempts < wsMaxReconnectAttempts) {
+                const delay = wsBaseReconnectDelay * Math.pow(2, wsReconnectAttempts);
+                wsReconnectAttempts++;
+                
+                console.log(`Reconnecting in ${delay}ms... (Attempt ${wsReconnectAttempts}/${wsMaxReconnectAttempts})`);
+                updateConnectionStatus('reconnecting');
+                
+                wsReconnectTimeout = setTimeout(() => {
+                    connectWebSocket();
+                }, delay);
+            } else {
+                console.log("Max reconnection attempts reached");
+                showNotification("Nav iespējams izveidot savienojumu ar serveri. Lūdzu, pārlādējiet lapu.", 'error');
+            }
+        };
+    } catch (error) {
+        console.error("Failed to create WebSocket connection:", error);
+        updateConnectionStatus('error');
+    }
+}
+
+/**
+ * Update connection status indicator
+ * @param {string} status - Connection status: 'connected', 'disconnected', 'reconnecting', 'error'
+ */
+function updateConnectionStatus(status) {
+    const indicator = document.getElementById('connection-status');
+    if (!indicator) return;
+    
+    indicator.className = 'connection-status ' + status;
+    
+    const statusText = {
+        'connected': '● Savienots',
+        'disconnected': '○ Atvienots',
+        'reconnecting': '◐ Atjauno...',
+        'error': '⚠ Kļūda'
     };
+    
+    indicator.textContent = statusText[status] || '';
+    indicator.title = statusText[status] || '';
 }
 
 // --- 4. DEEPL TULKOŠANA ---
@@ -308,3 +398,54 @@ function toggleModal(id) { document.getElementById(id).style.display = document.
 function exitGame() { window.close(); }
 function setMusicVolume(v) { document.getElementById('bg-music').volume = v/100; }
 function setSFXVolume(v) { document.getElementById('hover-sound').volume = v/100; }
+
+// --- NOTIFICATION SYSTEM (TOAST) ---
+
+/**
+ * Show a toast notification to the user
+ * @param {string} message - Message to display
+ * @param {string} type - Notification type: 'success', 'error', 'info', 'warning'
+ * @param {number} duration - Duration in milliseconds (default: 3000)
+ */
+function showNotification(message, type = 'info', duration = 3000) {
+    // Create notification container if it doesn't exist
+    let container = document.getElementById('notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    // Add icon based on type
+    const icon = {
+        'success': '✓',
+        'error': '✗',
+        'warning': '⚠',
+        'info': 'ℹ'
+    }[type] || 'ℹ';
+    
+    notification.innerHTML = `<span class="notification-icon">${icon}</span><span class="notification-text">${message}</span>`;
+    
+    // Add to container
+    container.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Remove after duration
+    setTimeout(() => {
+        notification.classList.remove('show');
+        notification.classList.add('hide');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, duration);
+}

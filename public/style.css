@@ -414,3 +414,355 @@ input[type=range] {
     color: #ffaa00; 
     width: 100px;
 }
+/* --- CONNECTION STATUS INDICATOR --- */
+
+.connection-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 9999;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    backdrop-filter: blur(10px);
+}
+
+.connection-status.connected {
+    color: #4caf50;
+    border-color: #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.connection-status.disconnected {
+    color: #f44336;
+    border-color: #f44336;
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+}
+
+.connection-status.reconnecting {
+    color: #ff9800;
+    border-color: #ff9800;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
+    animation: pulse-status 1.5s ease-in-out infinite;
+}
+
+.connection-status.error {
+    color: #e91e63;
+    border-color: #e91e63;
+    box-shadow: 0 0 10px rgba(233, 30, 99, 0.3);
+}
+
+@keyframes pulse-status {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.95); }
+}
+
+/* --- NOTIFICATION SYSTEM (TOAST) --- */
+
+.notification-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.notification {
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    min-width: 250px;
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-left: 4px solid #2196f3;
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification.hide {
+    opacity: 0;
+    transform: translateX(400px);
+}
+
+.notification-icon {
+    font-size: 20px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.notification-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-success {
+    border-left-color: #4caf50;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(0, 0, 0, 0.9));
+}
+
+.notification-error {
+    border-left-color: #f44336;
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(0, 0, 0, 0.9));
+}
+
+.notification-warning {
+    border-left-color: #ff9800;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(0, 0, 0, 0.9));
+}
+
+.notification-info {
+    border-left-color: #2196f3;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(0, 0, 0, 0.9));
+}
+
+/* --- LOADING STATES --- */
+
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffaa00;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* --- SMOOTH TRANSITIONS --- */
+
+.modal {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.modal[style*="display: block"] {
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* --- RESPONSIVE DESIGN IMPROVEMENTS --- */
+
+/* Mobile-first breakpoints */
+@media (max-width: 768px) {
+    .title {
+        font-size: 48px;
+    }
+    
+    .subtitle {
+        font-size: 24px;
+        letter-spacing: 4px;
+    }
+    
+    .btn {
+        width: 80%;
+        padding: 12px 30px;
+        font-size: 16px;
+    }
+    
+    .connection-status {
+        top: 10px;
+        right: 10px;
+        font-size: 10px;
+        padding: 6px 12px;
+    }
+    
+    .notification-container {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .notification {
+        min-width: auto;
+        max-width: 100%;
+    }
+    
+    .modal-content {
+        width: 90%;
+        max-width: 90%;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 36px;
+    }
+    
+    .subtitle {
+        font-size: 18px;
+        letter-spacing: 2px;
+    }
+    
+    .btn {
+        width: 90%;
+        font-size: 14px;
+    }
+}
+
+/* Tablet breakpoint */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .title {
+        font-size: 64px;
+    }
+    
+    .subtitle {
+        font-size: 32px;
+    }
+    
+    .btn {
+        width: 300px;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1920px) {
+    .title {
+        font-size: 100px;
+    }
+    
+    .subtitle {
+        font-size: 50px;
+    }
+    
+    .btn {
+        width: 300px;
+        font-size: 20px;
+    }
+}
+
+/* --- ENHANCED FLEXBOX LAYOUTS --- */
+
+/* Improved button group with better spacing */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+    padding: 0 20px;
+}
+
+/* Flex utility classes for reusability */
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+/* Gap utilities */
+.gap-xs { gap: 5px; }
+.gap-sm { gap: 10px; }
+.gap-md { gap: 15px; }
+.gap-lg { gap: 20px; }
+.gap-xl { gap: 30px; }
+
+/* --- ACCESSIBILITY IMPROVEMENTS --- */
+
+/* Focus visible for keyboard navigation */
+.btn:focus-visible {
+    outline: 3px solid #ffaa00;
+    outline-offset: 2px;
+}
+
+input:focus-visible {
+    outline: 2px solid #ffaa00;
+    outline-offset: 1px;
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn {
+        border-width: 3px;
+    }
+    
+    .connection-status {
+        border-width: 3px;
+    }
+    
+    .notification {
+        border-left-width: 6px;
+    }
+}
