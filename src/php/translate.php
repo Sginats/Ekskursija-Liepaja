@@ -6,7 +6,7 @@ $authKey = getenv('DEEPL_AUTH_KEY');
 
 if (!$authKey) {
     http_response_code(503);
-    echo json_encode(['error' => 'Translation service not configured. Please set DEEPL_AUTH_KEY environment variable.']);
+    echo json_encode(['error' => 'Translation service temporarily unavailable.']);
     exit;
 } 
 
