@@ -83,15 +83,12 @@
             
             <h3 class="section-title">🎵 Spotify Playlist</h3>
             <div class="spotify-player-minimal">
-                <div class="spotify-controls">
-                    <button id="spotify-play-btn" class="spotify-btn" onclick="toggleSpotifyPlayback()">
-                        <span id="spotify-icon">▶️</span> Play Spotify
-                    </button>
-                    <div class="spotify-info">
-                        <small style="color: #1DB954;">Liepājas Ekskursija Playlist</small>
-                    </div>
-                </div>
-                <div id="spotify-embed-container" style="display: none; margin-top: 15px; border-radius: 8px; overflow: hidden;">
+                <button id="spotify-play-btn" class="spotify-btn-large" onclick="toggleSpotifyPlayback()">
+                    <span style="font-size: 24px; margin-right: 8px;">▶️</span>
+                    <span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>
+                </button>
+                <p class="spotify-info">Liepājas Ekskursija Playlist</p>
+                <div id="spotify-embed-container" style="display: none; margin-top: 15px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(29, 185, 84, 0.2);">
                     <!-- Spotify embed will be inserted here -->
                 </div>
             </div>

@@ -743,9 +743,8 @@ function finishBoatRace() {
         points = BOAT_RACE_CONFIG.SLOW_POINTS;
     }
     
-    // Enforce score limits: min 0, max 100
-    if (score < 0) score = 0;
-    if (score > 100) score = 100;
+    score += points;
+    enforceScoreLimits();
     
     document.getElementById('score-display').innerText = "Punkti: " + score;
     
@@ -797,8 +796,16 @@ async function showQuiz(type) {
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
-        <input id="ans-in" maxlength="50"><button class="btn" onclick="checkAns('${task.a}')">OK</button>
+        <input id="ans-in" placeholder="Tavs atbilde..." maxlength="50"><button class="btn" onclick="checkAns('${task.a}')">Iesniegt</button>
     `;
+}
+
+/**
+ * Enforce score limits (minimum 0, maximum 100)
+ */
+function enforceScoreLimits() {
+    if (score < 0) score = 0;
+    if (score > 100) score = 100;
 }
 
 function checkAns(correct) {
@@ -809,9 +816,7 @@ function checkAns(correct) {
         score -= 5;
     }
     
-    // Enforce score limits: min 0, max 100
-    if (score < 0) score = 0;
-    if (score > 100) score = 100;
+    enforceScoreLimits();
     
     document.getElementById('score-display').innerText = "Punkti: " + score;
     document.getElementById('game-modal').style.display = 'none';
@@ -829,9 +834,7 @@ function showEndGame() {
     const seconds = elapsedSeconds % 60;
     const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
-    // Enforce score limits: min 0, max 100
-    if (score < 0) score = 0;
-    if (score > 100) score = 100;
+    enforceScoreLimits();
     
     finishGame(globalName, score, formattedTime); 
 }
@@ -885,20 +888,19 @@ function setSFXVolume(v) {
 function toggleSpotifyPlayback() {
     const container = document.getElementById('spotify-embed-container');
     const button = document.getElementById('spotify-play-btn');
-    const icon = document.getElementById('spotify-icon');
     
     if (container.style.display === 'none') {
         // First time - load the Spotify embed
         if (!container.innerHTML.trim()) {
-            // TODO: Replace with actual Spotify playlist URL
+            // TODO: Replace with actual Spotify playlist URL provided by user
             // Format: https://open.spotify.com/playlist/YOUR_PLAYLIST_ID
-            const spotifyPlaylistUrl = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M'; // Example playlist
+            const spotifyPlaylistUrl = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M'; // Placeholder - Today's Top Hits
             const playlistId = spotifyPlaylistUrl.split('/').pop().split('?')[0];
             
             container.innerHTML = `<iframe 
                 src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
                 width="100%" 
-                height="80" 
+                height="152" 
                 frameBorder="0" 
                 allowfullscreen="" 
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
@@ -912,12 +914,10 @@ function toggleSpotifyPlayback() {
             }
         }
         container.style.display = 'block';
-        icon.textContent = '⏸️';
-        button.innerHTML = '<span id="spotify-icon">⏸️</span> Hide Spotify';
+        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">⏸️</span><span style="font-size: 16px; font-weight: bold;">Paslēpt Spotify</span>';
     } else {
         container.style.display = 'none';
-        icon.textContent = '▶️';
-        button.innerHTML = '<span id="spotify-icon">▶️</span> Play Spotify';
+        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">▶️</span><span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>';
     }
 }
 
