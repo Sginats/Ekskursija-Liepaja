@@ -1012,39 +1012,118 @@ function setSFXVolume(v) {
     }
 }
 
-// --- SPOTIFY PLAYER INTEGRATION ---
+// --- SPOTIFY MINI PLAYER ---
+
+let spotifyEmbedController = null;
+let spotifyIsPlaying = false;
+let spotifyShuffleOn = false;
+let spotifyRepeatOn = false;
+let spotifyLoaded = false;
 
 /**
- * Toggle Spotify playlist embed player
- * Shows/hides the Spotify iframe embed widget
+ * Initialize the Spotify Embed iframe and IFrame API controller.
+ * On first call it inserts a hidden iframe and connects via the
+ * Spotify IFrame API so we can drive playback with JS.
  */
-let spotifyLoaded = false;
-function toggleSpotifyPlayback() {
+function spotifyInit(callback) {
+    if (spotifyLoaded) { if (callback) callback(); return; }
     const container = document.getElementById('spotify-embed-container');
-    const button = document.getElementById('spotify-play-btn');
-    if (!container || !button) return;
+    if (!container) return;
     
-    if (container.style.display === 'none' || container.style.display === '') {
-        // Load the Spotify embed on first click
-        if (!spotifyLoaded) {
-            const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
-            container.innerHTML = `<iframe 
-                src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
-                width="100%" 
-                height="152" 
-                frameBorder="0" 
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                loading="lazy"
-                style="border-radius: 12px;">
-            </iframe>`;
-            spotifyLoaded = true;
-        }
-        container.style.display = 'block';
-        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">⏸️</span><span style="font-size: 16px; font-weight: bold;">Paslēpt Spotify</span>';
-    } else {
-        container.style.display = 'none';
-        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">▶️</span><span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>';
+    const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
+    container.style.display = 'block';
+    container.innerHTML = `<iframe 
+        id="spotify-iframe"
+        src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
+        width="1" 
+        height="1" 
+        frameBorder="0" 
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+        loading="lazy"
+        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+    </iframe>`;
+    
+    // Try connecting to the Spotify IFrame API
+    window.onSpotifyIframeApiReady = function(IFrameAPI) {
+        const iframe = document.getElementById('spotify-iframe');
+        if (!iframe) return;
+        IFrameAPI.createController(iframe, {}, function(controller) {
+            spotifyEmbedController = controller;
+            controller.addListener('playback_update', function(e) {
+                spotifyIsPlaying = !e.data.isPaused;
+                updatePlayButton();
+            });
+            if (callback) callback();
+        });
+    };
+    
+    // Load the Spotify IFrame API script if not already present
+    if (!document.getElementById('spotify-iframe-api')) {
+        const script = document.createElement('script');
+        script.id = 'spotify-iframe-api';
+        script.src = 'https://open.spotify.com/embed/iframe-api/v1';
+        document.head.appendChild(script);
     }
+    spotifyLoaded = true;
+}
+
+function updatePlayButton() {
+    const btn = document.getElementById('smp-play');
+    if (btn) btn.textContent = spotifyIsPlaying ? '⏸️' : '▶️';
+}
+
+function spotifyPlayPause() {
+    if (!spotifyLoaded) {
+        spotifyInit(function() {
+            if (spotifyEmbedController) spotifyEmbedController.togglePlay();
+        });
+        // Update UI optimistically
+        spotifyIsPlaying = true;
+        updatePlayButton();
+        const name = document.getElementById('smp-artist-name');
+        if (name) name.textContent = 'Ielādē...';
+        return;
+    }
+    if (spotifyEmbedController) {
+        spotifyEmbedController.togglePlay();
+    }
+}
+
+function spotifyNext() {
+    if (!spotifyLoaded) { spotifyInit(); return; }
+    // The Spotify IFrame API doesn't expose next/prev directly,
+    // but we can use loadUri to skip or use the seek workaround.
+    // For the embedded player, loadUri with offset works:
+    if (spotifyEmbedController) {
+        spotifyEmbedController.loadUri(SPOTIFY_PLAYLIST_URL.replace('https://open.spotify.com/', 'spotify:').replace(/\//g, ':'));
+    }
+    showNotification('⏭ Nākamā dziesma', 'info', 1500);
+}
+
+function spotifyPrev() {
+    if (!spotifyLoaded) { spotifyInit(); return; }
+    if (spotifyEmbedController) {
+        spotifyEmbedController.seek(0);
+    }
+    showNotification('⏮ No sākuma', 'info', 1500);
+}
+
+function spotifyToggleShuffle() {
+    spotifyShuffleOn = !spotifyShuffleOn;
+    const btn = document.getElementById('smp-shuffle');
+    if (btn) {
+        btn.classList.toggle('active', spotifyShuffleOn);
+    }
+    showNotification(spotifyShuffleOn ? '🔀 Shuffle ON' : '🔀 Shuffle OFF', 'info', 1500);
+}
+
+function spotifyToggleRepeat() {
+    spotifyRepeatOn = !spotifyRepeatOn;
+    const btn = document.getElementById('smp-repeat');
+    if (btn) {
+        btn.classList.toggle('active', spotifyRepeatOn);
+    }
+    showNotification(spotifyRepeatOn ? '🔁 Repeat ON' : '🔁 Repeat OFF', 'info', 1500);
 }
 
 // --- NOTIFICATION SYSTEM (TOAST) ---
