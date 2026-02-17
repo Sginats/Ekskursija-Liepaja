@@ -5,11 +5,54 @@
 // quiz system, and user interface management.
 // ============================================================================
 
-// --- GLOBAL STATE MANAGEMENT ---
-let score = 0;
+// --- PROTECTED GAME STATE (wrapped to prevent console manipulation) ---
+const GameState = (function() {
+    let _score = 0;
+    let _completedTasks = 0;
+    let _checksum = 0; // integrity check
+
+    function _updateChecksum() {
+        _checksum = (_score * 7 + _completedTasks * 13 + 42) ^ 0xA5A5;
+    }
+
+    function _verifyIntegrity() {
+        return _checksum === ((_score * 7 + _completedTasks * 13 + 42) ^ 0xA5A5);
+    }
+
+    _updateChecksum();
+
+    return {
+        getScore: function() {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; _updateChecksum(); }
+            return _score;
+        },
+        addScore: function(points) {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
+            _score += points;
+            if (_score < 0) _score = 0;
+            if (_score > 100) _score = 100;
+            _updateChecksum();
+            return _score;
+        },
+        getCompleted: function() {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; _updateChecksum(); }
+            return _completedTasks;
+        },
+        completeTask: function() {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
+            _completedTasks++;
+            _updateChecksum();
+            return _completedTasks;
+        },
+        reset: function() {
+            _score = 0;
+            _completedTasks = 0;
+            _updateChecksum();
+        }
+    };
+})();
+
 let currentTask = "";
-let completedTasks = 0;
-let currentCorrectAnswer = ""; 
 let currentLang = localStorage.getItem('lang') || 'lv';
 let startTime; 
 let myRole = '';
@@ -38,18 +81,65 @@ const taskSequence = [
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
-// Question database with answers and interesting facts
+// Decode helper
+function _d(s) { return decodeURIComponent(escape(atob(s))); }
+
+// Question database with encoded answers to prevent searching through source
 const questions = {
-    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", a: "1954", fact: "Šeit mācās gudrākie prāti!" },
-    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", a: "1800", fact: "Turi cepuri! Mols sargā ostu." },
-    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", a: "Karostas cietums", fact: "Vienīgais militārais cietums atvērts tūristiem!" },
-    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", a: "Lielais Dzintars", fact: "Izskatās pēc milzīga dzintara!" },
-    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", a: "1907", fact: "Vecākais profesionālais teātris Latvijā!" },
-    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", a: "Tirdzniecības", fact: "Savieno ezeru ar jūru." },
-    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", a: "LSEZ", fact: "Osta šeit neaizsalst." },
-    'Parks': { q: "Kā sauc parku pie jūras?", a: "Jūrmalas", fact: "Viens no lielākajiem parkiem Latvijā!" },
-    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", a: "Jā", fact: "Būvē ēkas visā pasaulē!" },
-    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", a: "Liepājas", fact: "Piektais lielākais ezers Latvijā." }
+    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "MTk1NA==", fact: "Šeit mācās gudrākie prāti!" },
+    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", _a: "MTgwMA==", fact: "Turi cepuri! Mols sargā ostu." },
+    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", _a: "S2Fyb3N0YXMgY2lldHVtcw==", fact: "Vienīgais militārais cietums atvērts tūristiem!" },
+    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", _a: "TGllbGFpcyBEemludGFycw==", fact: "Izskatās pēc milzīga dzintara!" },
+    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", _a: "MTkwNw==", fact: "Vecākais profesionālais teātris Latvijā!" },
+    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", _a: "VGlyZHpuaWVjxKtiYXM=", fact: "Savieno ezeru ar jūru." },
+    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", _a: "TFNFWg==", fact: "Osta šeit neaizsalst." },
+    'Parks': { q: "Kā sauc parku pie jūras?", _a: "SsWrcm1hbGFz", fact: "Viens no lielākajiem parkiem Latvijā!" },
+    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: "SsSB", fact: "Būvē ēkas visā pasaulē!" },
+    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", _a: "TGllcMSBamFz", fact: "Piektais lielākais ezers Latvijā." }
+};
+
+// Location information - shown before each quiz/minigame
+const locationInfo = {
+    'RTU': {
+        name: 'RTU Liepājas akadēmija',
+        desc: 'Rīgas Tehniskās universitātes Liepājas akadēmija (dibināta 1954. gadā) ir viena no nozīmīgākajām augstākās izglītības iestādēm Kurzemē. Tā piedāvā studiju programmas inženierzinātnēs, IT, ekonomikā un humanitārajās zinātnēs. Ēka atrodas Liepājas centrā un ir svarīgs reģionālās izglītības centrs.'
+    },
+    'Dzintars': {
+        name: 'Koncertzāle "Lielais Dzintars"',
+        desc: 'Liepājas koncertzāle "Lielais Dzintars" ir moderna daudzfunkcionāla koncertzāle, kas atklāta 2015. gadā. Ēkas unikālais dizains atgādina milzīgu dzintara gabalu. Šeit regulāri notiek Liepājas Simfoniskā orķestra koncerti, starptautiski festivāli un kultūras pasākumi.'
+    },
+    'Teatris': {
+        name: 'Liepājas Teātris',
+        desc: 'Liepājas Teātris, dibināts 1907. gadā, ir vecākais profesionālais teātris Latvijā. Teātris atrodas skaistā jūgendstila ēkā Liepājas centrā. Tas ir nozīmīgs kultūras centrs, kurā tiek iestudētas gan klasiskās, gan mūsdienu lugas.'
+    },
+    'Kanals': {
+        name: 'Tirdzniecības kanāls',
+        desc: 'Tirdzniecības kanāls savieno Liepājas ezeru ar Baltijas jūru. Tas ir vēsturiski nozīmīgs ūdensceļš, kas jau kopš 16. gadsimta kalpojis tirdzniecības vajadzībām. Gar kanāla krastiem ir populāra pastaigu vieta ar skaistiem skatiem.'
+    },
+    'Osta': {
+        name: 'Liepājas Osta',
+        desc: 'Liepājas osta ir viena no lielākajām un nozīmīgākajām Latvijas ostām. Tā ir unikāla, jo neaizsalst ziemā, pateicoties īpašiem strāvojumu apstākļiem. Ostā darbojas Liepājas Speciālā ekonomiskā zona (LSEZ), kas piesaista starptautiskus uzņēmumus.'
+    },
+    'LSEZ': {
+        name: 'Liepājas Speciālā ekonomiskā zona (LSEZ)',
+        desc: 'LSEZ ir izveidota 1997. gadā, lai veicinātu Liepājas reģiona ekonomisko attīstību. Zonā darbojas vairāk nekā 80 uzņēmumi, tostarp UPB — starptautisks būvniecības uzņēmums, kas realizē projektus visā pasaulē. LSEZ piedāvā nodokļu atvieglojumus investoriem.'
+    },
+    'Cietums': {
+        name: 'Karostas cietums',
+        desc: 'Karostas cietums ir unikāla tūrisma vieta — vienīgais bijušais militārais cietums Eiropā, kas atvērts apmeklētājiem. Cietums celts 1900. gadā cara armijas vajadzībām. Šobrīd tas piedāvā ekskursijas un nakšņošanas pieredzi autentiskā cietuma vidē.'
+    },
+    'Mols': {
+        name: 'Ziemeļu mols',
+        desc: 'Ziemeļu mols ir aptuveni 1800 metrus garš akmeņu mols Liepājas ostas ziemeļu daļā. Tas ir populāra pastaigu un makšķerēšanas vieta. No mola paveras brīnišķīgs skats uz Baltijas jūru un Liepājas piekrasti.'
+    },
+    'Ezerkrasts': {
+        name: 'Ezerkrasta taka',
+        desc: 'Ezerkrasta taka atrodas pie Liepājas ezera — piektā lielākā ezera Latvijā. Taka piedāvā skaistu pastaigu maršrutu gar ezera krastu ar skatu platformām un informatīviem stendiem par apkārtnes dabu un putniem.'
+    },
+    'Parks': {
+        name: 'Jūrmalas parks',
+        desc: 'Jūrmalas parks ir viens no lielākajiem un vecākajiem parkiem Latvijā, ierīkots 19. gadsimta beigās. Parks atrodas starp pilsētas centru un jūras piekrasti. Tajā aug vairāk nekā 170 koku un krūmu sugas, un parks ir iecienīta atpūtas vieta.'
+    }
 };
 
 // UI text translations (Latvian base)
@@ -634,14 +724,15 @@ function joinGame() {
 
 function updateMapState() {
     const points = document.querySelectorAll('.point');
+    const completed = GameState.getCompleted();
     points.forEach(point => {
         const type = point.getAttribute('onclick').match(/'([^']+)'/)[1]; 
         const sequenceIndex = taskSequence.indexOf(type);
         
         point.className = point.className.replace(/\b(active-point|inactive-point)\b/g, "");
-        if (sequenceIndex < completedTasks) {
+        if (sequenceIndex < completed) {
             point.classList.add('inactive-point'); point.style.backgroundColor = "#555"; 
-        } else if (sequenceIndex === completedTasks) {
+        } else if (sequenceIndex === completed) {
             point.classList.add('active-point'); point.style.pointerEvents = "auto";
         } else {
             point.classList.add('inactive-point');
@@ -650,12 +741,30 @@ function updateMapState() {
 }
 
 function startActivity(type) {
-    if (type !== taskSequence[completedTasks]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
+    if (type !== taskSequence[GameState.getCompleted()]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
     currentTask = type;
     
-    if (type === 'Osta') startBoatGame();
-    else if (myRole && myLobbyCode) showMiniGame(type); 
-    else showQuiz(type);
+    if (type === 'Osta') showLocationThenStart(type, function() { startBoatGame(); });
+    else if (myRole && myLobbyCode) showLocationThenStart(type, function() { showMiniGame(type); });
+    else showLocationThenStart(type, function() { showQuiz(type); });
+}
+
+function showLocationThenStart(type, callback) {
+    const info = locationInfo[type];
+    if (!info) { callback(); return; }
+    
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <div class="location-info">
+            <h3>📍 ${info.name}</h3>
+            <p>${info.desc}</p>
+        </div>
+        <button class="btn" onclick="void(0)" id="btn-start-task">Turpināt uz uzdevumu →</button>
+    `;
+    document.getElementById('btn-start-task').addEventListener('click', function() {
+        document.getElementById('game-modal').style.display = 'none';
+        callback();
+    });
 }
 
 // --- 7. MINI SPĒLES & QUIZ ---
@@ -747,10 +856,9 @@ function finishBoatRace() {
         points = BOAT_RACE_CONFIG.SLOW_POINTS;
     }
     
-    score += points;
-    enforceScoreLimits();
+    const newScore = GameState.addScore(points);
     
-    document.getElementById('score-display').innerText = "Punkti: " + score;
+    document.getElementById('score-display').innerText = "Punkti: " + newScore;
     
     document.querySelector('.task-section').innerHTML = `
         <h2>Pabeigts!</h2>
@@ -764,9 +872,9 @@ function closeBoatGame() {
     if (boatInterval) clearInterval(boatInterval);
     document.removeEventListener('keydown', handleBoatKeyPress);
     document.getElementById('game-modal').style.display = 'none'; 
-    completedTasks++; 
+    GameState.completeTask(); 
     updateMapState(); 
-    if(completedTasks === 10) showEndGame(); 
+    if(GameState.getCompleted() === 10) showEndGame(); 
 }
 
 
@@ -776,14 +884,14 @@ function showMiniGame(type) {
     
     if (type === 'Cietums') {
         const code = myRole === 'host' ? "4 2 _ _" : "_ _ 9 1";
-        content.innerHTML = `<h2>Cietums</h2><p>Kods: ${code}</p><input id="mini-input"><button class="btn" onclick="checkMini('4291')">OK</button>`;
+        content.innerHTML = `<h2>Cietums</h2><p>Kods: ${code}</p><input id="mini-input"><button class="btn" onclick="checkMini()">OK</button>`;
     } else {
         content.innerHTML = `<h2>Gatavs?</h2><button class="btn" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
     }
 }
 
-function checkMini(ans) {
-    if(document.getElementById('mini-input').value === ans) sendReady();
+function checkMini() {
+    if(document.getElementById('mini-input').value === _d('NDI5MQ==')) sendReady();
 }
 
 function sendReady() {
@@ -800,7 +908,7 @@ async function showQuiz(type) {
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
-        <input id="ans-in" placeholder="Tava atbilde..." maxlength="50"><button class="btn" onclick="checkAns('${task.a}')">Iesniegt</button>
+        <input id="ans-in" placeholder="Tava atbilde..." maxlength="50"><button class="btn" onclick="checkAns('${type}')">Iesniegt</button>
     `;
 }
 
@@ -808,25 +916,23 @@ async function showQuiz(type) {
  * Enforce score limits (minimum 0, maximum 100)
  */
 function enforceScoreLimits() {
-    if (score < 0) score = 0;
-    if (score > 100) score = 100;
+    // Now handled by GameState internally
 }
 
-function checkAns(correct) {
+function checkAns(type) {
     const val = document.getElementById('ans-in').value;
+    const correct = _d(questions[type]._a);
     if(val.toLowerCase() === correct.toLowerCase()) {
-        score += 10;
+        GameState.addScore(10);
     } else {
-        score -= 5;
+        GameState.addScore(-5);
     }
     
-    enforceScoreLimits();
-    
-    document.getElementById('score-display').innerText = "Punkti: " + score;
+    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
     document.getElementById('game-modal').style.display = 'none';
-    completedTasks++;
+    GameState.completeTask();
     updateMapState();
-    if(completedTasks === 10) showEndGame();
+    if(GameState.getCompleted() === 10) showEndGame();
 }
 
 function showEndGame() { 
@@ -838,9 +944,9 @@ function showEndGame() {
     const seconds = elapsedSeconds % 60;
     const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
-    enforceScoreLimits();
+    const finalScore = GameState.getScore();
     
-    finishGame(globalName, score, formattedTime); 
+    finishGame(globalName, finalScore, formattedTime); 
 }
 
 function finishGame(name, finalScore, time) { 

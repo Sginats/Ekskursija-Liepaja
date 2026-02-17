@@ -18,15 +18,15 @@
     <!-- Connection Status Indicator -->
     <div id="connection-status" class="connection-status" style="display: none;"></div>
 
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 2px solid #ffaa00;">
+    <div class="map-topbar">
         
-        <button id="btn-back" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="location.href='index.html'">Atpakaļ uz Menu</button>
+        <button id="btn-back" class="btn topbar-btn" onclick="location.href='index.html'">← Menu</button>
         
-        <div id="score-display" style="color: #ffaa00; font-size: 24px; font-weight: bold; text-shadow: 0 0 10px #ffaa00;">Punkti: 0</div>
+        <div id="score-display" class="topbar-score">Punkti: 0</div>
 
-        <div style="display: flex; gap: 10px;">
-            <button id="btn-settings-map" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button id="btn-about-map" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="toggleModal('about-modal')">Par Spēli</button>
+        <div class="topbar-right">
+            <button id="btn-settings-map" class="btn topbar-btn" onclick="toggleModal('settings-modal')">⚙</button>
+            <button id="btn-about-map" class="btn topbar-btn" onclick="toggleModal('about-modal')">ℹ</button>
         </div>
     </div>
 
