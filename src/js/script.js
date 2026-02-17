@@ -125,7 +125,6 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 
-// (Spotify removed – replaced by animation toggle)
 
 // Configuration
 const WS_PORT = 8080;
@@ -721,7 +720,7 @@ function validateName() {
     if (!nameInput) return globalName;
     let name = nameInput.value.trim();
     if (!name) { showNotification("Lūdzu ievadi Vārdu!", 'warning'); return null; }
-    if (name.length > 8) name = name.substring(0, 8); // Force limit
+    if (name.length > 8) name = name.substring(0, 8);
     return name;
 }
 
@@ -979,7 +978,7 @@ function startAntGame() {
     document.querySelector('.task-section').innerHTML = `
         <h2>🐜 RTU Datorikas uzdevums</h2>
         <p>Studiju programmā "Datorika" studenti mācās risināt problēmas ātri un precīzi.</p>
-        <p>Nospiez ${ANTS_REQUIRED} kļūdas (bugs) ${ANT_GAME_TIME} sekunžu laikā!</p>
+        <p>Noķer ${ANTS_REQUIRED} kukaiņus ${ANT_GAME_TIME} sekunžu laikā!</p>
         <button class="btn btn-full" onclick="initAntGame()">SĀKT</button>
     `;
 }
@@ -990,9 +989,9 @@ function initAntGame() {
     let timeLeft = ANT_GAME_TIME;
     
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐛 Ķer kļūdas (bugs)!</h2>
+        <h2>🐛 Ķer kukaiņus!</h2>
         <p id="ant-timer" style="color: #ffaa00; font-size: 20px;">Laiks: ${timeLeft}s</p>
-        <p id="ant-count" style="font-size: 18px;">Noķertas: 0/${ANTS_REQUIRED}</p>
+        <p id="ant-count" style="font-size: 18px;">Noķerti: 0/${ANTS_REQUIRED}</p>
         <div id="ant-field" style="position: relative; width: 100%; height: 250px; background: rgba(0,100,0,0.2); border: 2px solid #4CAF50; border-radius: 10px; overflow: hidden; cursor: crosshair;"></div>
     `;
     
@@ -1026,7 +1025,7 @@ function spawnAnt() {
         setTimeout(() => { if (this.parentNode) this.parentNode.removeChild(this); }, 200);
         
         const countEl = document.getElementById('ant-count');
-        if (countEl) countEl.textContent = `Izlabotas: ${antsCaught}/${ANTS_REQUIRED}`;
+        if (countEl) countEl.textContent = `Noķerti: ${antsCaught}/${ANTS_REQUIRED}`;
         
         if (antsCaught >= ANTS_REQUIRED) { finishAntGame(true); }
         else { setTimeout(spawnAnt, 300); }
@@ -1057,7 +1056,7 @@ function finishAntGame(success) {
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>✅ Lielisks darbs!</h2>
-            <p>Izlabotas kļūdas: ${antsCaught}/${ANTS_REQUIRED}</p>
+            <p>Noķerti kukaiņi: ${antsCaught}/${ANTS_REQUIRED}</p>
             <p style="color: #4CAF50;">+10 punkti</p>
             <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
             <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
@@ -1065,10 +1064,9 @@ function finishAntGame(success) {
     } else {
         GameState.addScore(-5);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-        // V18: Must retry on failure
         document.querySelector('.task-section').innerHTML = `
             <h2>❌ Laiks beidzies!</h2>
-            <p>Izlabotas kļūdas: ${antsCaught}/${ANTS_REQUIRED}</p>
+            <p>Noķerti kukaiņi: ${antsCaught}/${ANTS_REQUIRED}</p>
             <p style="color: #f44336;">-5 punkti. Mēģini vēlreiz!</p>
             <button class="btn btn-full" onclick="initAntGame()">🔄 Mēģināt vēlreiz</button>
         `;
@@ -1160,7 +1158,6 @@ function checkHistorySequence() {
     } else {
         GameState.addScore(-5);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-        // V18: Must retry on failure
         document.querySelector('.task-section').innerHTML = `
             <h2>❌ Nepareizi!</h2>
             <p style="color: #f44336;">Secība nav pareiza. -5 punkti. Mēģini vēlreiz!</p>
@@ -1245,13 +1242,6 @@ async function showQuiz(type) {
             <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
         </div>
     `;
-}
-
-/**
- * Enforce score limits (minimum 0, maximum 100)
- */
-function enforceScoreLimits() {
-    // Now handled by GameState internally
 }
 
 function checkAns(type) {
@@ -1429,7 +1419,7 @@ function finishGame(name, finalScore, time) {
     });
 }
 
-function exitGame() { window.close(); }
+function exitGame() { window.location.href = 'https://www.google.com'; }
 function setMusicVolume(v) { 
     localStorage.setItem('musicVolume', v);
 }
@@ -1446,8 +1436,8 @@ function getTrailColor() {
     const theme = document.body.getAttribute('data-theme') || 'default';
     const colors = {
         'default': 'rgba(255, 170, 0,',
-        'dark': 'rgba(0, 170, 255,',
-        'light': 'rgba(255, 102, 0,',
+        'dark': 'rgba(187, 134, 252,',
+        'light': 'rgba(255, 68, 68,',
         'blue': 'rgba(255, 215, 0,'
     };
     return colors[theme] || colors['default'];
@@ -1566,8 +1556,8 @@ function setTheme(themeName) {
 function getThemeLabel(themeName) {
     const labels = {
         'default': 'Noklusējuma',
-        'dark': 'Tumša',
-        'light': 'Gaiša',
+        'dark': 'Violeta',
+        'light': 'Tumši sarkana',
         'blue': 'Zila'
     };
     return labels[themeName] || themeName;
@@ -1715,6 +1705,7 @@ window.initBoatRace = initBoatRace;
 window.closeBoatGame = closeBoatGame;
 window.initAntGame = initAntGame;
 window.closeAntGame = closeAntGame;
+window.startHistorySequence = startHistorySequence;
 window.checkHistorySequence = checkHistorySequence;
 window.closeHistoryGame = closeHistoryGame;
 window.sendReady = sendReady;
