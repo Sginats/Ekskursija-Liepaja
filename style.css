@@ -999,10 +999,21 @@ input[type=range] {
         padding: 14px 18px;
     }
     
-    /* Map page responsive */
+    /* Map page responsive - fix point overlapping */
     .map-area {
         height: 70vh;
         width: calc(70vh * 0.5);
+    }
+    
+    .point {
+        width: 20px;
+        height: 20px;
+        border-width: 2px;
+    }
+    
+    /* Ensure points don't overlap location names on mobile */
+    .point::after {
+        display: none;
     }
     
     .difficulty-legend {
@@ -1087,9 +1098,14 @@ input[type=range] {
     }
     
     .point {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         border-width: 2px;
+    }
+    
+    /* Bring active point to front to prevent overlap with inactive points */
+    .active-point {
+        z-index: 100;
     }
     
     .authors-corner {
@@ -1541,4 +1557,40 @@ body[data-theme="blue"] {
     background: var(--bg-primary);
     color: var(--text-primary);
     border-left: 4px solid var(--accent-primary);
+}
+
+/* Dynamic animated background */
+@keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary), var(--bg-primary));
+    background-size: 400% 400%;
+    animation: bgShift 15s ease infinite;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* History sequence mini-game styles */
+.history-item {
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.history-item:hover {
+    transform: translateX(5px);
+    background: rgba(255, 170, 0, 0.1) !important;
+}
+
+.history-item:active {
+    transform: scale(0.98);
 }

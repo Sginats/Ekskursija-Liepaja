@@ -29,7 +29,30 @@ if ($name !== null && $score !== null) {
     if ($score > 100) $score = 100; // Max 10 questions × 10 points
     if ($score < -50) $score = -50; // Minimum possible score
     
-    $time = htmlspecialchars($time ? $time : '00:00:00');
+    // Validate time format (MM:SS) and minimum time
+    $time = htmlspecialchars($time ? $time : '00:00');
+    $timeInSeconds = 0;
+    
+    // Support both MM:SS and HH:MM:SS formats
+    $timeParts = explode(':', $time);
+    if (count($timeParts) === 2) {
+        $timeInSeconds = (int)$timeParts[0] * 60 + (int)$timeParts[1];
+    } elseif (count($timeParts) === 3) {
+        $timeInSeconds = (int)$timeParts[0] * 3600 + (int)$timeParts[1] * 60 + (int)$timeParts[2];
+    }
+    
+    // Minimum time validation: 10 tasks × ~3 seconds minimum per task = 30 seconds
+    // This also covers negative and zero times
+    $MIN_GAME_TIME = 30;
+    if ($timeInSeconds < $MIN_GAME_TIME) {
+        echo "Error: Laiks ir pārāk īss, lai būtu reāls (minimums: {$MIN_GAME_TIME}s)";
+        exit;
+    }
+    
+    // Normalize time to MM:SS format
+    $normalizedMinutes = floor($timeInSeconds / 60);
+    $normalizedSeconds = $timeInSeconds % 60;
+    $time = sprintf("%02d:%02d", $normalizedMinutes, $normalizedSeconds);
 
     $line = $name . "|" . $score . "|" . $time . "\n";
     $file = __DIR__ . "/../data/leaderboard.txt";
