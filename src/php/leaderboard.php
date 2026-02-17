@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <title>Top 10 Rezultāti</title>
     <link rel="stylesheet" href="../../style.css">
+    <style>
+        .sort-indicator {
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        th {
+            cursor: pointer;
+            user-select: none;
+        }
+        th:hover {
+            background: rgba(255, 170, 0, 0.1);
+        }
+        .sort-info {
+            text-align: center;
+            color: #ffaa00;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
     <audio id="bg-music" loop>
@@ -11,17 +30,17 @@
     </audio>
     <div class="container">
         <h1 class="title">🏆 Top 10 Rezultāti</h1>
-        <p>Ātrākie spēlētāji Liepājas ekskursijā</p>
+        <p class="sort-info">Sortēts pēc: <span id="sort-mode">Kombinētā vērtējuma (Punkti + Laiks)</span></p>
         <table class="tabulaLead">
             <thead>
                 <tr id="tabulaiTR">
                     <th id="nummurs">#</th>
                     <th id="vardi">Vārds</th>
-                    <th id="laiki">Laiks</th>
-                    <th id="punkti">Punkti</th>
+                    <th id="laiki" onclick="sortByTime()">Laiks <span id="time-indicator" class="sort-indicator"></span></th>
+                    <th id="punkti" onclick="sortByScore()">Punkti <span id="score-indicator" class="sort-indicator"></span></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="leaderboard-body">
                 <?php
                 $file = __DIR__ . "/../data/leaderboard.txt";
                 
@@ -31,7 +50,6 @@
                     foreach ($lines as $line) {
                         $parts = explode("|", $line);
                         if (count($parts) >= 3) {
-                            // Convert time to seconds for proper sorting
                             $timeParts = explode(':', $parts[2]);
                             $timeInSeconds = 0;
                             if (count($timeParts) === 3) {
@@ -47,22 +65,10 @@
                         }
                     }
 
-                    usort($results, function($a, $b) {
-                        return $a['timeInSeconds'] - $b['timeInSeconds'];
-                    });
-
-                    $top10 = array_slice($results, 0, 10);
-                    $position = 1;
-                    foreach ($top10 as $row) {
-                        echo "<tr>";
-                        echo "<td>" . $position++ . "</td>";
-                        echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                        echo "<td>{$row['time']}</td>";
-                        echo "<td>{$row['score']}</td>";
-                        echo "</tr>";
-                    }
+                    // Output as JSON for JavaScript
+                    echo "<script>const leaderboardData = " . json_encode($results) . ";</script>";
                 } else {
-                    echo "<tr><td colspan='3'>Nav rezultātu</td></tr>";
+                    echo "<script>const leaderboardData = [];</script>";
                 }
                 ?>
             </tbody>
@@ -70,6 +76,97 @@
         <button class="btn" onclick="location.href='../../index.html'">Atpakaļ</button>
     </div>
     <script>
+        let currentSort = 'combo';
+        
+        // Calculate combo score (higher score + faster time = better)
+        function calculateComboScore(entry) {
+            // Score component: 0-100 points
+            const scoreComponent = entry.score;
+            // Time component: Convert to minutes and subtract from a max value
+            // Assuming max reasonable time is 60 minutes (3600 seconds)
+            // Better (faster) time = higher score
+            const maxTime = 3600;
+            const timeComponent = Math.max(0, (maxTime - entry.timeInSeconds) / maxTime * 100);
+            // Combined score: 60% weight on points, 40% weight on time
+            return (scoreComponent * 0.6) + (timeComponent * 0.4);
+        }
+        
+        function sortByCombo() {
+            currentSort = 'combo';
+            const sorted = [...leaderboardData].sort((a, b) => {
+                return calculateComboScore(b) - calculateComboScore(a);
+            });
+            renderLeaderboard(sorted);
+            updateSortIndicators();
+            document.getElementById('sort-mode').textContent = 'Kombinētā vērtējuma (Punkti + Laiks)';
+        }
+        
+        function sortByTime() {
+            if (currentSort === 'time') {
+                currentSort = 'combo';
+                sortByCombo();
+            } else {
+                currentSort = 'time';
+                const sorted = [...leaderboardData].sort((a, b) => {
+                    return a.timeInSeconds - b.timeInSeconds;
+                });
+                renderLeaderboard(sorted);
+                updateSortIndicators();
+                document.getElementById('sort-mode').textContent = 'Laika (Ātrākais pirmais)';
+            }
+        }
+        
+        function sortByScore() {
+            if (currentSort === 'score') {
+                currentSort = 'combo';
+                sortByCombo();
+            } else {
+                currentSort = 'score';
+                const sorted = [...leaderboardData].sort((a, b) => {
+                    return b.score - a.score;
+                });
+                renderLeaderboard(sorted);
+                updateSortIndicators();
+                document.getElementById('sort-mode').textContent = 'Punktu (Vairāk pirmais)';
+            }
+        }
+        
+        function updateSortIndicators() {
+            document.getElementById('time-indicator').textContent = currentSort === 'time' ? '↓' : '';
+            document.getElementById('score-indicator').textContent = currentSort === 'score' ? '↓' : '';
+        }
+        
+        function renderLeaderboard(data) {
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">Nav rezultātu</td></tr>';
+                return;
+            }
+            
+            const top10 = data.slice(0, 10);
+            top10.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(row.name)}</td>
+                    <td>${row.time}</td>
+                    <td>${row.score}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initialize with combo sort
+        sortByCombo();
+
         // Initialize background music
         const music = document.getElementById('bg-music');
         if (music) {

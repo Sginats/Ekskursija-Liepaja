@@ -53,7 +53,6 @@ const GameState = (function() {
 })();
 
 let currentTask = "";
-let currentLang = localStorage.getItem('lang') || 'lv';
 let startTime; 
 let myRole = '';
 let myLobbyCode = '';
@@ -136,24 +135,6 @@ const locationInfo = {
     }
 };
 
-// UI text translations (Latvian base)
-const uiTexts = {
-    "main-title": "LIEPĀJAS KARTE",
-    "subtitle": "EKSKURSIJA",
-    "btn-start": "Sākt spēli",
-    "btn-settings": "Iestatījumi",
-    "btn-leaderboard": "Top 10",
-    "btn-about": "Par spēli",
-    "btn-exit": "Iziet",
-    "score-label": "Punkti: ",
-    "btn-submit": "Iesniegt",
-    "mode-title": "Izvēlies režīmu",
-    "btn-single": "Spēlēt vienam",
-    "btn-lobby": "Spēlēt ar draugu",
-    "btn-join": "Pievienoties",
-    "btn-cancel-mode": "Atcelt"
-};
-
 // ============================================================================
 // INITIALIZATION & EVENT LISTENERS
 // ============================================================================
@@ -161,6 +142,9 @@ const uiTexts = {
 document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
     startTime = Date.now();
+    
+    // Initialize theme
+    initTheme();
     
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
@@ -555,40 +539,6 @@ function checkBothPlayersDonePHP(code) {
     setTimeout(() => clearInterval(checkInterval), 30000);
 }
 
-// Translation
-
-async function translateText(text, targetLang) {
-    try {
-        const response = await fetch(`../php/translate.php?text=${encodeURIComponent(text)}&target=${targetLang}`);
-        const data = await response.json();
-        if (data && data.translations && data.translations[0]) {
-            return data.translations[0].text;
-        }
-    } catch (e) {
-        console.error("Tulkošanas kļūda:", e);
-    }
-    return text;
-}
-
-async function translateInterface(lang) {
-    // Tulko UI elementus
-    for (const key in uiTexts) {
-        const el = document.getElementById(key);
-        if (el) {
-            const original = uiTexts[key];
-            const translated = await translateText(original, lang.toUpperCase());
-            if (el.tagName === 'INPUT') el.placeholder = translated;
-            else el.innerText = translated;
-        }
-    }
-}
-
-function setLanguage(lang) {
-    currentLang = lang;
-    localStorage.setItem('lang', lang);
-    location.reload(); // Pārlādējam, lai ielādētos tulkojumi
-}
-
 // Menu functions
 
 function getQueryParams() {
@@ -879,7 +829,6 @@ async function showQuiz(type) {
     const task = questions[type];
     
     let q = task.q;
-    if(currentLang !== 'lv') q = await translateText(q, currentLang.toUpperCase());
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
@@ -963,6 +912,47 @@ function setSFXVolume(v) {
         sfx.volume = v/100;
         localStorage.setItem('sfxVolume', v);
     }
+}
+
+// Theme system
+function setTheme(themeName) {
+    document.body.setAttribute('data-theme', themeName);
+    localStorage.setItem('theme', themeName);
+    
+    // Update active button
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-theme') === themeName) {
+            btn.classList.add('active');
+        }
+    });
+    
+    showNotification(`Tēma mainīta: ${getThemeLabel(themeName)}`, 'success', 2000);
+}
+
+function getThemeLabel(themeName) {
+    const labels = {
+        'default': 'Noklusējuma',
+        'dark': 'Tumša',
+        'light': 'Gaiša',
+        'blue': 'Zila'
+    };
+    return labels[themeName] || themeName;
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'default';
+    document.body.setAttribute('data-theme', savedTheme);
+    
+    // Mark active theme button when settings modal opens
+    setTimeout(() => {
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-theme') === savedTheme) {
+                btn.classList.add('active');
+            }
+        });
+    }, 100);
 }
 
 // Spotify mini player

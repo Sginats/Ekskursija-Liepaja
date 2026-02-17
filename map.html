@@ -82,6 +82,26 @@
             <label id="vol-sfx">Skaņas efekti</label>
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
             
+            <h3 class="section-title">🎨 Krāsu tēma</h3>
+            <div class="theme-selector">
+                <button class="theme-btn" onclick="setTheme('default')" data-theme="default">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #332222, #2a1a1a);"></span>
+                    Noklusējuma
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" data-theme="dark">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #1a1a1a, #000000);"></span>
+                    Tumša
+                </button>
+                <button class="theme-btn" onclick="setTheme('light')" data-theme="light">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #f0f0f0, #d0d0d0);"></span>
+                    Gaiša
+                </button>
+                <button class="theme-btn" onclick="setTheme('blue')" data-theme="blue">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #1e3a5f, #2c5f8d);"></span>
+                    Zila
+                </button>
+            </div>
+            
             <h3 class="section-title">🎵 Spotify Playlist</h3>
             <div class="spotify-mini-player" id="spotify-mini-player">
                 <div class="smp-track-info">
