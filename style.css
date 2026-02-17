@@ -113,6 +113,7 @@ body {
     position: relative;
     overflow: hidden;
     animation: slideInFromRight 0.4s ease-out;
+    will-change: transform;
 }
 
 .btn:nth-child(1) { animation-delay: 0.05s; }
@@ -480,119 +481,77 @@ input[type=range] {
     pointer-events: none;
 }
 
-/* Spotify Mini Player */
-.spotify-mini-player {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 2px solid rgba(29, 185, 84, 0.4);
-    border-radius: 15px;
-    padding: 15px;
+/* Animation Toggle */
+.animation-toggle {
     margin: 15px 0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.smp-track-info {
+.toggle-label {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.smp-album-art {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #1DB954, #191414);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.smp-track-details {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.smp-track-name {
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.smp-artist-name {
-    color: #1DB954;
-    font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
-}
-
-.smp-controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.smp-btn {
-    background: none;
-    border: none;
+    justify-content: space-between;
     cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 0;
-    line-height: 1;
+    font-size: 15px;
+    color: var(--text-secondary);
 }
 
-.smp-btn:hover {
-    transform: scale(1.2);
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
 }
 
-.smp-btn:active {
-    transform: scale(0.95);
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
-.smp-btn-small {
-    font-size: 20px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--border-color);
+    border-radius: 26px;
+    transition: background 0.3s ease;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
     border-radius: 50%;
-    color: #b3b3b3;
+    transition: transform 0.3s ease;
 }
 
-.smp-btn-small:hover {
-    color: #fff;
-    background: rgba(255,255,255,0.1);
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--accent-primary);
 }
 
-.smp-btn-small.active {
-    color: #1DB954;
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(24px);
 }
 
-.smp-btn-play {
-    font-size: 28px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #1DB954;
-    box-shadow: 0 3px 10px rgba(29, 185, 84, 0.4);
+/* Animations disabled state */
+body.no-animations,
+body.no-animations * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
 }
 
-.smp-btn-play:hover {
-    background: #1ed760;
-    box-shadow: 0 4px 15px rgba(29, 185, 84, 0.6);
+body.no-animations .button-group .btn {
+    animation: none !important;
+    opacity: 1;
+}
+
+body.no-animations::before,
+body.no-animations::after {
+    animation: none !important;
 }
 
 /* Quiz form layout - stacked input + button */
@@ -1646,11 +1605,6 @@ body[data-theme="blue"] .modal-content {
     100% { background-position: 0% 50%; }
 }
 
-@keyframes floatParticle {
-    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-    50% { transform: translateY(-30px) rotate(180deg); opacity: 0.6; }
-}
-
 body::before {
     content: '';
     position: fixed;
@@ -1663,6 +1617,7 @@ body::before {
     background-size: 400% 400%;
     animation: bgShift 15s ease infinite;
     pointer-events: none;
+    will-change: background-position;
 }
 
 body::after {
@@ -1682,6 +1637,7 @@ body::after {
     pointer-events: none;
     animation: bgShift 20s ease-in-out infinite reverse;
     background-size: 200% 200%;
+    will-change: background-position;
 }
 
 /* History sequence mini-game styles */

@@ -64,7 +64,7 @@ let globalName = "Anonīms";
 let ws = null;
 
 // Spotify configuration
-const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/2FJVi4yazmR6yUDFkOu9ep';
+// (Removed – replaced by animation toggle)
 
 // Configuration
 const WS_PORT = 8080;
@@ -214,7 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize cursor trail effect
-    initCursorTrail();
+    initAnimationToggle();
+    if (animationsEnabled) {
+        initCursorTrail();
+    }
 });
 
 // Connection manager
@@ -1237,6 +1240,10 @@ function getTrailColor() {
 function initCursorTrail() {
     const canvas = document.getElementById('cursor-canvas');
     if (!canvas) return;
+    if (cursorTrailAnimId) {
+        cancelAnimationFrame(cursorTrailAnimId);
+        cursorTrailAnimId = null;
+    }
     const ctx = canvas.getContext('2d');
 
     let mouseMoved = false;
@@ -1244,15 +1251,15 @@ function initCursorTrail() {
         x: 0.5 * window.innerWidth,
         y: 0.5 * window.innerHeight,
     };
+    const pointsNumber = 30;
     const params = {
-        pointsNumber: 40,
         widthFactor: 0.3,
         spring: 0.4,
         friction: 0.5
     };
 
-    const trail = new Array(params.pointsNumber);
-    for (let i = 0; i < params.pointsNumber; i++) {
+    const trail = new Array(pointsNumber);
+    for (let i = 0; i < pointsNumber; i++) {
         trail[i] = { x: pointer.x, y: pointer.y, dx: 0, dy: 0 };
     }
 
@@ -1280,6 +1287,8 @@ function initCursorTrail() {
     window.addEventListener("resize", setupCanvas);
 
     function update(t) {
+        if (!animationsEnabled) return;
+
         if (!mouseMoved) {
             pointer.x = (0.5 + 0.3 * Math.cos(0.002 * t) * Math.sin(0.005 * t)) * window.innerWidth;
             pointer.y = (0.5 + 0.2 * Math.cos(0.005 * t) + 0.1 * Math.cos(0.01 * t)) * window.innerHeight;
@@ -1306,7 +1315,7 @@ function initCursorTrail() {
             const xc = 0.5 * (trail[i].x + trail[i + 1].x);
             const yc = 0.5 * (trail[i].y + trail[i + 1].y);
             ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
-            ctx.lineWidth = params.widthFactor * (params.pointsNumber - i);
+            ctx.lineWidth = params.widthFactor * (pointsNumber - i);
             const alpha = 1 - (i / trail.length);
             ctx.strokeStyle = colorBase + ' ' + alpha.toFixed(2) + ')';
             ctx.stroke();
@@ -1316,10 +1325,10 @@ function initCursorTrail() {
         ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
         ctx.stroke();
 
-        window.requestAnimationFrame(update);
+        cursorTrailAnimId = window.requestAnimationFrame(update);
     }
 
-    window.requestAnimationFrame(update);
+    cursorTrailAnimId = window.requestAnimationFrame(update);
 }
 
 // Theme system
@@ -1374,130 +1383,57 @@ function toggleModal(id) {
     const isOpening = modal.style.display !== "block";
     modal.style.display = isOpening ? "block" : "none";
     
-    // Update theme button active state when settings modal opens
+    // Update settings controls when settings modal opens
     if (isOpening && id === 'settings-modal') {
         const savedTheme = localStorage.getItem('theme') || 'default';
         updateActiveThemeButton(savedTheme);
+        const checkbox = document.getElementById('animation-toggle');
+        if (checkbox) checkbox.checked = animationsEnabled;
     }
 }
 
-// Spotify mini player
+// Animation toggle
 
-let spotifyEmbedController = null;
-let spotifyIsPlaying = false;
-let spotifyShuffleOn = false;
-let spotifyRepeatOn = false;
-let spotifyLoaded = false;
+let animationsEnabled = true;
+let cursorTrailAnimId = null;
 
-/**
- * Initialize the Spotify Embed iframe and IFrame API controller.
- * On first call it inserts a hidden iframe and connects via the
- * Spotify IFrame API so we can drive playback with JS.
- */
-function spotifyInit(callback) {
-    if (spotifyLoaded) { if (callback) callback(); return; }
-    const container = document.getElementById('spotify-embed-container');
-    if (!container) return;
-    
-    const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
-    container.style.display = 'block';
-    container.innerHTML = `<iframe 
-        id="spotify-iframe"
-        src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
-        width="1" 
-        height="1" 
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-        loading="lazy"
-        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;">
-    </iframe>`;
-    
-    // Try connecting to the Spotify IFrame API
-    window.onSpotifyIframeApiReady = function(IFrameAPI) {
-        const iframe = document.getElementById('spotify-iframe');
-        if (!iframe) return;
-        IFrameAPI.createController(iframe, {}, function(controller) {
-            spotifyEmbedController = controller;
-            controller.addListener('playback_update', function(e) {
-                spotifyIsPlaying = !e.data.isPaused;
-                updatePlayButton();
-            });
-            if (callback) callback();
-        });
-    };
-    
-    // Load the Spotify IFrame API script if not already present
-    if (!document.getElementById('spotify-iframe-api')) {
-        const script = document.createElement('script');
-        script.id = 'spotify-iframe-api';
-        script.src = 'https://open.spotify.com/embed/iframe-api/v1';
-        document.head.appendChild(script);
+function toggleAnimations(enabled) {
+    animationsEnabled = enabled;
+    localStorage.setItem('animationsEnabled', enabled ? '1' : '0');
+
+    if (enabled) {
+        document.body.classList.remove('no-animations');
+        const canvas = document.getElementById('cursor-canvas');
+        if (canvas) {
+            canvas.style.display = '';
+            initCursorTrail();
+        }
+    } else {
+        document.body.classList.add('no-animations');
+        if (cursorTrailAnimId) {
+            cancelAnimationFrame(cursorTrailAnimId);
+            cursorTrailAnimId = null;
+        }
+        const canvas = document.getElementById('cursor-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.style.display = 'none';
+        }
     }
-    spotifyLoaded = true;
+    showNotification(enabled ? '✨ Animācijas ieslēgtas' : '✨ Animācijas izslēgtas', 'info', 2000);
 }
 
-function updatePlayButton() {
-    const btn = document.getElementById('smp-play');
-    if (btn) btn.textContent = spotifyIsPlaying ? '⏸️' : '▶️';
-}
-
-function spotifyPlayPause() {
-    if (!spotifyLoaded) {
-        spotifyInit(function() {
-            if (spotifyEmbedController) spotifyEmbedController.togglePlay();
-        });
-        // Update UI optimistically
-        spotifyIsPlaying = true;
-        updatePlayButton();
-        const name = document.getElementById('smp-artist-name');
-        if (name) name.textContent = 'Ielādē...';
-        return;
+function initAnimationToggle() {
+    const saved = localStorage.getItem('animationsEnabled');
+    if (saved === '0') {
+        animationsEnabled = false;
+        document.body.classList.add('no-animations');
+        const canvas = document.getElementById('cursor-canvas');
+        if (canvas) canvas.style.display = 'none';
     }
-    if (spotifyEmbedController) {
-        spotifyEmbedController.togglePlay();
-    }
-}
-
-function spotifyNext() {
-    if (!spotifyLoaded) { spotifyInit(); return; }
-    // Spotify Embed IFrame API has limited skip support.
-    // We restart the playlist which triggers the next track if shuffle is on in the player.
-    if (spotifyEmbedController) {
-        const playlistUri = SPOTIFY_PLAYLIST_URL.replace('https://open.spotify.com/', 'spotify:').replace(/\//g, ':');
-        spotifyEmbedController.loadUri(playlistUri);
-        spotifyEmbedController.play();
-    }
-    showNotification('⏭ Nākamā dziesma', 'info', 1500);
-}
-
-function spotifyPrev() {
-    if (!spotifyLoaded) { spotifyInit(); return; }
-    // Seek to start of current track (standard prev behavior)
-    if (spotifyEmbedController) {
-        spotifyEmbedController.seek(0);
-    }
-    showNotification('⏮ No sākuma', 'info', 1500);
-}
-
-function spotifyToggleShuffle() {
-    // Note: Spotify Embed IFrame API does not expose shuffle control directly.
-    // This toggles the UI state; actual shuffle depends on the user's Spotify app settings.
-    spotifyShuffleOn = !spotifyShuffleOn;
-    const btn = document.getElementById('smp-shuffle');
-    if (btn) {
-        btn.classList.toggle('active', spotifyShuffleOn);
-    }
-    showNotification(spotifyShuffleOn ? '🔀 Shuffle ON' : '🔀 Shuffle OFF', 'info', 1500);
-}
-
-function spotifyToggleRepeat() {
-    // Note: Spotify Embed IFrame API does not expose repeat control directly.
-    // This toggles the UI state; actual repeat depends on the user's Spotify app settings.
-    spotifyRepeatOn = !spotifyRepeatOn;
-    const btn = document.getElementById('smp-repeat');
-    if (btn) {
-        btn.classList.toggle('active', spotifyRepeatOn);
-    }
-    showNotification(spotifyRepeatOn ? '🔁 Repeat ON' : '🔁 Repeat OFF', 'info', 1500);
+    const checkbox = document.getElementById('animation-toggle');
+    if (checkbox) checkbox.checked = animationsEnabled;
 }
 
 // Notification system
@@ -1569,10 +1505,6 @@ window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
 window.finishGame = finishGame;
 window.showEndGameScreen = showEndGameScreen;
-window.spotifyPlayPause = spotifyPlayPause;
-window.spotifyNext = spotifyNext;
-window.spotifyPrev = spotifyPrev;
-window.spotifyToggleShuffle = spotifyToggleShuffle;
-window.spotifyToggleRepeat = spotifyToggleRepeat;
+window.toggleAnimations = toggleAnimations;
 
 })(); // End IIFE

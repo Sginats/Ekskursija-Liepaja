@@ -103,23 +103,15 @@
                 </button>
             </div>
             
-            <h3 class="section-title">🎵 Spotify Playlist</h3>
-            <div class="spotify-mini-player" id="spotify-mini-player">
-                <div class="smp-track-info">
-                    <div class="smp-album-art" id="smp-album-art">🎵</div>
-                    <div class="smp-track-details">
-                        <div class="smp-track-name" id="smp-track-name">Liepājas Ekskursija</div>
-                        <div class="smp-artist-name" id="smp-artist-name">Spied Play lai sāktu</div>
+            <h3 class="section-title">✨ Animācijas</h3>
+            <div class="animation-toggle">
+                <label class="toggle-label" for="animation-toggle">
+                    <span>Animācijas On/Off</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="animation-toggle" checked onchange="toggleAnimations(this.checked)">
+                        <span class="toggle-slider"></span>
                     </div>
-                </div>
-                <div class="smp-controls">
-                    <button class="smp-btn smp-btn-small" id="smp-shuffle" onclick="spotifyToggleShuffle()" title="Shuffle">🔀</button>
-                    <button class="smp-btn smp-btn-small" id="smp-prev" onclick="spotifyPrev()" title="Iepriekšējā">⏮</button>
-                    <button class="smp-btn smp-btn-play" id="smp-play" onclick="spotifyPlayPause()" title="Play/Pause">▶️</button>
-                    <button class="smp-btn smp-btn-small" id="smp-next" onclick="spotifyNext()" title="Nākamā">⏭</button>
-                    <button class="smp-btn smp-btn-small" id="smp-repeat" onclick="spotifyToggleRepeat()" title="Repeat">🔁</button>
-                </div>
-                <div id="spotify-embed-container" style="display:none;"></div>
+                </label>
             </div>
             
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
@@ -175,7 +167,6 @@
                 <ul>
                     <li>Fona mūzika: Brīvās licences audio</li>
                     <li>Skaņas efekti: Autoru ieraksti</li>
-                    <li>Spotify integrācija: Spotify Embed API</li>
                 </ul>
                 <p><strong>Informācija:</strong></p>
                 <ul>
