@@ -60,6 +60,9 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 
+// --- SPOTIFY CONFIGURATION ---
+const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/2FJVi4yazmR6yUDFkOu9ep';
+
 // --- CONFIGURATION ---
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -215,6 +218,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sfx) {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
+    }
+
+    // Set volume slider values from localStorage
+    const musicSlider = document.querySelector('input[oninput*="setMusicVolume"]');
+    if (musicSlider) {
+        const savedMusicVolume = localStorage.getItem('musicVolume');
+        musicSlider.value = savedMusicVolume || 30;
     }
 
     const sfxSlider = document.querySelector('input[oninput*="setSFXVolume"]');
@@ -991,11 +1001,50 @@ function finishGame(name, finalScore, time) {
 }
 function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
 function exitGame() { window.close(); }
+function setMusicVolume(v) { 
+    localStorage.setItem('musicVolume', v);
+}
 function setSFXVolume(v) { 
     const sfx = document.getElementById('hover-sound');
     if (sfx) {
         sfx.volume = v/100;
         localStorage.setItem('sfxVolume', v);
+    }
+}
+
+// --- SPOTIFY PLAYER INTEGRATION ---
+
+/**
+ * Toggle Spotify playlist embed player
+ * Shows/hides the Spotify iframe embed widget
+ */
+let spotifyLoaded = false;
+function toggleSpotifyPlayback() {
+    const container = document.getElementById('spotify-embed-container');
+    const button = document.getElementById('spotify-play-btn');
+    if (!container || !button) return;
+    
+    if (container.style.display === 'none' || container.style.display === '') {
+        // Load the Spotify embed on first click
+        if (!spotifyLoaded) {
+            const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
+            container.innerHTML = `<iframe 
+                src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
+                width="100%" 
+                height="152" 
+                frameBorder="0" 
+                allowfullscreen="" 
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                loading="lazy"
+                style="border-radius: 12px;">
+            </iframe>`;
+            spotifyLoaded = true;
+        }
+        container.style.display = 'block';
+        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">⏸️</span><span style="font-size: 16px; font-weight: bold;">Paslēpt Spotify</span>';
+    } else {
+        container.style.display = 'none';
+        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">▶️</span><span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>';
     }
 }
 

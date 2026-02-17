@@ -73,8 +73,22 @@
             <h2 id="settings-title">Iestatījumi</h2>
             
             <h3 id="audio-title" class="section-title">Audio</h3>
+            <label id="vol-music">Mūzika</label>
+            <input type="range" min="0" max="100" value="30" oninput="setMusicVolume(this.value)">
+            
             <label id="vol-sfx">Skaņas efekti</label>
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
+
+            <h3 class="section-title">🎵 Spotify Playlist</h3>
+            <div class="spotify-player-minimal">
+                <button id="spotify-play-btn" class="spotify-btn-large" onclick="toggleSpotifyPlayback()">
+                    <span style="font-size: 24px; margin-right: 8px;">▶️</span>
+                    <span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>
+                </button>
+                <p class="spotify-info">Liepājas Ekskursija Playlist</p>
+                <div id="spotify-embed-container" style="display: none; margin-top: 15px; border-radius: 12px; overflow: hidden;">
+                </div>
+            </div>
 
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
         </div>
