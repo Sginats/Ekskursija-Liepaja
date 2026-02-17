@@ -901,7 +901,7 @@ function finishGame(name, finalScore, time) {
         location.href = 'src/php/leaderboard.php';
     });
 }
-function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
+
 function exitGame() { window.close(); }
 function setMusicVolume(v) { 
     localStorage.setItem('musicVolume', v);
@@ -944,15 +944,35 @@ function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'default';
     document.body.setAttribute('data-theme', savedTheme);
     
-    // Mark active theme button when settings modal opens
-    setTimeout(() => {
-        document.querySelectorAll('.theme-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.getAttribute('data-theme') === savedTheme) {
-                btn.classList.add('active');
-            }
-        });
-    }, 100);
+    // Update active theme button when available
+    updateActiveThemeButton(savedTheme);
+}
+
+function updateActiveThemeButton(savedTheme) {
+    const buttons = document.querySelectorAll('.theme-btn');
+    if (buttons.length === 0) {
+        // Settings modal not yet loaded, try again when it opens
+        return;
+    }
+    
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-theme') === savedTheme) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+function toggleModal(id) {
+    const modal = document.getElementById(id);
+    const isOpening = modal.style.display !== "block";
+    modal.style.display = isOpening ? "block" : "none";
+    
+    // Update theme button active state when settings modal opens
+    if (isOpening && id === 'settings-modal') {
+        const savedTheme = localStorage.getItem('theme') || 'default';
+        updateActiveThemeButton(savedTheme);
+    }
 }
 
 // Spotify mini player

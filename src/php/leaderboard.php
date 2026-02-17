@@ -30,7 +30,7 @@
     </audio>
     <div class="container">
         <h1 class="title">🏆 Top 10 Rezultāti</h1>
-        <p class="sort-info">Sortēts pēc: <span id="sort-mode">Kombinētā vērtējuma (Punkti + Laiks)</span></p>
+        <p class="sort-info">Kārtots pēc: <span id="sort-mode">Kombinētā vērtējuma (Punkti + Laiks)</span></p>
         <table class="tabulaLead">
             <thead>
                 <tr id="tabulaiTR">
@@ -82,12 +82,11 @@
         function calculateComboScore(entry) {
             // Score component: 0-100 points
             const scoreComponent = entry.score;
-            // Time component: Convert to minutes and subtract from a max value
-            // Assuming max reasonable time is 60 minutes (3600 seconds)
-            // Better (faster) time = higher score
+            // Time component: Assuming max reasonable game completion time is 60 minutes
+            // This value is based on typical game completion being 10-30 minutes
             const maxTime = 3600;
             const timeComponent = Math.max(0, (maxTime - entry.timeInSeconds) / maxTime * 100);
-            // Combined score: 60% weight on points, 40% weight on time
+            // Combined score: 60% weight on points (knowledge), 40% weight on time (efficiency)
             return (scoreComponent * 0.6) + (timeComponent * 0.4);
         }
         
@@ -112,7 +111,7 @@
                 });
                 renderLeaderboard(sorted);
                 updateSortIndicators();
-                document.getElementById('sort-mode').textContent = 'Laika (Ātrākais pirmais)';
+                document.getElementById('sort-mode').textContent = 'Laiks (Ātrākais pirmais)';
             }
         }
         
@@ -159,9 +158,12 @@
         }
         
         function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
         
         // Initialize with combo sort
