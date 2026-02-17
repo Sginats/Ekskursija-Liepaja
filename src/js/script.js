@@ -787,10 +787,15 @@ let boatSpaceCount = 0;
 let boatInterval = null;
 
 function startBoatGame() {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const instruction = isTouchDevice 
+        ? `Spied pogu ${BOAT_RACE_CONFIG.REQUIRED_PRESSES} reizes pēc iespējas ātrāk!`
+        : `Spied SPACE taustiņu ${BOAT_RACE_CONFIG.REQUIRED_PRESSES} reizes pēc iespējas ātrāk!`;
+    
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
         <h2>Ostas Regate</h2>
-        <p>Spied SPACE taustiņu ${BOAT_RACE_CONFIG.REQUIRED_PRESSES} reizes pēc iespējas ātrāk!</p>
+        <p>${instruction}</p>
         <h3 id="boat-timer">0.00 s</h3>
         <p id="boat-progress">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
         <button class="btn" onclick="initBoatRace()">SĀKT</button>`;
@@ -801,14 +806,18 @@ function initBoatRace() {
     boatStartTime = Date.now();
     boatSpaceCount = 0;
     
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const actionText = isTouchDevice ? 'SPIED POGU!' : 'SPIED SPACE!';
+    
     // Remove any existing listener to prevent duplicates
     document.removeEventListener('keydown', handleBoatKeyPress);
     
     document.querySelector('.task-section').innerHTML = `
         <h2>Ostas Regate</h2>
-        <p style="color: #ffaa00; font-size: 24px; font-weight: bold;">SPIED SPACE!</p>
+        <p style="color: #ffaa00; font-size: 24px; font-weight: bold;">${actionText}</p>
         <h3 id="boat-timer">0.00 s</h3>
-        <p id="boat-progress" style="font-size: 20px;">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>`;
+        <p id="boat-progress" style="font-size: 20px;">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
+        <button id="boat-tap-btn" class="boat-tap-btn">🚣 SPIED! 🚣</button>`;
     
     // Update timer
     boatInterval = setInterval(() => {
@@ -819,8 +828,21 @@ function initBoatRace() {
         }
     }, 50);
     
-    // Listen for spacebar
+    // Listen for spacebar (desktop)
     document.addEventListener('keydown', handleBoatKeyPress);
+    
+    // Listen for tap/click on the button (mobile + desktop)
+    const tapBtn = document.getElementById('boat-tap-btn');
+    if (tapBtn) {
+        tapBtn.addEventListener('touchstart', handleBoatTap, { passive: false });
+        tapBtn.addEventListener('mousedown', handleBoatTap);
+    }
+}
+
+function handleBoatTap(e) {
+    e.preventDefault();
+    if (!boatRaceActive) return;
+    registerBoatPress();
 }
 
 function handleBoatKeyPress(e) {
@@ -828,14 +850,26 @@ function handleBoatKeyPress(e) {
     
     if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
-        boatSpaceCount++;
-        
-        const progressEl = document.getElementById('boat-progress');
-        if (progressEl) progressEl.innerText = `Spiedienu skaits: ${boatSpaceCount}/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}`;
-        
-        if (boatSpaceCount >= BOAT_RACE_CONFIG.REQUIRED_PRESSES) {
-            finishBoatRace();
-        }
+        registerBoatPress();
+    }
+}
+
+function registerBoatPress() {
+    if (!boatRaceActive) return;
+    boatSpaceCount++;
+    
+    const progressEl = document.getElementById('boat-progress');
+    if (progressEl) progressEl.innerText = `Spiedienu skaits: ${boatSpaceCount}/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}`;
+    
+    // Visual feedback on tap button
+    const tapBtn = document.getElementById('boat-tap-btn');
+    if (tapBtn) {
+        tapBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => { if (tapBtn) tapBtn.style.transform = 'scale(1)'; }, 100);
+    }
+    
+    if (boatSpaceCount >= BOAT_RACE_CONFIG.REQUIRED_PRESSES) {
+        finishBoatRace();
     }
 }
 

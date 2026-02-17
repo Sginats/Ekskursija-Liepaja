@@ -1282,6 +1282,33 @@ input[type=range] {
     font-size: 16px;
 }
 
+/* Boat race tap button (mobile-friendly) */
+.boat-tap-btn {
+    display: block;
+    width: 100%;
+    padding: 30px 20px;
+    margin: 15px 0;
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffaa00;
+    background: linear-gradient(135deg, #3a2525, #2a1a1a);
+    border: 3px solid #ffaa00;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 4px 15px rgba(255, 170, 0, 0.3);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.boat-tap-btn:active {
+    transform: scale(0.9);
+    box-shadow: 0 2px 8px rgba(255, 170, 0, 0.5);
+    background: linear-gradient(135deg, #4a3333, #3a2525);
+}
+
 /* --- ACCESSIBILITY IMPROVEMENTS --- */
 
 /* Focus visible for keyboard navigation */
