@@ -11,22 +11,19 @@
 </head>
 <body>
     <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
-    <audio id="bg-music" loop>
-        <source src="skana/music.mp3" type="audio/mpeg">
-    </audio>
 
     <!-- Connection Status Indicator -->
     <div id="connection-status" class="connection-status" style="display: none;"></div>
 
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 2px solid #ffaa00;">
+    <div class="map-topbar">
         
-        <button id="btn-back" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="location.href='index.html'">Atpakaļ uz Menu</button>
+        <button id="btn-back" class="btn topbar-btn" onclick="location.href='index.html'">← Menu</button>
         
-        <div id="score-display" style="color: #ffaa00; font-size: 24px; font-weight: bold; text-shadow: 0 0 10px #ffaa00;">Punkti: 0</div>
+        <div id="score-display" class="topbar-score">Punkti: 0</div>
 
-        <div style="display: flex; gap: 10px;">
-            <button id="btn-settings-map" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button id="btn-about-map" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="toggleModal('about-modal')">Par Spēli</button>
+        <div class="topbar-right">
+            <button id="btn-settings-map" class="btn topbar-btn" onclick="toggleModal('settings-modal')">⚙</button>
+            <button id="btn-about-map" class="btn topbar-btn" onclick="toggleModal('about-modal')">ℹ</button>
         </div>
     </div>
 
@@ -82,15 +79,22 @@
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
             
             <h3 class="section-title">🎵 Spotify Playlist</h3>
-            <div class="spotify-player-minimal">
-                <button id="spotify-play-btn" class="spotify-btn-large" onclick="toggleSpotifyPlayback()">
-                    <span style="font-size: 24px; margin-right: 8px;">▶️</span>
-                    <span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>
-                </button>
-                <p class="spotify-info">Liepājas Ekskursija Playlist</p>
-                <div id="spotify-embed-container" style="display: none; margin-top: 15px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(29, 185, 84, 0.2);">
-                    <!-- Spotify embed will be inserted here -->
+            <div class="spotify-mini-player" id="spotify-mini-player">
+                <div class="smp-track-info">
+                    <div class="smp-album-art" id="smp-album-art">🎵</div>
+                    <div class="smp-track-details">
+                        <div class="smp-track-name" id="smp-track-name">Liepājas Ekskursija</div>
+                        <div class="smp-artist-name" id="smp-artist-name">Spied Play lai sāktu</div>
+                    </div>
                 </div>
+                <div class="smp-controls">
+                    <button class="smp-btn smp-btn-small" id="smp-shuffle" onclick="spotifyToggleShuffle()" title="Shuffle">🔀</button>
+                    <button class="smp-btn smp-btn-small" id="smp-prev" onclick="spotifyPrev()" title="Iepriekšējā">⏮</button>
+                    <button class="smp-btn smp-btn-play" id="smp-play" onclick="spotifyPlayPause()" title="Play/Pause">▶️</button>
+                    <button class="smp-btn smp-btn-small" id="smp-next" onclick="spotifyNext()" title="Nākamā">⏭</button>
+                    <button class="smp-btn smp-btn-small" id="smp-repeat" onclick="spotifyToggleRepeat()" title="Repeat">🔁</button>
+                </div>
+                <div id="spotify-embed-container" style="display:none;"></div>
             </div>
             
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>

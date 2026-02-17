@@ -88,7 +88,9 @@ body {
     gap: 15px;
     width: 100%;
     align-items: center;
-    animation: fadeInUp 1.2s ease-out;
+    padding: 0 20px;
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
 }
 
 .btn {
@@ -446,66 +448,134 @@ input[type=range] {
     pointer-events: none;
 }
 
-/* Spotify Player Minimal Styles */
-.spotify-player-minimal {
-    background: linear-gradient(135deg, rgba(29, 185, 84, 0.15), rgba(29, 185, 84, 0.05));
+/* Spotify Mini Player */
+.spotify-mini-player {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
     border: 2px solid rgba(29, 185, 84, 0.4);
     border-radius: 15px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 4px 15px rgba(29, 185, 84, 0.1);
+    padding: 15px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.spotify-btn-large {
-    background: linear-gradient(135deg, #1DB954, #1ed760);
-    border: none;
-    color: white;
-    padding: 18px 40px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(29, 185, 84, 0.3);
-    width: 100%;
+.smp-track-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.smp-album-art {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1DB954, #191414);
     display: flex;
     align-items: center;
     justify-content: center;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.spotify-btn-large:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(29, 185, 84, 0.5);
-    background: linear-gradient(135deg, #1ed760, #17a34a);
+.smp-track-details {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
-.spotify-btn-large:active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+.smp-track-name {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.spotify-info {
-    text-align: center;
+.smp-artist-name {
     color: #1DB954;
-    font-size: 13px;
-    margin: 10px 0 0 0;
-    font-weight: 500;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
 }
 
-#spotify-embed-container iframe {
-    width: 100%;
-    height: 152px;
+.smp-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.smp-btn {
+    background: none;
     border: none;
-    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+.smp-btn:hover {
+    transform: scale(1.2);
+}
+
+.smp-btn:active {
+    transform: scale(0.95);
+}
+
+.smp-btn-small {
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #b3b3b3;
+}
+
+.smp-btn-small:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+}
+
+.smp-btn-small.active {
+    color: #1DB954;
+}
+
+.smp-btn-play {
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #1DB954;
+    box-shadow: 0 3px 10px rgba(29, 185, 84, 0.4);
+}
+
+.smp-btn-play:hover {
+    background: #1ed760;
+    box-shadow: 0 4px 15px rgba(29, 185, 84, 0.6);
+}
+
+/* Quiz form layout - stacked input + button */
+.quiz-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
 }
 
 /* Game Input Fields - Make them match the design */
 #ans-in, #mini-input {
     width: 100%;
     padding: 15px 20px;
-    margin: 15px 0;
+    margin: 0;
     font-size: 18px;
     font-weight: 500;
     color: #ffaa00;
@@ -519,6 +589,7 @@ input[type=range] {
         0 2px 8px rgba(0, 0, 0, 0.2);
     text-align: center;
     letter-spacing: 1px;
+    display: block;
 }
 
 #ans-in::placeholder, #mini-input::placeholder {
@@ -548,6 +619,12 @@ input[type=range] {
 }
 
 .close-btn {
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.btn-full {
     width: 100%;
     padding: 15px;
     box-sizing: border-box;
@@ -1107,16 +1184,7 @@ input[type=range] {
         transform: translateY(0);
     }
 }
-.button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    align-items: center;
-    padding: 0 20px;
-    animation: fadeInUp 0.6s ease forwards;
-    opacity: 0; 
-}
+/* button-group animation delays defined above */
 .button-group .btn:nth-child(1) { animation-delay: 0.1s; }
 .button-group .btn:nth-child(2) { animation-delay: 0.2s; }
 .button-group .btn:nth-child(3) { animation-delay: 0.3s; }
@@ -1163,6 +1231,158 @@ input[type=range] {
 .gap-md { gap: 15px; }
 .gap-lg { gap: 20px; }
 .gap-xl { gap: 30px; }
+
+/* --- MAP TOP BAR --- */
+
+.map-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: rgba(0,0,0,0.8);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+    border-bottom: 2px solid #ffaa00;
+}
+
+.topbar-btn {
+    width: auto;
+    padding: 8px 18px;
+    font-size: 14px;
+    animation: none;
+}
+
+.map-topbar #score-display {
+    position: static;
+    min-width: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    top: auto;
+    left: auto;
+    right: auto;
+}
+
+.topbar-score {
+    color: #ffaa00;
+    font-size: 22px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ffaa00;
+    white-space: nowrap;
+    position: static;
+    min-width: auto;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.topbar-right {
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 480px) {
+    .map-topbar {
+        padding: 0 10px;
+        gap: 5px;
+    }
+    .topbar-btn {
+        padding: 6px 10px;
+        font-size: 16px;
+    }
+    .topbar-score {
+        font-size: 16px;
+    }
+    .topbar-right {
+        gap: 5px;
+    }
+}
+
+/* --- GLOWING GOLD BORDER ANIMATION --- */
+
+@keyframes goldGlowRotate {
+    0% {
+        box-shadow: 3px 0 8px rgba(255, 170, 0, 0.6),
+                    0 0 2px rgba(255, 170, 0, 0.2);
+    }
+    25% {
+        box-shadow: 0 3px 8px rgba(255, 170, 0, 0.6),
+                    0 0 2px rgba(255, 170, 0, 0.2);
+    }
+    50% {
+        box-shadow: -3px 0 8px rgba(255, 170, 0, 0.6),
+                    0 0 2px rgba(255, 170, 0, 0.2);
+    }
+    75% {
+        box-shadow: 0 -3px 8px rgba(255, 170, 0, 0.6),
+                    0 0 2px rgba(255, 170, 0, 0.2);
+    }
+    100% {
+        box-shadow: 3px 0 8px rgba(255, 170, 0, 0.6),
+                    0 0 2px rgba(255, 170, 0, 0.2);
+    }
+}
+
+.button-group .btn {
+    animation: slideInFromRight 0.6s ease-out backwards, goldGlowRotate 3s ease-in-out infinite;
+    border-color: rgba(255, 170, 0, 0.4);
+}
+
+.button-group .btn:hover {
+    animation: goldGlowRotate 1.5s ease-in-out infinite;
+    box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
+    border-color: #ffaa00;
+}
+
+/* Location info panel in game modal */
+.location-info {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #ffaa00;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #ddd;
+}
+
+.location-info h3 {
+    color: #ffaa00;
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+/* Boat race tap button (mobile-friendly) */
+.boat-tap-btn {
+    display: block;
+    width: 100%;
+    padding: 30px 20px;
+    margin: 15px 0;
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffaa00;
+    background: linear-gradient(135deg, #3a2525, #2a1a1a);
+    border: 3px solid #ffaa00;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 4px 15px rgba(255, 170, 0, 0.3);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.boat-tap-btn:active {
+    transform: scale(0.9);
+    box-shadow: 0 2px 8px rgba(255, 170, 0, 0.5);
+    background: linear-gradient(135deg, #4a3333, #3a2525);
+}
 
 /* --- ACCESSIBILITY IMPROVEMENTS --- */
 

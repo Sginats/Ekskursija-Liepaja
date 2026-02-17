@@ -5,11 +5,54 @@
 // quiz system, and user interface management.
 // ============================================================================
 
-// --- GLOBAL STATE MANAGEMENT ---
-let score = 0;
+// --- PROTECTED GAME STATE (wrapped to prevent console manipulation) ---
+const GameState = (function() {
+    let _score = 0;
+    let _completedTasks = 0;
+    let _checksum = 0; // integrity check
+
+    function _updateChecksum() {
+        _checksum = (_score * 7 + _completedTasks * 13 + 42) ^ 0xA5A5;
+    }
+
+    function _verifyIntegrity() {
+        return _checksum === ((_score * 7 + _completedTasks * 13 + 42) ^ 0xA5A5);
+    }
+
+    _updateChecksum();
+
+    return {
+        getScore: function() {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; _updateChecksum(); }
+            return _score;
+        },
+        addScore: function(points) {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
+            _score += points;
+            if (_score < 0) _score = 0;
+            if (_score > 100) _score = 100;
+            _updateChecksum();
+            return _score;
+        },
+        getCompleted: function() {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; _updateChecksum(); }
+            return _completedTasks;
+        },
+        completeTask: function() {
+            if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
+            _completedTasks++;
+            _updateChecksum();
+            return _completedTasks;
+        },
+        reset: function() {
+            _score = 0;
+            _completedTasks = 0;
+            _updateChecksum();
+        }
+    };
+})();
+
 let currentTask = "";
-let completedTasks = 0;
-let currentCorrectAnswer = ""; 
 let currentLang = localStorage.getItem('lang') || 'lv';
 let startTime; 
 let myRole = '';
@@ -18,7 +61,6 @@ let globalName = "Anonīms";
 let ws = null;
 
 // --- SPOTIFY CONFIGURATION ---
-// Spotify playlist URL for the game
 const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/2FJVi4yazmR6yUDFkOu9ep';
 
 // --- CONFIGURATION ---
@@ -38,18 +80,65 @@ const taskSequence = [
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
-// Question database with answers and interesting facts
+// Decode helper
+function _d(s) { return decodeURIComponent(escape(atob(s))); }
+
+// Question database with encoded answers to prevent searching through source
 const questions = {
-    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", a: "1954", fact: "Šeit mācās gudrākie prāti!" },
-    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", a: "1800", fact: "Turi cepuri! Mols sargā ostu." },
-    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", a: "Karostas cietums", fact: "Vienīgais militārais cietums atvērts tūristiem!" },
-    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", a: "Lielais Dzintars", fact: "Izskatās pēc milzīga dzintara!" },
-    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", a: "1907", fact: "Vecākais profesionālais teātris Latvijā!" },
-    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", a: "Tirdzniecības", fact: "Savieno ezeru ar jūru." },
-    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", a: "LSEZ", fact: "Osta šeit neaizsalst." },
-    'Parks': { q: "Kā sauc parku pie jūras?", a: "Jūrmalas", fact: "Viens no lielākajiem parkiem Latvijā!" },
-    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", a: "Jā", fact: "Būvē ēkas visā pasaulē!" },
-    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", a: "Liepājas", fact: "Piektais lielākais ezers Latvijā." }
+    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "MTk1NA==", fact: "Šeit mācās gudrākie prāti!" },
+    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", _a: "MTgwMA==", fact: "Turi cepuri! Mols sargā ostu." },
+    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", _a: "S2Fyb3N0YXMgY2lldHVtcw==", fact: "Vienīgais militārais cietums atvērts tūristiem!" },
+    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", _a: "TGllbGFpcyBEemludGFycw==", fact: "Izskatās pēc milzīga dzintara!" },
+    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", _a: "MTkwNw==", fact: "Vecākais profesionālais teātris Latvijā!" },
+    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", _a: "VGlyZHpuaWVjxKtiYXM=", fact: "Savieno ezeru ar jūru." },
+    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", _a: "TFNFWg==", fact: "Osta šeit neaizsalst." },
+    'Parks': { q: "Kā sauc parku pie jūras?", _a: "SsWrcm1hbGFz", fact: "Viens no lielākajiem parkiem Latvijā!" },
+    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: "SsSB", fact: "Būvē ēkas visā pasaulē!" },
+    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", _a: "TGllcMSBamFz", fact: "Piektais lielākais ezers Latvijā." }
+};
+
+// Location information - shown before each quiz/minigame
+const locationInfo = {
+    'RTU': {
+        name: 'RTU Liepājas akadēmija',
+        desc: 'Rīgas Tehniskās universitātes Liepājas akadēmija (dibināta 1954. gadā) ir viena no nozīmīgākajām augstākās izglītības iestādēm Kurzemē. Tā piedāvā studiju programmas inženierzinātnēs, IT, ekonomikā un humanitārajās zinātnēs. Ēka atrodas Liepājas centrā un ir svarīgs reģionālās izglītības centrs.'
+    },
+    'Dzintars': {
+        name: 'Koncertzāle "Lielais Dzintars"',
+        desc: 'Liepājas koncertzāle "Lielais Dzintars" ir moderna daudzfunkcionāla koncertzāle, kas atklāta 2015. gadā. Ēkas unikālais dizains atgādina milzīgu dzintara gabalu. Šeit regulāri notiek Liepājas Simfoniskā orķestra koncerti, starptautiski festivāli un kultūras pasākumi.'
+    },
+    'Teatris': {
+        name: 'Liepājas Teātris',
+        desc: 'Liepājas Teātris, dibināts 1907. gadā, ir vecākais profesionālais teātris Latvijā. Teātris atrodas skaistā jūgendstila ēkā Liepājas centrā. Tas ir nozīmīgs kultūras centrs, kurā tiek iestudētas gan klasiskās, gan mūsdienu lugas.'
+    },
+    'Kanals': {
+        name: 'Tirdzniecības kanāls',
+        desc: 'Tirdzniecības kanāls savieno Liepājas ezeru ar Baltijas jūru. Tas ir vēsturiski nozīmīgs ūdensceļš, kas jau kopš 16. gadsimta kalpojis tirdzniecības vajadzībām. Gar kanāla krastiem ir populāra pastaigu vieta ar skaistiem skatiem.'
+    },
+    'Osta': {
+        name: 'Liepājas Osta',
+        desc: 'Liepājas osta ir viena no lielākajām un nozīmīgākajām Latvijas ostām. Tā ir unikāla, jo neaizsalst ziemā, pateicoties īpašiem strāvojumu apstākļiem. Ostā darbojas Liepājas Speciālā ekonomiskā zona (LSEZ), kas piesaista starptautiskus uzņēmumus.'
+    },
+    'LSEZ': {
+        name: 'Liepājas Speciālā ekonomiskā zona (LSEZ)',
+        desc: 'LSEZ ir izveidota 1997. gadā, lai veicinātu Liepājas reģiona ekonomisko attīstību. Zonā darbojas vairāk nekā 80 uzņēmumi, tostarp UPB — starptautisks būvniecības uzņēmums, kas realizē projektus visā pasaulē. LSEZ piedāvā nodokļu atvieglojumus investoriem.'
+    },
+    'Cietums': {
+        name: 'Karostas cietums',
+        desc: 'Karostas cietums ir unikāla tūrisma vieta — vienīgais bijušais militārais cietums Eiropā, kas atvērts apmeklētājiem. Cietums celts 1900. gadā cara armijas vajadzībām. Šobrīd tas piedāvā ekskursijas un nakšņošanas pieredzi autentiskā cietuma vidē.'
+    },
+    'Mols': {
+        name: 'Ziemeļu mols',
+        desc: 'Ziemeļu mols ir aptuveni 1800 metrus garš akmeņu mols Liepājas ostas ziemeļu daļā. Tas ir populāra pastaigu un makšķerēšanas vieta. No mola paveras brīnišķīgs skats uz Baltijas jūru un Liepājas piekrasti.'
+    },
+    'Ezerkrasts': {
+        name: 'Ezerkrasta taka',
+        desc: 'Ezerkrasta taka atrodas pie Liepājas ezera — piektā lielākā ezera Latvijā. Taka piedāvā skaistu pastaigu maršrutu gar ezera krastu ar skatu platformām un informatīviem stendiem par apkārtnes dabu un putniem.'
+    },
+    'Parks': {
+        name: 'Jūrmalas parks',
+        desc: 'Jūrmalas parks ir viens no lielākajiem un vecākajiem parkiem Latvijā, ierīkots 19. gadsimta beigās. Parks atrodas starp pilsētas centru un jūras piekrasti. Tajā aug vairāk nekā 170 koku un krūmu sugas, un parks ir iecienīta atpūtas vieta.'
+    }
 };
 
 // UI text translations (Latvian base)
@@ -122,19 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             p.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
         });
-    }
-
-    // Initialize background music with user interaction requirement
-    const music = document.getElementById('bg-music');
-    if (music) {
-        // Load saved volume or use default
-        const savedMusicVolume = localStorage.getItem('musicVolume');
-        music.volume = savedMusicVolume ? savedMusicVolume / 100 : 0.3;
-        const playAudio = () => {
-            music.play().catch(() => {});
-            document.removeEventListener('click', playAudio);
-        };
-        document.addEventListener('click', playAudio);
     }
 
     // Load saved SFX volume
@@ -634,14 +710,15 @@ function joinGame() {
 
 function updateMapState() {
     const points = document.querySelectorAll('.point');
+    const completed = GameState.getCompleted();
     points.forEach(point => {
         const type = point.getAttribute('onclick').match(/'([^']+)'/)[1]; 
         const sequenceIndex = taskSequence.indexOf(type);
         
         point.className = point.className.replace(/\b(active-point|inactive-point)\b/g, "");
-        if (sequenceIndex < completedTasks) {
+        if (sequenceIndex < completed) {
             point.classList.add('inactive-point'); point.style.backgroundColor = "#555"; 
-        } else if (sequenceIndex === completedTasks) {
+        } else if (sequenceIndex === completed) {
             point.classList.add('active-point'); point.style.pointerEvents = "auto";
         } else {
             point.classList.add('inactive-point');
@@ -650,12 +727,30 @@ function updateMapState() {
 }
 
 function startActivity(type) {
-    if (type !== taskSequence[completedTasks]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
+    if (type !== taskSequence[GameState.getCompleted()]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
     currentTask = type;
     
-    if (type === 'Osta') startBoatGame();
-    else if (myRole && myLobbyCode) showMiniGame(type); 
-    else showQuiz(type);
+    if (type === 'Osta') showLocationThenStart(type, function() { startBoatGame(); });
+    else if (myRole && myLobbyCode) showLocationThenStart(type, function() { showMiniGame(type); });
+    else showLocationThenStart(type, function() { showQuiz(type); });
+}
+
+function showLocationThenStart(type, callback) {
+    const info = locationInfo[type];
+    if (!info) { callback(); return; }
+    
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <div class="location-info">
+            <h3>📍 ${info.name}</h3>
+            <p>${info.desc}</p>
+        </div>
+        <button class="btn" id="btn-start-task">Turpināt uz uzdevumu →</button>
+    `;
+    document.getElementById('btn-start-task').addEventListener('click', function() {
+        document.getElementById('game-modal').style.display = 'none';
+        callback();
+    });
 }
 
 // --- 7. MINI SPĒLES & QUIZ ---
@@ -678,10 +773,15 @@ let boatSpaceCount = 0;
 let boatInterval = null;
 
 function startBoatGame() {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const instruction = isTouchDevice 
+        ? `Spied pogu ${BOAT_RACE_CONFIG.REQUIRED_PRESSES} reizes pēc iespējas ātrāk!`
+        : `Spied SPACE taustiņu ${BOAT_RACE_CONFIG.REQUIRED_PRESSES} reizes pēc iespējas ātrāk!`;
+    
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
         <h2>Ostas Regate</h2>
-        <p>Spied SPACE taustiņu ${BOAT_RACE_CONFIG.REQUIRED_PRESSES} reizes pēc iespējas ātrāk!</p>
+        <p>${instruction}</p>
         <h3 id="boat-timer">0.00 s</h3>
         <p id="boat-progress">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
         <button class="btn" onclick="initBoatRace()">SĀKT</button>`;
@@ -692,14 +792,18 @@ function initBoatRace() {
     boatStartTime = Date.now();
     boatSpaceCount = 0;
     
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const actionText = isTouchDevice ? 'SPIED POGU!' : 'SPIED SPACE!';
+    
     // Remove any existing listener to prevent duplicates
     document.removeEventListener('keydown', handleBoatKeyPress);
     
     document.querySelector('.task-section').innerHTML = `
         <h2>Ostas Regate</h2>
-        <p style="color: #ffaa00; font-size: 24px; font-weight: bold;">SPIED SPACE!</p>
+        <p style="color: #ffaa00; font-size: 24px; font-weight: bold;">${actionText}</p>
         <h3 id="boat-timer">0.00 s</h3>
-        <p id="boat-progress" style="font-size: 20px;">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>`;
+        <p id="boat-progress" style="font-size: 20px;">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
+        <button id="boat-tap-btn" class="boat-tap-btn">🚣 SPIED! 🚣</button>`;
     
     // Update timer
     boatInterval = setInterval(() => {
@@ -710,8 +814,21 @@ function initBoatRace() {
         }
     }, 50);
     
-    // Listen for spacebar
+    // Listen for spacebar (desktop)
     document.addEventListener('keydown', handleBoatKeyPress);
+    
+    // Listen for tap/click on the button (mobile + desktop)
+    const tapBtn = document.getElementById('boat-tap-btn');
+    if (tapBtn) {
+        tapBtn.addEventListener('touchstart', handleBoatTap, { passive: false });
+        tapBtn.addEventListener('mousedown', handleBoatTap);
+    }
+}
+
+function handleBoatTap(e) {
+    if (e.cancelable) e.preventDefault();
+    if (!boatRaceActive) return;
+    registerBoatPress();
 }
 
 function handleBoatKeyPress(e) {
@@ -719,14 +836,26 @@ function handleBoatKeyPress(e) {
     
     if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
-        boatSpaceCount++;
-        
-        const progressEl = document.getElementById('boat-progress');
-        if (progressEl) progressEl.innerText = `Spiedienu skaits: ${boatSpaceCount}/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}`;
-        
-        if (boatSpaceCount >= BOAT_RACE_CONFIG.REQUIRED_PRESSES) {
-            finishBoatRace();
-        }
+        registerBoatPress();
+    }
+}
+
+function registerBoatPress() {
+    if (!boatRaceActive) return;
+    boatSpaceCount++;
+    
+    const progressEl = document.getElementById('boat-progress');
+    if (progressEl) progressEl.innerText = `Spiedienu skaits: ${boatSpaceCount}/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}`;
+    
+    // Visual feedback on tap button
+    const tapBtn = document.getElementById('boat-tap-btn');
+    if (tapBtn) {
+        tapBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => { if (tapBtn) tapBtn.style.transform = 'scale(1)'; }, 100);
+    }
+    
+    if (boatSpaceCount >= BOAT_RACE_CONFIG.REQUIRED_PRESSES) {
+        finishBoatRace();
     }
 }
 
@@ -747,10 +876,9 @@ function finishBoatRace() {
         points = BOAT_RACE_CONFIG.SLOW_POINTS;
     }
     
-    score += points;
-    enforceScoreLimits();
+    const newScore = GameState.addScore(points);
     
-    document.getElementById('score-display').innerText = "Punkti: " + score;
+    document.getElementById('score-display').innerText = "Punkti: " + newScore;
     
     document.querySelector('.task-section').innerHTML = `
         <h2>Pabeigts!</h2>
@@ -764,9 +892,9 @@ function closeBoatGame() {
     if (boatInterval) clearInterval(boatInterval);
     document.removeEventListener('keydown', handleBoatKeyPress);
     document.getElementById('game-modal').style.display = 'none'; 
-    completedTasks++; 
+    GameState.completeTask(); 
     updateMapState(); 
-    if(completedTasks === 10) showEndGame(); 
+    if(GameState.getCompleted() === 10) showEndGame(); 
 }
 
 
@@ -776,14 +904,18 @@ function showMiniGame(type) {
     
     if (type === 'Cietums') {
         const code = myRole === 'host' ? "4 2 _ _" : "_ _ 9 1";
-        content.innerHTML = `<h2>Cietums</h2><p>Kods: ${code}</p><input id="mini-input"><button class="btn" onclick="checkMini('4291')">OK</button>`;
+        content.innerHTML = `<h2>Cietums</h2><p>Kods: ${code}</p>
+            <div class="quiz-form">
+                <input id="mini-input" placeholder="Ievadi kodu...">
+                <button class="btn btn-full" onclick="checkMini()">OK</button>
+            </div>`;
     } else {
-        content.innerHTML = `<h2>Gatavs?</h2><button class="btn" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
+        content.innerHTML = `<h2>Gatavs?</h2><button class="btn btn-full" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
     }
 }
 
-function checkMini(ans) {
-    if(document.getElementById('mini-input').value === ans) sendReady();
+function checkMini() {
+    if(document.getElementById('mini-input').value === _d('NDI5MQ==')) sendReady();
 }
 
 function sendReady() {
@@ -800,7 +932,10 @@ async function showQuiz(type) {
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
-        <input id="ans-in" placeholder="Tava atbilde..." maxlength="50"><button class="btn" onclick="checkAns('${task.a}')">Iesniegt</button>
+        <div class="quiz-form">
+            <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
+            <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
+        </div>
     `;
 }
 
@@ -808,25 +943,23 @@ async function showQuiz(type) {
  * Enforce score limits (minimum 0, maximum 100)
  */
 function enforceScoreLimits() {
-    if (score < 0) score = 0;
-    if (score > 100) score = 100;
+    // Now handled by GameState internally
 }
 
-function checkAns(correct) {
+function checkAns(type) {
     const val = document.getElementById('ans-in').value;
+    const correct = _d(questions[type]._a);
     if(val.toLowerCase() === correct.toLowerCase()) {
-        score += 10;
+        GameState.addScore(10);
     } else {
-        score -= 5;
+        GameState.addScore(-5);
     }
     
-    enforceScoreLimits();
-    
-    document.getElementById('score-display').innerText = "Punkti: " + score;
+    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
     document.getElementById('game-modal').style.display = 'none';
-    completedTasks++;
+    GameState.completeTask();
     updateMapState();
-    if(completedTasks === 10) showEndGame();
+    if(GameState.getCompleted() === 10) showEndGame();
 }
 
 function showEndGame() { 
@@ -838,9 +971,9 @@ function showEndGame() {
     const seconds = elapsedSeconds % 60;
     const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
-    enforceScoreLimits();
+    const finalScore = GameState.getScore();
     
-    finishGame(globalName, score, formattedTime); 
+    finishGame(globalName, finalScore, formattedTime); 
 }
 
 function finishGame(name, finalScore, time) { 
@@ -869,11 +1002,7 @@ function finishGame(name, finalScore, time) {
 function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
 function exitGame() { window.close(); }
 function setMusicVolume(v) { 
-    const music = document.getElementById('bg-music');
-    if (music) {
-        music.volume = v/100;
-        localStorage.setItem('musicVolume', v);
-    }
+    localStorage.setItem('musicVolume', v);
 }
 function setSFXVolume(v) { 
     const sfx = document.getElementById('hover-sound');
@@ -883,43 +1012,124 @@ function setSFXVolume(v) {
     }
 }
 
-// --- SPOTIFY PLAYER INTEGRATION ---
+// --- SPOTIFY MINI PLAYER ---
+
+let spotifyEmbedController = null;
+let spotifyIsPlaying = false;
+let spotifyShuffleOn = false;
+let spotifyRepeatOn = false;
+let spotifyLoaded = false;
 
 /**
- * Toggle Spotify playlist playback
- * Creates a minimalistic embedded player on first play
+ * Initialize the Spotify Embed iframe and IFrame API controller.
+ * On first call it inserts a hidden iframe and connects via the
+ * Spotify IFrame API so we can drive playback with JS.
  */
-function toggleSpotifyPlayback() {
+function spotifyInit(callback) {
+    if (spotifyLoaded) { if (callback) callback(); return; }
     const container = document.getElementById('spotify-embed-container');
-    const button = document.getElementById('spotify-play-btn');
+    if (!container) return;
     
-    if (container.style.display === 'none') {
-        // First time - load the Spotify embed
-        if (!container.innerHTML.trim()) {
-            const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
-            
-            container.innerHTML = `<iframe 
-                src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
-                width="100%" 
-                height="152" 
-                frameBorder="0" 
-                allowfullscreen="" 
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                loading="lazy">
-            </iframe>`;
-            
-            // Pause local music when Spotify starts
-            const localMusic = document.getElementById('bg-music');
-            if (localMusic) {
-                localMusic.pause();
-            }
-        }
-        container.style.display = 'block';
-        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">⏸️</span><span style="font-size: 16px; font-weight: bold;">Paslēpt Spotify</span>';
-    } else {
-        container.style.display = 'none';
-        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">▶️</span><span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>';
+    const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
+    container.style.display = 'block';
+    container.innerHTML = `<iframe 
+        id="spotify-iframe"
+        src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
+        width="1" 
+        height="1" 
+        frameBorder="0" 
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+        loading="lazy"
+        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+    </iframe>`;
+    
+    // Try connecting to the Spotify IFrame API
+    window.onSpotifyIframeApiReady = function(IFrameAPI) {
+        const iframe = document.getElementById('spotify-iframe');
+        if (!iframe) return;
+        IFrameAPI.createController(iframe, {}, function(controller) {
+            spotifyEmbedController = controller;
+            controller.addListener('playback_update', function(e) {
+                spotifyIsPlaying = !e.data.isPaused;
+                updatePlayButton();
+            });
+            if (callback) callback();
+        });
+    };
+    
+    // Load the Spotify IFrame API script if not already present
+    if (!document.getElementById('spotify-iframe-api')) {
+        const script = document.createElement('script');
+        script.id = 'spotify-iframe-api';
+        script.src = 'https://open.spotify.com/embed/iframe-api/v1';
+        document.head.appendChild(script);
     }
+    spotifyLoaded = true;
+}
+
+function updatePlayButton() {
+    const btn = document.getElementById('smp-play');
+    if (btn) btn.textContent = spotifyIsPlaying ? '⏸️' : '▶️';
+}
+
+function spotifyPlayPause() {
+    if (!spotifyLoaded) {
+        spotifyInit(function() {
+            if (spotifyEmbedController) spotifyEmbedController.togglePlay();
+        });
+        // Update UI optimistically
+        spotifyIsPlaying = true;
+        updatePlayButton();
+        const name = document.getElementById('smp-artist-name');
+        if (name) name.textContent = 'Ielādē...';
+        return;
+    }
+    if (spotifyEmbedController) {
+        spotifyEmbedController.togglePlay();
+    }
+}
+
+function spotifyNext() {
+    if (!spotifyLoaded) { spotifyInit(); return; }
+    // Spotify Embed IFrame API has limited skip support.
+    // We restart the playlist which triggers the next track if shuffle is on in the player.
+    if (spotifyEmbedController) {
+        const playlistUri = SPOTIFY_PLAYLIST_URL.replace('https://open.spotify.com/', 'spotify:').replace(/\//g, ':');
+        spotifyEmbedController.loadUri(playlistUri);
+        spotifyEmbedController.play();
+    }
+    showNotification('⏭ Nākamā dziesma', 'info', 1500);
+}
+
+function spotifyPrev() {
+    if (!spotifyLoaded) { spotifyInit(); return; }
+    // Seek to start of current track (standard prev behavior)
+    if (spotifyEmbedController) {
+        spotifyEmbedController.seek(0);
+    }
+    showNotification('⏮ No sākuma', 'info', 1500);
+}
+
+function spotifyToggleShuffle() {
+    // Note: Spotify Embed IFrame API does not expose shuffle control directly.
+    // This toggles the UI state; actual shuffle depends on the user's Spotify app settings.
+    spotifyShuffleOn = !spotifyShuffleOn;
+    const btn = document.getElementById('smp-shuffle');
+    if (btn) {
+        btn.classList.toggle('active', spotifyShuffleOn);
+    }
+    showNotification(spotifyShuffleOn ? '🔀 Shuffle ON' : '🔀 Shuffle OFF', 'info', 1500);
+}
+
+function spotifyToggleRepeat() {
+    // Note: Spotify Embed IFrame API does not expose repeat control directly.
+    // This toggles the UI state; actual repeat depends on the user's Spotify app settings.
+    spotifyRepeatOn = !spotifyRepeatOn;
+    const btn = document.getElementById('smp-repeat');
+    if (btn) {
+        btn.classList.toggle('active', spotifyRepeatOn);
+    }
+    showNotification(spotifyRepeatOn ? '🔁 Repeat ON' : '🔁 Repeat OFF', 'info', 1500);
 }
 
 // --- NOTIFICATION SYSTEM (TOAST) ---
