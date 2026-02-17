@@ -6,6 +6,9 @@ header("Access-Control-Allow-Headers: Content-Type");
 $name = isset($_REQUEST['name']) ? $_REQUEST['name'] : null;
 $score = isset($_REQUEST['score']) ? $_REQUEST['score'] : null;
 $time = isset($_REQUEST['time']) ? $_REQUEST['time'] : null;
+$token = isset($_REQUEST['token']) ? $_REQUEST['token'] : null;
+$tasks = isset($_REQUEST['tasks']) ? intval($_REQUEST['tasks']) : 0;
+$violations = isset($_REQUEST['violations']) ? intval($_REQUEST['violations']) : 0;
 
 if ($name === null) {
     $json = file_get_contents('php://input');
@@ -14,10 +17,28 @@ if ($name === null) {
         $name = isset($data['name']) ? $data['name'] : null;
         $score = isset($data['score']) ? $data['score'] : null;
         $time = isset($data['time']) ? $data['time'] : null;
+        $token = isset($data['token']) ? $data['token'] : null;
+        $tasks = isset($data['tasks']) ? intval($data['tasks']) : 0;
+        $violations = isset($data['violations']) ? intval($data['violations']) : 0;
     }
 }
 
 if ($name !== null && $score !== null) {
+    // Anti-cheat: require integrity token (format: hash-nonce)
+    if (empty($token) || !preg_match('/^[a-z0-9]+-[a-z0-9]+$/', $token)) {
+        echo "Error: Nav derīga spēles sesija";
+        exit;
+    }
+    
+    // Anti-cheat: require 10 completed tasks
+    if ($tasks < 10) {
+        echo "Error: Spēle nav pabeigta";
+        exit;
+    }
+
+    // Anti-cheat: flag submissions with violations
+    $flagged = ($violations > 3);
+
     // Validate and sanitize name
     $name = preg_replace('/[^a-zA-Z0-9āčēģīķļņšūž\s]/u', '', $name);
     $name = substr($name, 0, 8);
@@ -54,6 +75,11 @@ if ($name !== null && $score !== null) {
     $normalizedSeconds = $timeInSeconds % 60;
     $time = sprintf("%02d:%02d", $normalizedMinutes, $normalizedSeconds);
 
+    // If flagged for cheating, add marker
+    if ($flagged) {
+        $name = $name . "*";
+    }
+
     $line = $name . "|" . $score . "|" . $time . "\n";
     $file = __DIR__ . "/../data/leaderboard.txt";
 
@@ -63,6 +89,6 @@ if ($name !== null && $score !== null) {
         echo "Error: Nevar ierakstit faila";
     }
 } else {
-    echo "Error: Dati netika sanemti. REQUEST masivs: " . json_encode($_REQUEST);
+    echo "Error: Dati netika sanemti";
 }
 ?>

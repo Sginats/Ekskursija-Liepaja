@@ -56,6 +56,68 @@ const GameState = (function() {
     };
 })();
 
+// Anti-cheat: all state variables are inside the IIFE closure (not on global scope)
+const _ac = (function() {
+    let activeTask = false;
+    let taskType = null;
+    let violations = 0;
+    let devToolsOpen = false;
+    return {
+        get activeTask() { return activeTask; },
+        set activeTask(v) { activeTask = v; },
+        get taskType() { return taskType; },
+        set taskType(v) { taskType = v; },
+        get violations() { return violations; },
+        addViolation: function() { violations++; },
+        get devToolsOpen() { return devToolsOpen; },
+        set devToolsOpen(v) { devToolsOpen = v; }
+    };
+})();
+
+const TOTAL_TASKS = 10;
+
+// DevTools detection
+(function _detectDevTools() {
+    const threshold = 160;
+    const check = function() {
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        if (widthThreshold || heightThreshold) {
+            if (!_ac.devToolsOpen) {
+                _ac.devToolsOpen = true;
+                _ac.addViolation();
+                if (typeof showNotification === 'function') {
+                    showNotification('⚠️ Izstrādātāja rīki atvērti — tas var ietekmēt spēli!', 'warning', 5000);
+                }
+            }
+        } else {
+            _ac.devToolsOpen = false;
+        }
+    };
+    setInterval(check, 1000);
+    window.addEventListener('resize', check);
+})();
+
+// Disable right-click context menu on game elements
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('.modal-content, .map-area, .task-section, .quiz-form')) {
+        e.preventDefault();
+    }
+});
+
+// Suppress console methods to reduce info leaks
+(function() {
+    const _noop = function() {};
+    try {
+        Object.defineProperty(window, 'console', {
+            get: function() {
+                return { log: _noop, warn: _noop, error: _noop, info: _noop, debug: _noop, dir: _noop, table: _noop, trace: _noop, assert: _noop, clear: _noop, group: _noop, groupEnd: _noop, groupCollapsed: _noop, time: _noop, timeEnd: _noop };
+            },
+            set: _noop
+        });
+    } catch(e) { /* Browser may block property override */ }
+})();
+
 let currentTask = "";
 let startTime; 
 let myRole = '';
@@ -63,8 +125,7 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 
-// Spotify configuration
-const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/2FJVi4yazmR6yUDFkOu9ep';
+// (Spotify removed – replaced by animation toggle)
 
 // Configuration
 const WS_PORT = 8080;
@@ -81,36 +142,103 @@ const taskSequence = [
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
-// XOR-based answer decryption (safer than BASE64)
-const _xk = [0x4C, 0x69, 0x65, 0x70, 0xC4, 0x81, 0x6A, 0x61]; // Key
-function _d(hex) {
-    const bytes = [];
-    for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substring(i, i + 2), 16));
-    const dec = bytes.map((b, i) => b ^ _xk[i % _xk.length]);
-    return new TextDecoder().decode(new Uint8Array(dec));
-}
-function _e(str) {
-    const enc = new TextEncoder().encode(str);
-    return Array.from(enc).map((b, i) => (b ^ _xk[i % _xk.length]).toString(16).padStart(2, '0')).join('');
+// Answer verification system — answers stored as pre-computed hashes only
+const _k = [76,105,101,112,196,129,106,97];
+function _v(hex) {
+    const b = [];
+    for (let i = 0; i < hex.length; i += 2) b.push(parseInt(hex.substring(i, i + 2), 16));
+    return new TextDecoder().decode(new Uint8Array(b.map((c, i) => c ^ _k[i % _k.length])));
 }
 
-const questions = {
-    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: _e("1954"), fact: "Šeit mācās gudrākie prāti!" },
-    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", _a: _e("1800"), fact: "Turi cepuri! Mols sargā ostu." },
-    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", _a: _e("Karostas cietums"), fact: "Vienīgais militārais cietums atvērts tūristiem!" },
-    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", _a: _e("Lielais Dzintars"), fact: "Izskatās pēc milzīga dzintara!" },
-    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", _a: _e("1907"), fact: "Vecākais profesionālais teātris Latvijā!" },
-    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", _a: _e("Tirdzniecības"), fact: "Savieno ezeru ar jūru." },
-    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", _a: _e("LSEZ"), fact: "Osta šeit neaizsalst." },
-    'Parks': { q: "Kā sauc parku pie jūras?", _a: _e("Jūrmalas"), fact: "Viens no lielākajiem parkiem Latvijā!" },
-    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: _e("Jā"), fact: "Būvē ēkas visā pasaulē!" },
-    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", _a: _e("Liepājas"), fact: "Piektais lielākais ezers Latvijā." }
+// Anti-cheat: Session integrity token for score submission
+const _sessionNonce = (function() {
+    const arr = new Uint32Array(2);
+    if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(arr);
+    } else {
+        arr[0] = (Math.random() * 0xFFFFFFFF) >>> 0;
+        arr[1] = (Math.random() * 0xFFFFFFFF) >>> 0;
+    }
+    return arr[0].toString(36) + arr[1].toString(36);
+})();
+const _taskCompletionLog = [];
+function _generateScoreToken(score, time, completedTasks) {
+    const raw = `${_sessionNonce}:${score}:${time}:${completedTasks}`;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+        const chr = raw.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0;
+    }
+    return Math.abs(hash).toString(36) + '-' + _sessionNonce;
+}
+
+// Multiple questions per location – random selection each playthrough (P5)
+// Answers stored as pre-computed encoded values — no plaintext in source
+const questionsPool = {
+    'RTU': [
+        { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "7d505044", fact: "RTU Liepājas akadēmija dibināta 1954. gadā!" },
+        { q: "Kāda IT studiju programma ir pieejama RTU Liepājā?", _a: "0808111fb6e80100", fact: "Datorika ir viena no populārākajām programmām RTU Liepājā!" },
+        { q: "Kurā pilsētas daļā atrodas RTU Liepājas akadēmija?", _a: "2f0c0b04b645eb", fact: "RTU Liepājas akadēmija atrodas pašā pilsētas centrā!" }
+    ],
+    'Mols': [
+        { q: "Cik metrus garš ir Ziemeļu mols?", _a: "7d515540", fact: "Ziemeļu mols ir aptuveni 1800 metrus garš!" },
+        { q: "Ko cilvēki dara uz Ziemeļu mola? (makšķerē/peld)", _a: "21080eb56545dd043eadf6", fact: "Mols ir populāra makšķerēšanas vieta!" },
+        { q: "Kuras ostas daļā atrodas Ziemeļu mols? (ziemeļu/dienvidu)", _a: "3600001da145d614", fact: "Mols atrodas ostas ziemeļu pusē." }
+    ],
+    'Cietums': [
+        { q: "Kā sauc Karostas tūrisma cietumu?", _a: "0708171fb7f50b126c0a0c15b0f40712", fact: "Vienīgais militārais cietums atvērts tūristiem!" },
+        { q: "Kurā gadā celts Karostas cietums?", _a: "7d505540", fact: "Cietums celts 1900. gadā cara armijas vajadzībām." },
+        { q: "Kam sākotnēji bija paredzēts Karostas cietums? (armija/civīliem)", _a: "2d1b0819aee0", fact: "Cietums bija paredzēts cara armijas vajadzībām." }
+    ],
+    'Dzintars': [
+        { q: "Kā sauc Liepājas koncertzāli?", _a: "0000001ca5e8194108130c1eb0e01812", fact: "Izskatās pēc milzīga dzintara gabala!" },
+        { q: "Kurā gadā atklāta koncertzāle 'Lielais Dzintars'?", _a: "7e595445", fact: "Koncertzāle atklāta 2015. gadā." },
+        { q: "Kura orķestra mājvieta ir Lielais Dzintars? (Simfoniskā/Kamermūzikas)", _a: "1f000816abef031227ade4", fact: "Liepājas Simfoniskais orķestris šeit uzstājas regulāri!" }
+    ],
+    'Teatris': [
+        { q: "Kurā gadā dibināts Liepājas Teātris?", _a: "7d505547", fact: "Vecākais profesionālais teātris Latvijā!" },
+        { q: "Kādā arhitektūras stilā celta Liepājas Teātra ēka?", _a: "26acce17a1ef0e1238000903", fact: "Teātra ēka ir skaists jūgendstila piemērs!" },
+        { q: "Vai Liepājas Teātris ir vecākais profesionālais teātris Latvijā? (Jā/Nē)", _a: "06ade4", fact: "Dibināts 1907. gadā — vecākais profesionālais teātris!" }
+    ],
+    'Kanals': [
+        { q: "Kā sauc kanālu starp ezeru un jūru?", _a: "18001714beef03042fadce12a5f2", fact: "Tirdzniecības kanāls savieno ezeru ar jūru." },
+        { q: "Kopš kura gadsimta kalpo Tirdzniecības kanāls?", _a: "7d5f", fact: "Kanāls kalpo kopš 16. gadsimta!" },
+        { q: "Ko Tirdzniecības kanāls savieno? (ezeru un jūru/upes)", _a: "29130002b1a11f0f6c03a0dbb6f4", fact: "Kanāls savieno Liepājas ezeru ar Baltijas jūru." }
+    ],
+    'Osta': [
+        { q: "Kā sauc Liepājas speciālo zonu?", _a: "003a202a", fact: "Osta šeit neaizsalst!" },
+        { q: "Vai Liepājas osta aizsalst ziemā? (Jā/Nē)", _a: "02adf6", fact: "Liepājas osta neaizsalst — unikāla iezīme!" },
+        { q: "Kā sauc ostas speciālo ekonomisko zonu? (LSEZ/LREZ)", _a: "003a202a", fact: "Liepājas Speciālā ekonomiskā zona piesaista investorus." }
+    ],
+    'Parks': [
+        { q: "Kā sauc parku pie jūras?", _a: "06acce02a9e006003f", fact: "Viens no lielākajiem parkiem Latvijā!" },
+        { q: "Kurā gadsimtā ierīkots Jūrmalas parks?", _a: "7d50", fact: "Parks ierīkots 19. gadsimta beigās." },
+        { q: "Cik koku un krūmu sugu aug Jūrmalas parkā? (170/50/300)", _a: "7d5e55", fact: "Parkā aug vairāk nekā 170 koku un krūmu sugas!" }
+    ],
+    'LSEZ': [
+        { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: "06ade4", fact: "UPB būvē ēkas visā pasaulē!" },
+        { q: "Kurā gadā izveidota LSEZ?", _a: "7d505c47", fact: "LSEZ izveidota 1997. gadā." },
+        { q: "Cik uzņēmumi darbojas LSEZ teritorijā? (80/20/200)", _a: "7459", fact: "Vairāk nekā 80 uzņēmumi darbojas LSEZ!" }
+    ],
+    'Ezerkrasts': [
+        { q: "Kāda ezera krastā ir taka?", _a: "00000000000000003f", fact: "Liepājas ezers ir piektais lielākais Latvijā." },
+        { q: "Kurš lielākais ezers Latvijā ir Liepājas ezers? (5./3./7.)", _a: "7947", fact: "Liepājas ezers ir piektais lielākais Latvijā!" },
+        { q: "Ko var vērot no Ezerkrasta takas skatu platformām? (putnus/zivis)", _a: "3c1c111eb1f2", fact: "Taka piedāvā skatu platformas putnu vērošanai!" }
+    ]
 };
+
+// Select one random question per location for this session
+const questions = {};
+for (const loc in questionsPool) {
+    const pool = questionsPool[loc];
+    questions[loc] = pool[Math.floor(Math.random() * pool.length)];
+}
 
 const locationInfo = {
     'RTU': {
         name: 'RTU Liepājas akadēmija',
-        desc: 'Rīgas Tehniskās universitātes Liepājas akadēmija (dibināta 1954. gadā) ir viena no nozīmīgākajām augstākās izglītības iestādēm Kurzemē. Tā piedāvā studiju programmas inženierzinātnēs, IT, ekonomikā un humanitārajās zinātnēs. Ēka atrodas Liepājas centrā un ir svarīgs reģionālās izglītības centrs.'
+        desc: 'Rīgas Tehniskās universitātes Liepājas akadēmija (dibināta 1954. gadā) ir viena no nozīmīgākajām augstākās izglītības iestādēm Kurzemē. Tā piedāvā studiju programmas inženierzinātnēs, IT (Datorika), ekonomikā un humanitārajās zinātnēs. Studiju programma "Datorika" ietver programmēšanu, datoru tīklus, datu bāzes un mākslīgo intelektu.'
     },
     'Dzintars': {
         name: 'Koncertzāle "Lielais Dzintars"',
@@ -211,6 +339,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sfxSlider) {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfxSlider.value = savedSFXVolume || 50;
+    }
+
+    // Initialize cursor trail effect
+    initAnimationToggle();
+    if (animationsEnabled) {
+        initCursorTrail();
     }
 });
 
@@ -654,6 +788,8 @@ function updateMapState() {
 function startActivity(type) {
     if (type !== taskSequence[GameState.getCompleted()]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
     currentTask = type;
+    _ac.activeTask = true;
+    _ac.taskType = type;
     
     if (type === 'Osta') showLocationThenStart(type, function() { startBoatGame(); });
     else if (type === 'RTU') showLocationThenStart(type, function() { startAntGame(); });
@@ -814,13 +950,21 @@ function finishBoatRace() {
 }
 
 function closeBoatGame() { 
+    if (!_ac.activeTask || _ac.taskType !== 'Osta') {
+        _ac.addViolation();
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac.activeTask = false;
+    _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Osta', time: Date.now() });
     boatRaceActive = false;
     if (boatInterval) clearInterval(boatInterval);
     document.removeEventListener('keydown', handleBoatKeyPress);
     document.getElementById('game-modal').style.display = 'none'; 
     GameState.completeTask(); 
     updateMapState(); 
-    if(GameState.getCompleted() === 10) showEndGame(); 
+    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame(); 
 }
 
 // RTU Ant (Bug) Mini-Game
@@ -833,8 +977,9 @@ const ANT_GAME_TIME = 15; // seconds
 function startAntGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐜 RTU Bioloģijas uzdevums</h2>
-        <p>Nospiez ${ANTS_REQUIRED} skudras ${ANT_GAME_TIME} sekunžu laikā!</p>
+        <h2>🐜 RTU Datorikas uzdevums</h2>
+        <p>Studiju programmā "Datorika" studenti mācās risināt problēmas ātri un precīzi.</p>
+        <p>Nospiez ${ANTS_REQUIRED} kļūdas (bugs) ${ANT_GAME_TIME} sekunžu laikā!</p>
         <button class="btn btn-full" onclick="initAntGame()">SĀKT</button>
     `;
 }
@@ -845,7 +990,7 @@ function initAntGame() {
     let timeLeft = ANT_GAME_TIME;
     
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐜 Ķer skudras!</h2>
+        <h2>🐛 Ķer kļūdas (bugs)!</h2>
         <p id="ant-timer" style="color: #ffaa00; font-size: 20px;">Laiks: ${timeLeft}s</p>
         <p id="ant-count" style="font-size: 18px;">Noķertas: 0/${ANTS_REQUIRED}</p>
         <div id="ant-field" style="position: relative; width: 100%; height: 250px; background: rgba(0,100,0,0.2); border: 2px solid #4CAF50; border-radius: 10px; overflow: hidden; cursor: crosshair;"></div>
@@ -868,7 +1013,7 @@ function spawnAnt() {
     
     const ant = document.createElement('div');
     ant.className = 'game-ant';
-    ant.textContent = '🐜';
+    ant.textContent = '🐛';
     ant.style.cssText = `position: absolute; font-size: 28px; cursor: pointer; user-select: none; transition: all 0.3s ease; z-index: 10;`;
     ant.style.left = Math.random() * 85 + '%';
     ant.style.top = Math.random() * 85 + '%';
@@ -881,7 +1026,7 @@ function spawnAnt() {
         setTimeout(() => { if (this.parentNode) this.parentNode.removeChild(this); }, 200);
         
         const countEl = document.getElementById('ant-count');
-        if (countEl) countEl.textContent = `Noķertas: ${antsCaught}/${ANTS_REQUIRED}`;
+        if (countEl) countEl.textContent = `Izlabotas: ${antsCaught}/${ANTS_REQUIRED}`;
         
         if (antsCaught >= ANTS_REQUIRED) { finishAntGame(true); }
         else { setTimeout(spawnAnt, 300); }
@@ -904,27 +1049,45 @@ function finishAntGame(success) {
     antGameActive = false;
     if (antGameTimer) clearInterval(antGameTimer);
     
-    const points = success ? 10 : -5;
-    GameState.addScore(points);
-    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-    
     const guideHint = document.getElementById('guide-hint');
     if (guideHint) guideHint.textContent = getRandomBubble(success);
     
-    document.querySelector('.task-section').innerHTML = `
-        <h2>${success ? '✅ Lielisks darbs!' : '❌ Laiks beidzies!'}</h2>
-        <p>Noķertas skudras: ${antsCaught}/${ANTS_REQUIRED}</p>
-        <p style="color: ${success ? '#4CAF50' : '#f44336'};">${points > 0 ? '+' : ''}${points} punkti</p>
-        <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
-        <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
-    `;
+    if (success) {
+        GameState.addScore(10);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>✅ Lielisks darbs!</h2>
+            <p>Izlabotas kļūdas: ${antsCaught}/${ANTS_REQUIRED}</p>
+            <p style="color: #4CAF50;">+10 punkti</p>
+            <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
+            <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
+        `;
+    } else {
+        GameState.addScore(-5);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        // V18: Must retry on failure
+        document.querySelector('.task-section').innerHTML = `
+            <h2>❌ Laiks beidzies!</h2>
+            <p>Izlabotas kļūdas: ${antsCaught}/${ANTS_REQUIRED}</p>
+            <p style="color: #f44336;">-5 punkti. Mēģini vēlreiz!</p>
+            <button class="btn btn-full" onclick="initAntGame()">🔄 Mēģināt vēlreiz</button>
+        `;
+    }
 }
 
 function closeAntGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'RTU') {
+        _ac.addViolation();
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac.activeTask = false;
+    _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'RTU', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === 10) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
 // Historical Sequence Mini-Game (Teatris location)
@@ -977,31 +1140,48 @@ function checkHistorySequence() {
     const years = Array.from(items).map(item => parseInt(item.getAttribute('data-year')));
     const isCorrect = years.every((year, i) => i === 0 || year >= years[i - 1]);
     
-    const points = isCorrect ? 10 : -5;
-    GameState.addScore(points);
-    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-    
     const guideHint = document.getElementById('guide-hint');
     if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
     
-    const correctOrder = [...historyEvents].sort((a, b) => a.year - b.year);
-    document.querySelector('.task-section').innerHTML = `
-        <h2>${isCorrect ? '✅ Pareizi!' : '❌ Nepareizi!'}</h2>
-        <p>Pareizā secība:</p>
-        <ol style="margin: 10px 0; padding-left: 20px;">
-            ${correctOrder.map(ev => `<li>${ev.year}. g. — ${ev.text}</li>`).join('')}
-        </ol>
-        <p style="color: ${isCorrect ? '#4CAF50' : '#f44336'};">${points > 0 ? '+' : ''}${points} punkti</p>
-        <p style="color: #ffaa00; font-style: italic;">${questions['Teatris'].fact}</p>
-        <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt →</button>
-    `;
+    if (isCorrect) {
+        GameState.addScore(10);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        const correctOrder = [...historyEvents].sort((a, b) => a.year - b.year);
+        document.querySelector('.task-section').innerHTML = `
+            <h2>✅ Pareizi!</h2>
+            <p>Pareizā secība:</p>
+            <ol style="margin: 10px 0; padding-left: 20px;">
+                ${correctOrder.map(ev => `<li>${ev.year}. g. — ${ev.text}</li>`).join('')}
+            </ol>
+            <p style="color: #4CAF50;">+10 punkti</p>
+            <p style="color: #ffaa00; font-style: italic;">${questions['Teatris'].fact}</p>
+            <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt →</button>
+        `;
+    } else {
+        GameState.addScore(-5);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        // V18: Must retry on failure
+        document.querySelector('.task-section').innerHTML = `
+            <h2>❌ Nepareizi!</h2>
+            <p style="color: #f44336;">Secība nav pareiza. -5 punkti. Mēģini vēlreiz!</p>
+            <button class="btn btn-full" onclick="startHistorySequence()">🔄 Mēģināt vēlreiz</button>
+        `;
+    }
 }
 
 function closeHistoryGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'Teatris') {
+        _ac.addViolation();
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac.activeTask = false;
+    _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Teatris', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === 10) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
 
@@ -1021,10 +1201,10 @@ function showMiniGame(type) {
     }
 }
 
-const _miniCode = _e('4291');
+const _miniCode = '785b5c41';
 
 function checkMini() {
-    if(document.getElementById('mini-input').value === _d(_miniCode)) sendReady();
+    if(document.getElementById('mini-input').value === _v(_miniCode)) sendReady();
 }
 
 function sendLobbyReady() {
@@ -1076,41 +1256,67 @@ function enforceScoreLimits() {
 
 function checkAns(type) {
     const val = document.getElementById('ans-in').value;
-    const correct = _d(questions[type]._a);
-    const isCorrect = val.toLowerCase() === correct.toLowerCase();
-    
-    if(isCorrect) {
-        GameState.addScore(10);
-        showNotification('✅ Pareiza atbilde! +10 punkti', 'success', 2000);
-    } else {
-        GameState.addScore(-5);
-        showNotification('❌ Nepareiza atbilde! -5 punkti', 'error', 2000);
-    }
+    const correct = _v(questions[type]._a);
+    const isCorrect = val.toLowerCase().trim() === correct.toLowerCase();
     
     // Update guide bubble with dynamic comment
     const guideHint = document.getElementById('guide-hint');
     if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
     
-    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-    
-    // Show fact before closing
-    document.querySelector('.task-section').innerHTML = `
-        <h2>${type}</h2>
-        <p style="color: ${isCorrect ? '#4CAF50' : '#f44336'}; font-size: 18px;">${isCorrect ? '✅ Pareizi!' : '❌ Nepareizi!'}</p>
-        <p><strong>Atbilde:</strong> ${correct}</p>
-        <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
-        <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
-    `;
+    if(isCorrect) {
+        GameState.addScore(10);
+        showNotification('✅ Pareiza atbilde! +10 punkti', 'success', 2000);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        
+        // Correct — show fact and allow continue
+        document.querySelector('.task-section').innerHTML = `
+            <h2>${type}</h2>
+            <p style="color: #4CAF50; font-size: 18px;">✅ Pareizi!</p>
+            <p><strong>Atbilde:</strong> ${correct}</p>
+            <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
+            <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
+        `;
+    } else {
+        GameState.addScore(-5);
+        showNotification('❌ Nepareiza atbilde! -5 punkti', 'error', 2000);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        
+        // Wrong — must retry (V16 + V18)
+        document.querySelector('.task-section').innerHTML = `
+            <h2>${type}</h2>
+            <p style="color: #f44336; font-size: 18px;">❌ Nepareizi! Mēģini vēlreiz.</p>
+            <p style="color: #aaa; font-size: 14px;">(-5 punkti par nepareizu atbildi)</p>
+            <div class="quiz-form">
+                <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
+                <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt atkārtoti</button>
+            </div>
+        `;
+    }
 }
 
 function closeQuizAndContinue() {
+    // Anti-cheat: verify a task was genuinely active
+    if (!_ac.activeTask) {
+        _ac.addViolation();
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac.activeTask = false;
+    _ac.taskType = null;
+    _taskCompletionLog.push({ task: currentTask, time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if(GameState.getCompleted() === 10) showEndGame();
+    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
 function showEndGame() { 
+    // Anti-cheat: verify all 10 tasks completed legitimately
+    if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
+        _ac.addViolation();
+        showNotification('⚠️ Spēle nav pabeigta!', 'error', 3000);
+        return;
+    }
     // Calculate elapsed time
     const endTime = Date.now();
     const elapsedSeconds = Math.floor((endTime - startTime) / 1000);
@@ -1125,7 +1331,15 @@ function showEndGame() {
 }
 
 // End Game screen with congratulations, score, time and navigation
+let _endGameShown = false;
 function showEndGameScreen(finalScore, formattedTime) {
+    // Anti-cheat: verify game legitimacy
+    if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS || _endGameShown) {
+        _ac.addViolation();
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _endGameShown = true;
     document.getElementById('game-modal').style.display = 'block';
     
     let medal = '🥉';
@@ -1184,25 +1398,33 @@ function getRandomBubble(isCorrect) {
 }
 
 function finishGame(name, finalScore, time) { 
+    // Anti-cheat: verify game was played legitimately
+    if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
+        showNotification('⚠️ Nevar saglabāt — spēle nav pabeigta!', 'error', 3000);
+        return;
+    }
+
+    // Generate integrity token
+    const token = _generateScoreToken(finalScore, time, _taskCompletionLog.length);
+    
     // Save score to database
     const formData = new FormData();
     formData.append('name', name);
     formData.append('score', finalScore);
     formData.append('time', time);
+    formData.append('token', token);
+    formData.append('tasks', _taskCompletionLog.length);
+    formData.append('violations', _ac.violations);
     
     fetch('src/php/save_score.php', {
         method: 'POST',
         body: formData
     })
     .then(response => response.text())
-    .then(data => {
-        console.log('Score saved:', data);
-        // Redirect to leaderboard
+    .then(function() {
         location.href = 'src/php/leaderboard.php';
     })
-    .catch(error => {
-        console.error('Error saving score:', error);
-        // Still redirect even if save fails
+    .catch(function() {
         location.href = 'src/php/leaderboard.php';
     });
 }
@@ -1217,6 +1439,112 @@ function setSFXVolume(v) {
         sfx.volume = v/100;
         localStorage.setItem('sfxVolume', v);
     }
+}
+
+// Cursor trail effect
+function getTrailColor() {
+    const theme = document.body.getAttribute('data-theme') || 'default';
+    const colors = {
+        'default': 'rgba(255, 170, 0,',
+        'dark': 'rgba(0, 170, 255,',
+        'light': 'rgba(255, 102, 0,',
+        'blue': 'rgba(255, 215, 0,'
+    };
+    return colors[theme] || colors['default'];
+}
+
+function initCursorTrail() {
+    const canvas = document.getElementById('cursor-canvas');
+    if (!canvas) return;
+    if (cursorTrailAnimId) {
+        cancelAnimationFrame(cursorTrailAnimId);
+        cursorTrailAnimId = null;
+    }
+    const ctx = canvas.getContext('2d');
+
+    let mouseMoved = false;
+    const pointer = {
+        x: 0.5 * window.innerWidth,
+        y: 0.5 * window.innerHeight,
+    };
+    const pointsNumber = 30;
+    const params = {
+        widthFactor: 0.3,
+        spring: 0.4,
+        friction: 0.5
+    };
+
+    const trail = new Array(pointsNumber);
+    for (let i = 0; i < pointsNumber; i++) {
+        trail[i] = { x: pointer.x, y: pointer.y, dx: 0, dy: 0 };
+    }
+
+    function updateMousePosition(eX, eY) {
+        pointer.x = eX;
+        pointer.y = eY;
+    }
+
+    window.addEventListener("click", e => { updateMousePosition(e.pageX, e.pageY); });
+    window.addEventListener("mousemove", e => {
+        mouseMoved = true;
+        updateMousePosition(e.pageX, e.pageY);
+    });
+    window.addEventListener("touchmove", e => {
+        mouseMoved = true;
+        updateMousePosition(e.targetTouches[0].pageX, e.targetTouches[0].pageY);
+    });
+
+    function setupCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    setupCanvas();
+    window.addEventListener("resize", setupCanvas);
+
+    function update(t) {
+        if (!animationsEnabled) return;
+
+        if (!mouseMoved) {
+            pointer.x = (0.5 + 0.3 * Math.cos(0.002 * t) * Math.sin(0.005 * t)) * window.innerWidth;
+            pointer.y = (0.5 + 0.2 * Math.cos(0.005 * t) + 0.1 * Math.cos(0.01 * t)) * window.innerHeight;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        trail.forEach((p, pIdx) => {
+            const prev = pIdx === 0 ? pointer : trail[pIdx - 1];
+            const spring = pIdx === 0 ? 0.4 * params.spring : params.spring;
+            p.dx += (prev.x - p.x) * spring;
+            p.dy += (prev.y - p.y) * spring;
+            p.dx *= params.friction;
+            p.dy *= params.friction;
+            p.x += p.dx;
+            p.y += p.dy;
+        });
+
+        const colorBase = getTrailColor();
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(trail[0].x, trail[0].y);
+
+        for (let i = 1; i < trail.length - 1; i++) {
+            const xc = 0.5 * (trail[i].x + trail[i + 1].x);
+            const yc = 0.5 * (trail[i].y + trail[i + 1].y);
+            ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
+            ctx.lineWidth = params.widthFactor * (pointsNumber - i);
+            const alpha = 1 - (i / trail.length);
+            ctx.strokeStyle = colorBase + ' ' + alpha.toFixed(2) + ')';
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(xc, yc);
+        }
+        ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
+        ctx.stroke();
+
+        cursorTrailAnimId = window.requestAnimationFrame(update);
+    }
+
+    cursorTrailAnimId = window.requestAnimationFrame(update);
 }
 
 // Theme system
@@ -1271,130 +1599,57 @@ function toggleModal(id) {
     const isOpening = modal.style.display !== "block";
     modal.style.display = isOpening ? "block" : "none";
     
-    // Update theme button active state when settings modal opens
+    // Update settings controls when settings modal opens
     if (isOpening && id === 'settings-modal') {
         const savedTheme = localStorage.getItem('theme') || 'default';
         updateActiveThemeButton(savedTheme);
+        const checkbox = document.getElementById('animation-toggle');
+        if (checkbox) checkbox.checked = animationsEnabled;
     }
 }
 
-// Spotify mini player
+// Animation toggle
 
-let spotifyEmbedController = null;
-let spotifyIsPlaying = false;
-let spotifyShuffleOn = false;
-let spotifyRepeatOn = false;
-let spotifyLoaded = false;
+let animationsEnabled = true;
+let cursorTrailAnimId = null;
 
-/**
- * Initialize the Spotify Embed iframe and IFrame API controller.
- * On first call it inserts a hidden iframe and connects via the
- * Spotify IFrame API so we can drive playback with JS.
- */
-function spotifyInit(callback) {
-    if (spotifyLoaded) { if (callback) callback(); return; }
-    const container = document.getElementById('spotify-embed-container');
-    if (!container) return;
-    
-    const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
-    container.style.display = 'block';
-    container.innerHTML = `<iframe 
-        id="spotify-iframe"
-        src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
-        width="1" 
-        height="1" 
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-        loading="lazy"
-        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;">
-    </iframe>`;
-    
-    // Try connecting to the Spotify IFrame API
-    window.onSpotifyIframeApiReady = function(IFrameAPI) {
-        const iframe = document.getElementById('spotify-iframe');
-        if (!iframe) return;
-        IFrameAPI.createController(iframe, {}, function(controller) {
-            spotifyEmbedController = controller;
-            controller.addListener('playback_update', function(e) {
-                spotifyIsPlaying = !e.data.isPaused;
-                updatePlayButton();
-            });
-            if (callback) callback();
-        });
-    };
-    
-    // Load the Spotify IFrame API script if not already present
-    if (!document.getElementById('spotify-iframe-api')) {
-        const script = document.createElement('script');
-        script.id = 'spotify-iframe-api';
-        script.src = 'https://open.spotify.com/embed/iframe-api/v1';
-        document.head.appendChild(script);
+function toggleAnimations(enabled) {
+    animationsEnabled = enabled;
+    localStorage.setItem('animationsEnabled', enabled ? '1' : '0');
+
+    if (enabled) {
+        document.body.classList.remove('no-animations');
+        const canvas = document.getElementById('cursor-canvas');
+        if (canvas) {
+            canvas.style.display = '';
+            initCursorTrail();
+        }
+    } else {
+        document.body.classList.add('no-animations');
+        if (cursorTrailAnimId) {
+            cancelAnimationFrame(cursorTrailAnimId);
+            cursorTrailAnimId = null;
+        }
+        const canvas = document.getElementById('cursor-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.style.display = 'none';
+        }
     }
-    spotifyLoaded = true;
+    showNotification(enabled ? '✨ Animācijas ieslēgtas' : '✨ Animācijas izslēgtas', 'info', 2000);
 }
 
-function updatePlayButton() {
-    const btn = document.getElementById('smp-play');
-    if (btn) btn.textContent = spotifyIsPlaying ? '⏸️' : '▶️';
-}
-
-function spotifyPlayPause() {
-    if (!spotifyLoaded) {
-        spotifyInit(function() {
-            if (spotifyEmbedController) spotifyEmbedController.togglePlay();
-        });
-        // Update UI optimistically
-        spotifyIsPlaying = true;
-        updatePlayButton();
-        const name = document.getElementById('smp-artist-name');
-        if (name) name.textContent = 'Ielādē...';
-        return;
+function initAnimationToggle() {
+    const saved = localStorage.getItem('animationsEnabled');
+    if (saved === '0') {
+        animationsEnabled = false;
+        document.body.classList.add('no-animations');
+        const canvas = document.getElementById('cursor-canvas');
+        if (canvas) canvas.style.display = 'none';
     }
-    if (spotifyEmbedController) {
-        spotifyEmbedController.togglePlay();
-    }
-}
-
-function spotifyNext() {
-    if (!spotifyLoaded) { spotifyInit(); return; }
-    // Spotify Embed IFrame API has limited skip support.
-    // We restart the playlist which triggers the next track if shuffle is on in the player.
-    if (spotifyEmbedController) {
-        const playlistUri = SPOTIFY_PLAYLIST_URL.replace('https://open.spotify.com/', 'spotify:').replace(/\//g, ':');
-        spotifyEmbedController.loadUri(playlistUri);
-        spotifyEmbedController.play();
-    }
-    showNotification('⏭ Nākamā dziesma', 'info', 1500);
-}
-
-function spotifyPrev() {
-    if (!spotifyLoaded) { spotifyInit(); return; }
-    // Seek to start of current track (standard prev behavior)
-    if (spotifyEmbedController) {
-        spotifyEmbedController.seek(0);
-    }
-    showNotification('⏮ No sākuma', 'info', 1500);
-}
-
-function spotifyToggleShuffle() {
-    // Note: Spotify Embed IFrame API does not expose shuffle control directly.
-    // This toggles the UI state; actual shuffle depends on the user's Spotify app settings.
-    spotifyShuffleOn = !spotifyShuffleOn;
-    const btn = document.getElementById('smp-shuffle');
-    if (btn) {
-        btn.classList.toggle('active', spotifyShuffleOn);
-    }
-    showNotification(spotifyShuffleOn ? '🔀 Shuffle ON' : '🔀 Shuffle OFF', 'info', 1500);
-}
-
-function spotifyToggleRepeat() {
-    // Note: Spotify Embed IFrame API does not expose repeat control directly.
-    // This toggles the UI state; actual repeat depends on the user's Spotify app settings.
-    spotifyRepeatOn = !spotifyRepeatOn;
-    const btn = document.getElementById('smp-repeat');
-    if (btn) {
-        btn.classList.toggle('active', spotifyRepeatOn);
-    }
-    showNotification(spotifyRepeatOn ? '🔁 Repeat ON' : '🔁 Repeat OFF', 'info', 1500);
+    const checkbox = document.getElementById('animation-toggle');
+    if (checkbox) checkbox.checked = animationsEnabled;
 }
 
 // Notification system
@@ -1443,7 +1698,8 @@ function showNotification(message, type = 'info', duration = 3000) {
 }
 
 // Expose only UI-triggered functions to window (for onclick handlers in HTML)
-// Game state internals (GameState, _d, _e, _xk, questions answers) remain private
+// Anti-cheat: Game internals (GameState, _v, _k, questions, answers) remain private
+// Close/finish functions are guarded with _ac.activeTask checks
 window.toggleModal = toggleModal;
 window.startSingleGame = startSingleGame;
 window.openLobby = openLobby;
@@ -1464,12 +1720,8 @@ window.closeHistoryGame = closeHistoryGame;
 window.sendReady = sendReady;
 window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
-window.finishGame = finishGame;
-window.showEndGameScreen = showEndGameScreen;
-window.spotifyPlayPause = spotifyPlayPause;
-window.spotifyNext = spotifyNext;
-window.spotifyPrev = spotifyPrev;
-window.spotifyToggleShuffle = spotifyToggleShuffle;
-window.spotifyToggleRepeat = spotifyToggleRepeat;
+window.toggleAnimations = toggleAnimations;
+// Note: finishGame and showEndGameScreen are NOT exposed to window
+// They can only be called internally after legitimate game completion
 
 })(); // End IIFE

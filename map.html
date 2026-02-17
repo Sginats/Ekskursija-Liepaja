@@ -14,6 +14,7 @@
     <script src="src/js/script.js?v=20260216194225" defer></script>
 </head>
 <body>
+    <canvas id="cursor-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;"></canvas>
     <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
 
     <!-- Connection Status Indicator -->
@@ -102,23 +103,15 @@
                 </button>
             </div>
             
-            <h3 class="section-title">🎵 Spotify Playlist</h3>
-            <div class="spotify-mini-player" id="spotify-mini-player">
-                <div class="smp-track-info">
-                    <div class="smp-album-art" id="smp-album-art">🎵</div>
-                    <div class="smp-track-details">
-                        <div class="smp-track-name" id="smp-track-name">Liepājas Ekskursija</div>
-                        <div class="smp-artist-name" id="smp-artist-name">Spied Play lai sāktu</div>
+            <h3 class="section-title">✨ Animācijas</h3>
+            <div class="animation-toggle">
+                <label class="toggle-label" for="animation-toggle">
+                    <span>Animācijas On/Off</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="animation-toggle" checked onchange="toggleAnimations(this.checked)">
+                        <span class="toggle-slider"></span>
                     </div>
-                </div>
-                <div class="smp-controls">
-                    <button class="smp-btn smp-btn-small" id="smp-shuffle" onclick="spotifyToggleShuffle()" title="Shuffle">🔀</button>
-                    <button class="smp-btn smp-btn-small" id="smp-prev" onclick="spotifyPrev()" title="Iepriekšējā">⏮</button>
-                    <button class="smp-btn smp-btn-play" id="smp-play" onclick="spotifyPlayPause()" title="Play/Pause">▶️</button>
-                    <button class="smp-btn smp-btn-small" id="smp-next" onclick="spotifyNext()" title="Nākamā">⏭</button>
-                    <button class="smp-btn smp-btn-small" id="smp-repeat" onclick="spotifyToggleRepeat()" title="Repeat">🔁</button>
-                </div>
-                <div id="spotify-embed-container" style="display:none;"></div>
+                </label>
             </div>
             
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
@@ -132,6 +125,20 @@
             <div class="info-box">
                 <p><strong id="about-game-label">Spēle:</strong> "Mācību ekskursija Liepājā"</p>
                 <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju, pildot interaktīvus uzdevumus.</span></p>
+            </div>
+
+            <h3 class="section-title">📋 Spēles noteikumi</h3>
+            <div class="info-box">
+                <ol style="margin: 5px 0 0 20px; font-size: 14px; line-height: 1.8;">
+                    <li>Ekskursija ietver <strong>10 apmeklējuma vietas</strong> Liepājā, kas jāapmeklē noteiktā secībā.</li>
+                    <li>Katrā vietā saņemsi <strong>informāciju par vietu</strong> un <strong>uzdevumu</strong> (jautājums, mini-spēle vai secības uzdevums).</li>
+                    <li>Par <strong>pareizu atbildi</strong> saņemsi <strong>+10 punktus</strong>.</li>
+                    <li>Par <strong>nepareizu atbildi</strong> tiek noņemti <strong>-5 punkti</strong>, un jāmēģina atkārtoti — uzdevumu nevar izlaist!</li>
+                    <li>Katru vietu var apmeklēt <strong>tikai vienu reizi</strong>.</li>
+                    <li>Pēdējā apmeklējuma vieta vienmēr ir <strong>atpūtas vieta</strong>.</li>
+                    <li>Spēles beigās tiek parādīts tavs <strong>rezultāts</strong> un <strong>laiks</strong>.</li>
+                    <li>Vari saglabāt rezultātu un iekļūt <strong>Top 10 tabulā</strong>!</li>
+                </ol>
             </div>
 
             <h3 id="legend-title" class="section-title">Objektu nozīme kartē</h3>
@@ -150,6 +157,7 @@
                         <li>JavaScript</li>
                         <li>PHP (Datu bāze)</li>
                         <li>WebSocket (Real-time)</li>
+                        <li>AI: Gemini, Claude, Copilot</li>
                     </ul>
                 </div>
                 <div>
@@ -173,7 +181,6 @@
                 <ul>
                     <li>Fona mūzika: Brīvās licences audio</li>
                     <li>Skaņas efekti: Autoru ieraksti</li>
-                    <li>Spotify integrācija: Spotify Embed API</li>
                 </ul>
                 <p><strong>Informācija:</strong></p>
                 <ul>
