@@ -139,8 +139,18 @@ body {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 170, 0, 0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 170, 0, 0.15), transparent);
     transition: left 0.5s ease;
+}
+
+body[data-theme="dark"] .btn::before {
+    background: linear-gradient(90deg, transparent, rgba(0, 170, 255, 0.15), transparent);
+}
+body[data-theme="light"] .btn::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.15), transparent);
+}
+body[data-theme="blue"] .btn::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent);
 }
 
 .btn:hover::before {
@@ -149,10 +159,23 @@ body {
 
 .btn:hover {
     background: linear-gradient(135deg, #4a3333, #3a2525);
-    color: #ffaa00;
+    color: var(--accent-primary);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
-    border-color: #ffaa00;
+    border-color: var(--accent-primary);
+}
+
+body[data-theme="dark"] .btn:hover {
+    background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
+    box-shadow: 0 6px 20px rgba(0, 170, 255, 0.4);
+}
+body[data-theme="light"] .btn:hover {
+    background: linear-gradient(135deg, #ffffff, #f0f0f0);
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+}
+body[data-theme="blue"] .btn:hover {
+    background: linear-gradient(135deg, #2a4a6f, #1e3a5f);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
 }
 
 .btn:active {
@@ -298,8 +321,9 @@ body {
     position: fixed;
     z-index: 1000;
     left: 0; top: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(5px);
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     align-items: center;
     justify-content: center;
 }
@@ -309,14 +333,16 @@ body {
 }
 
 .modal-content {
-    background: linear-gradient(135deg, #2a1a1a, #1a0f0f);
-    border: 2px solid #ffaa00;
-    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(42, 26, 26, 0.85), rgba(26, 15, 15, 0.9));
+    border: 1px solid rgba(255, 170, 0, 0.3);
+    border-radius: 20px;
     padding: 30px;
     width: 90%;
     max-width: 500px;
     text-align: left;
-    box-shadow: 0 10px 50px rgba(0,0,0,0.9), 0 0 30px rgba(255, 170, 0, 0.3);
+    box-shadow: 0 10px 50px rgba(0,0,0,0.9), 0 0 30px rgba(255, 170, 0, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     position: relative;
     max-height: 85vh; 
     overflow-y: auto;
@@ -340,11 +366,14 @@ body {
 .modal-content::-webkit-scrollbar-track { background: #332222; }
 
 .info-box {
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 8px;
     margin-bottom: 15px;
     font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .section-title {
@@ -650,10 +679,12 @@ input[type=range] {
     position: absolute;
     top: 250px;
     left: 20px;
-    background: rgba(42, 26, 26, 0.8);
+    background: rgba(42, 26, 26, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     padding: 15px;
-    border-radius: 10px;
-    border: 1px solid #ffaa00;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 170, 0, 0.3);
     width: 250px;
     z-index: 10;
     text-align: left;
@@ -725,6 +756,16 @@ input[type=range] {
     background: rgba(255, 170, 0, 0.1);
 }
 
+body[data-theme="dark"] .tabulaLead tbody tr:hover {
+    background: rgba(0, 170, 255, 0.1);
+}
+body[data-theme="light"] .tabulaLead tbody tr:hover {
+    background: rgba(255, 102, 0, 0.1);
+}
+body[data-theme="blue"] .tabulaLead tbody tr:hover {
+    background: rgba(255, 215, 0, 0.1);
+}
+
 .tabulaLead td {
     padding: 12px;
     text-align: center;
@@ -766,14 +807,15 @@ input[type=range] {
     top: 20px;
     right: 20px;
     padding: 8px 16px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.5);
     border-radius: 20px;
     font-size: 12px;
     font-weight: bold;
     z-index: 9999;
     transition: all 0.3s ease;
-    border: 2px solid transparent;
-    backdrop-filter: blur(10px);
+    border: 1px solid transparent;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 .connection-status.connected {
@@ -1259,14 +1301,16 @@ input[type=range] {
     left: 0;
     width: 100%;
     height: 60px;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
     box-sizing: border-box;
-    border-bottom: 2px solid #ffaa00;
+    border-bottom: 1px solid rgba(255, 170, 0, 0.3);
 }
 
 .topbar-btn {
@@ -1355,7 +1399,28 @@ input[type=range] {
 .button-group .btn:hover {
     animation: goldGlowRotate 1.5s ease-in-out infinite;
     box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
-    border-color: #ffaa00;
+    border-color: var(--accent-primary);
+}
+
+body[data-theme="dark"] .button-group .btn {
+    border-color: rgba(0, 170, 255, 0.4);
+}
+body[data-theme="dark"] .button-group .btn:hover {
+    box-shadow: 0 6px 20px rgba(0, 170, 255, 0.4);
+}
+
+body[data-theme="light"] .button-group .btn {
+    border-color: rgba(255, 102, 0, 0.4);
+}
+body[data-theme="light"] .button-group .btn:hover {
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+}
+
+body[data-theme="blue"] .button-group .btn {
+    border-color: rgba(255, 215, 0, 0.4);
+}
+body[data-theme="blue"] .button-group .btn:hover {
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
 }
 
 /* Location info panel in game modal */
@@ -1537,7 +1602,9 @@ body[data-theme="blue"] {
 .btn {
     background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
     color: var(--text-secondary);
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .btn:hover {
@@ -1548,7 +1615,22 @@ body[data-theme="blue"] {
 .modal-content {
     background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
     color: var(--text-primary);
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+body[data-theme="dark"] .modal-content {
+    background: linear-gradient(135deg, rgba(26, 26, 26, 0.85), rgba(0, 0, 0, 0.9));
+    box-shadow: 0 10px 50px rgba(0,0,0,0.9), 0 0 30px rgba(0, 170, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.02);
+}
+body[data-theme="light"] .modal-content {
+    background: linear-gradient(135deg, rgba(240, 240, 240, 0.85), rgba(208, 208, 208, 0.9));
+    box-shadow: 0 10px 50px rgba(0,0,0,0.2), 0 0 30px rgba(255, 102, 0, 0.1), inset 0 0 30px rgba(255, 255, 255, 0.1);
+}
+body[data-theme="blue"] .modal-content {
+    background: linear-gradient(135deg, rgba(44, 95, 141, 0.85), rgba(26, 47, 74, 0.9));
+    box-shadow: 0 10px 50px rgba(0,0,0,0.9), 0 0 30px rgba(255, 215, 0, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.02);
 }
 
 .notification {
@@ -1610,6 +1692,16 @@ body::after {
 .history-item:hover {
     transform: translateX(5px);
     background: rgba(255, 170, 0, 0.1) !important;
+}
+
+body[data-theme="dark"] .history-item:hover {
+    background: rgba(0, 170, 255, 0.1) !important;
+}
+body[data-theme="light"] .history-item:hover {
+    background: rgba(255, 102, 0, 0.1) !important;
+}
+body[data-theme="blue"] .history-item:hover {
+    background: rgba(255, 215, 0, 0.1) !important;
 }
 
 .history-item:active {
