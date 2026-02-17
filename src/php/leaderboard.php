@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Top 10 Rezultāti</title>
     <link rel="stylesheet" href="../../style.css">
+    
     <script src="../../src/js/script.js?v=20260216194225" defer></script>
     <style>
         .sort-indicator {
@@ -84,7 +85,8 @@
                 ?>
             </tbody>
         </table>
-        <button class="btn" onclick="location.href='../../index.html'">Atpakaļ</button>
+        <!-- make the button centered -->
+        <button class="btn"  onclick="location.href='../../index.html'">Atpakaļ</button>
     </div>
     <script>
         let currentSort = 'combo';

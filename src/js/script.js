@@ -1,11 +1,3 @@
-// ============================================================================
-// LIEPĀJAS EKSKURSIJA - GAME LOGIC
-// ============================================================================
-// Main game script handling map interactions, WebSocket connections,
-// quiz system, and user interface management.
-// ============================================================================
-
-// Wrap everything in IIFE to prevent console access to game internals
 (function() {
 'use strict';
 
@@ -976,8 +968,8 @@ const ANT_GAME_TIME = 15; // seconds
 function startAntGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐜 RTU Datorikas uzdevums</h2>
-        <p>Studiju programmā "Datorika" studenti mācās risināt problēmas ātri un precīzi.</p>
+        <h2>🐜 RTU Bioloģijas uzdevums</h2>
+        <p>Studiju programmā "Bioloģijas" studenti mācās risināt problēmas ātri un precīzi.</p>
         <p>Noķer ${ANTS_REQUIRED} kukaiņus ${ANT_GAME_TIME} sekunžu laikā!</p>
         <button class="btn btn-full" onclick="initAntGame()">SĀKT</button>
     `;

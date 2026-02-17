@@ -1,8 +1,3 @@
-/* ============================================================================
-   LIEPĀJAS EKSKURSIJA - CUSTOM STYLES WITH BOOTSTRAP INTEGRATION
-   ============================================================================ */
-
-/* Bootstrap Override */
 body #main-menu.container { 
     display: flex;
     flex-direction: column;
@@ -101,7 +96,7 @@ body {
     background: linear-gradient(135deg, #332222, #2a1a1a);
     color: #ccc;
     border: 2px solid #553333;
-    padding: 15px 40px;
+    padding: 14px 40px;
     font-size: 18px;
     cursor: pointer;
     width: 250px;
@@ -114,6 +109,7 @@ body {
     overflow: hidden;
     animation: slideInFromRight 0.4s ease-out;
     will-change: transform;
+    
 }
 
 .btn:nth-child(1) { animation-delay: 0.05s; }
@@ -279,7 +275,7 @@ body[data-theme="blue"] .btn:hover {
 }
 
 .back-btn {
-    position: absolute;
+    position: relative;
     top: 20px;
     left: 20px;
     z-index: 10;
@@ -345,7 +341,7 @@ body[data-theme="blue"] .btn:hover {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     position: relative;
-    max-height: 85vh; 
+    max-height: 90vh; 
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -610,15 +606,17 @@ body.no-animations::after {
 }
 
 .close-btn {
-    width: 100%;
-    padding: 15px;
+    width: 100%;    
+    padding: 20px;
     box-sizing: border-box;
+    margin: 0 auto;
 }
 
 .btn-full {
     width: 100%;
     padding: 15px;
     box-sizing: border-box;
+    margin: 0 auto;
 }
 
 .quiz-layout {
@@ -628,7 +626,8 @@ body.no-animations::after {
 }
 .guide-wrapper { flex: 1; text-align: center; }
 .guide-sprite { width: 100px; height: auto; }
-.task-section { flex: 2; }
+.task-section { flex: 1;}
+.task-section button { justify-content: center; margin: 0 auto;}
 .speech-bubble {
     background: white; color: black; padding: 10px;
     border-radius: 10px; margin-top: 10px; font-size: 13px;
@@ -1172,9 +1171,9 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     .subtitle {
         font-size: 32px;
     }
-    
     .btn {
-        width: 300px;
+        width: 220px;
+        font-size: 18px;
     }
 }
 
@@ -1189,7 +1188,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     }
     
     .btn {
-        width: 300px;
         font-size: 20px;
     }
 }

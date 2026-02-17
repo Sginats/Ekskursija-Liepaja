@@ -39,34 +39,34 @@
             <h2 id="mode-title" style="color: #ffaa00;">Izvēlies režīmu</h2>
             
             <div class="input-wrapper">
-                <label class="input-label" for="start-player-name">👤 Tavs Vārds</label>
+                <label class="input-label" for="start-player-name">Tavs Vārds</label>
                 <input type="text" id="start-player-name" placeholder="Ievadi savu vārdu..." class="input-field" maxlength="8">
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
-                <button id="btn-single" class="btn" onclick="startSingleGame()">🎮 Spēlēt vienam</button>
-                <button id="btn-lobby" class="btn" onclick="openLobby()">👥 Spēlēt ar draugu</button>
+                <button id="btn-single" class="btn" onclick="startSingleGame()">Spēlēt vienam</button>
+                <button id="btn-lobby" class="btn" onclick="openLobby()">Spēlēt ar draugu</button>
                 <div style="margin-top: 15px; border-top: 2px solid #4a2c2c; width: 100%; padding-top: 20px;">
                     <div class="input-wrapper">
-                        <label class="input-label" for="join-code">🔑 Drauga Kods</label>
+                        <label class="input-label" for="join-code">Drauga Kods</label>
                         <input type="text" id="join-code" placeholder="Ievadi drauga lobby kodu" class="input-field" maxlength="8">
                     </div>
                     <button id="btn-join" class="btn" onclick="joinGame()" style="width: 100%; margin-top: 10px;">Pievienoties</button>
                 </div>
             </div>
-            <button id="btn-cancel-mode" class="btn close-btn" onclick="toggleModal('mode-modal')" style="margin-top: 20px;">❌ Atcelt</button>
+            <button id="btn-cancel-mode" class="btn close-btn" onclick="toggleModal('mode-modal')" style="margin-top: 20px;">Atcelt</button>
         </div>
     </div>
 
     <div id="lobby-modal" class="modal">
         <div class="modal-content" style="text-align: center;">
-            <h2 style="color: #ffaa00; margin-bottom: 20px;">🎮 Lobby</h2>
+            <h2 style="color: #ffaa00; margin-bottom: 20px;">Lobby</h2>
             <p style="font-size: 16px; color: #ccc; margin-bottom: 10px;">Tavs istabas kods:</p>
             <div style="background: linear-gradient(135deg, #2a1a1a, #1a1010); border: 3px solid #ffaa00; border-radius: 15px; padding: 20px; margin: 20px 0; box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);">
                 <h1 id="lobby-code" style="font-size: 50px; margin: 0; color: #ffaa00; letter-spacing: 8px; text-shadow: 0 0 20px rgba(255, 170, 0, 0.5);">0000</h1>
             </div>
-            <p id="lobby-wait" style="color: #ffaa00; font-size: 16px; margin: 20px 0; animation: pulse 2s infinite;">⏳ Gaidu otru spēlētāju...</p>
-            <button class="btn close-btn" onclick="location.reload()" style="margin-top: 20px;">❌ Aizvērt</button>
+            <p id="lobby-wait" style="color: #ffaa00; font-size: 16px; margin: 20px 0; animation: pulse 2s infinite;">Gaidu otru spēlētāju...</p>
+            <button class="btn close-btn" onclick="location.reload()" style="margin-top: 20px;">Aizvērt</button>
         </div>
     </div>
 
@@ -81,7 +81,7 @@
             <label id="vol-sfx">Skaņas efekti</label>
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
 
-            <h3 class="section-title">🎨 Krāsu tēma</h3>
+            <h3 class="section-title">Krāsu tēma</h3>
             <div class="theme-selector">
                 <button class="theme-btn" onclick="setTheme('default')" data-theme="default">
                     <span class="theme-preview" style="background: linear-gradient(135deg, #332222, #2a1a1a);"></span>
@@ -101,7 +101,7 @@
                 </button>
             </div>
 
-            <h3 class="section-title">✨ Animācijas</h3>
+            <h3 class="section-title">Animācijas</h3>
             <div class="animation-toggle">
                 <label class="toggle-label" for="animation-toggle">
                     <span>Animācijas On/Off</span>
@@ -125,7 +125,7 @@
                 <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju, veicot interaktīvus uzdevumus un sacensties par labākajiem rezultātiem.</span></p>
             </div>
 
-            <h3 class="section-title">📋 Spēles noteikumi</h3>
+            <h3 class="section-title">Spēles noteikumi</h3>
             <div class="info-box">
                 <ol style="margin: 5px 0 0 20px; font-size: 14px; line-height: 1.8;">
                     <li>Ekskursija ietver <strong>10 apmeklējuma vietas</strong> Liepājā, kas jāapmeklē noteiktā secībā.</li>
