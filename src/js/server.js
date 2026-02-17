@@ -33,6 +33,21 @@ wss.on('close', function close() {
 
 console.log("🚀 Professional WebSocket server started on port 8080!");
 console.log("Features: Auto-reconnect, Heartbeat, Lobby cleanup");
+console.log("Debug mode: Enabled");
+
+function logServerState() {
+    const lobbyCount = Object.keys(lobbies).length;
+    const clientCount = wss.clients.size;
+    console.log(`[STATE] Lobbies: ${lobbyCount}, Connected clients: ${clientCount}`);
+    if (lobbyCount > 0) {
+        Object.keys(lobbies).forEach(code => {
+            const lobby = lobbies[code];
+            console.log(`  - Lobby ${code}: host=${!!lobby.host}, guest=${!!lobby.guest}, hostDone=${lobby.hostDone}, guestDone=${lobby.guestDone}`);
+        });
+    }
+}
+
+setInterval(logServerState, 30000);
 
 wss.on('connection', (ws, req) => {
     ws.isAlive = true;
@@ -56,7 +71,7 @@ wss.on('connection', (ws, req) => {
                     created: Date.now()
                 };
                 ws.send(JSON.stringify({ type: 'created', code: newCode }));
-                console.log(`Lobby created: ${newCode}`);
+                console.log(`[CREATE] Lobby ${newCode} created. Total lobbies: ${Object.keys(lobbies).length}`);
             }
 
             else if (action === 'join') {
@@ -84,7 +99,7 @@ wss.on('connection', (ws, req) => {
                     lobbies[code].host.send(JSON.stringify({ type: 'start_game', role: 'host' }));
                 }
                 ws.send(JSON.stringify({ type: 'start_game', role: 'guest' }));
-                console.log(`Player joined lobby: ${code}`);
+                console.log(`[JOIN] Guest joined lobby ${code}. Total lobbies: ${Object.keys(lobbies).length}`);
             }
 
             else if (action === 'update_task') {
@@ -113,7 +128,7 @@ wss.on('connection', (ws, req) => {
                     // Reset
                     lobbies[code].hostDone = false;
                     lobbies[code].guestDone = false;
-                    console.log(`Task synchronized in lobby: ${code}`);
+                    console.log(`[SYNC] Task synchronized in lobby ${code}`);
                 }
             }
 
@@ -146,7 +161,7 @@ wss.on('connection', (ws, req) => {
                     }));
                 }
                 delete lobbies[lobbyCode];
-                console.log(`Lobby ${lobbyCode} closed due to player disconnect`);
+                console.log(`[CLOSE] Lobby ${lobbyCode} closed due to disconnect. Total lobbies: ${Object.keys(lobbies).length}`);
             }
         }
     });

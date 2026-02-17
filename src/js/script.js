@@ -5,11 +5,11 @@
 // quiz system, and user interface management.
 // ============================================================================
 
-// --- PROTECTED GAME STATE (wrapped to prevent console manipulation) ---
+// Protected game state
 const GameState = (function() {
     let _score = 0;
     let _completedTasks = 0;
-    let _checksum = 0; // integrity check
+    let _checksum = 0;
 
     function _updateChecksum() {
         _checksum = (_score * 7 + _completedTasks * 13 + 42) ^ 0xA5A5;
@@ -53,37 +53,32 @@ const GameState = (function() {
 })();
 
 let currentTask = "";
-let currentLang = localStorage.getItem('lang') || 'lv';
 let startTime; 
 let myRole = '';
 let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 
-// --- SPOTIFY CONFIGURATION ---
+// Spotify configuration
 const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/2FJVi4yazmR6yUDFkOu9ep';
 
-// --- CONFIGURATION ---
+// Configuration
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const POLL_INTERVAL = 2000; // Poll every 2 seconds
-const WS_TIMEOUT = 2000; // WebSocket connection timeout (short since it's unlikely to work)
+const POLL_INTERVAL = 2000;
+const WS_TIMEOUT = 2000;
 
-// Connection mode constants
 const CONNECTION_MODE_PHP = 'php-polling';
 const CONNECTION_MODE_WS = 'websocket';
-let connectionMode = CONNECTION_MODE_PHP; // Default to PHP polling (works everywhere)
+let connectionMode = CONNECTION_MODE_PHP;
 
-// Task completion sequence - defines the order in which locations must be visited
 const taskSequence = [
     'RTU', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
-// Decode helper
 function _d(s) { return decodeURIComponent(escape(atob(s))); }
 
-// Question database with encoded answers to prevent searching through source
 const questions = {
     'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "MTk1NA==", fact: "Šeit mācās gudrākie prāti!" },
     'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", _a: "MTgwMA==", fact: "Turi cepuri! Mols sargā ostu." },
@@ -97,7 +92,6 @@ const questions = {
     'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", _a: "TGllcMSBamFz", fact: "Piektais lielākais ezers Latvijā." }
 };
 
-// Location information - shown before each quiz/minigame
 const locationInfo = {
     'RTU': {
         name: 'RTU Liepājas akadēmija',
@@ -141,61 +135,32 @@ const locationInfo = {
     }
 };
 
-// UI text translations (Latvian base)
-const uiTexts = {
-    "main-title": "LIEPĀJAS KARTE",
-    "subtitle": "EKSKURSIJA",
-    "btn-start": "Sākt spēli",
-    "btn-settings": "Iestatījumi",
-    "btn-leaderboard": "Top 10",
-    "btn-about": "Par spēli",
-    "btn-exit": "Iziet",
-    "score-label": "Punkti: ",
-    "btn-submit": "Iesniegt",
-    "mode-title": "Izvēlies režīmu",
-    "btn-single": "Spēlēt vienam",
-    "btn-lobby": "Spēlēt ar draugu",
-    "btn-join": "Pievienoties",
-    "btn-cancel-mode": "Atcelt"
-};
-
 // ============================================================================
 // INITIALIZATION & EVENT LISTENERS
 // ============================================================================
 
-/**
- * Main initialization function - runs when DOM is fully loaded
- * Sets up WebSocket connection, tooltips, audio, and translations
- */
 document.addEventListener('DOMContentLoaded', () => {
-    // Parse URL parameters for multiplayer mode
     getQueryParams();
     startTime = Date.now();
     
-    // Only connect WebSocket if on index.html (for lobby creation/joining)
-    // or if we have multiplayer parameters (role and code)
+    // Initialize theme
+    initTheme();
+    
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
                           (myRole && myLobbyCode);
     
     if (needsConnection) {
-        // Show connection status indicator on pages that use multiplayer
         const statusIndicator = document.getElementById('connection-status');
         if (statusIndicator) {
             statusIndicator.style.display = 'block';
         }
         
-        // Smart connection: Try WebSocket first, fallback to PHP polling
         initSmartConnection();
     }
-
-    // Language switching disabled - using Latvian only
-    // Spotify player integration replaces language switcher
     
-    // Initialize map point states if on map page
     if(document.querySelector('.point')) updateMapState();
 
-    // Setup tooltip system for map points
     const tooltip = document.getElementById('tooltip');
     if (tooltip) {
         document.querySelectorAll('.point').forEach(p => {
@@ -234,13 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- 3. SMART CONNECTION MANAGER (MODERN HYBRID APPROACH) ---
+// Connection manager
 
-/**
- * Smart connection initialization
- * Uses PHP polling by default (works on any hosting)
- * Only tries WebSocket if on localhost (for development)
- */
 async function initSmartConnection() {
     console.log("🔍 Initializing multiplayer connection...");
     updateConnectionStatus('reconnecting');
@@ -248,33 +208,27 @@ async function initSmartConnection() {
     const hostname = window.location.hostname;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     
-    // Only try WebSocket on localhost
     if (isLocalhost) {
         console.log("🏠 Localhost detected, trying WebSocket first...");
         const wsAvailable = await tryWebSocketConnection();
         
         if (wsAvailable) {
-            console.log("✅ Using WebSocket mode (real-time, fastest)");
+            console.log("✅ WebSocket detected");
             connectionMode = CONNECTION_MODE_WS;
             updateConnectionStatus('connected');
-            showNotification('🚀 WebSocket Režīms (Dev)', 'success', 2000);
+            showNotification('WebSocket detected', 'success', 2000);
             return;
         } else {
             console.log("⚠️ WebSocket unavailable, using PHP polling");
         }
     }
     
-    // Use PHP polling (default for production)
-    console.log("✅ Using PHP polling mode (works everywhere)");
+    console.log("✅ PHP fallback mode no websocket detected");
     connectionMode = CONNECTION_MODE_PHP;
     initPHPPolling();
     showNotification('✨ Multiplayer gatavs!', 'success', 2000);
 }
 
-/**
- * Try to establish WebSocket connection with timeout
- * Returns true if successful, false otherwise
- */
 function tryWebSocketConnection() {
     return new Promise((resolve) => {
         const timeout = setTimeout(() => {
@@ -318,9 +272,6 @@ function tryWebSocketConnection() {
     });
 }
 
-/**
- * Setup WebSocket event handlers
- */
 function setupWebSocketHandlers() {
     ws.onmessage = (event) => {
         try {
@@ -332,9 +283,6 @@ function setupWebSocketHandlers() {
     };
 }
 
-/**
- * Handle WebSocket messages
- */
 function handleWebSocketMessage(data) {
     if (data.type === 'created') {
         myLobbyCode = data.code;
@@ -359,22 +307,17 @@ function handleWebSocketMessage(data) {
         showNotification(data.msg, 'error');
     }
     else if (data.type === 'pong') {
-        // Heartbeat response
         console.log('WebSocket alive');
     }
 }
 
-// --- LEGACY WEBSOCKET FUNCTIONS (KEPT FOR COMPATIBILITY) ---
+// Legacy WebSocket functions
 
 let wsReconnectAttempts = 0;
 const wsMaxReconnectAttempts = 5;
 const wsBaseReconnectDelay = 1000;
 let wsReconnectTimeout = null;
 
-/**
- * Connect to WebSocket server with automatic reconnection
- * Uses exponential backoff for reconnection attempts
- */
 function connectWebSocket() {
     // Prevent multiple simultaneous connection attempts
     if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
@@ -476,24 +419,17 @@ function updateConnectionStatus(status) {
     indicator.title = statusText[status] || '';
 }
 
-// --- PHP POLLING ALTERNATIVE (NO NODE.JS REQUIRED) ---
+// PHP polling alternative
 
 let pollInterval = null;
 let phpPolling = false;
 
-/**
- * Initialize PHP-based polling system (alternative to WebSockets)
- * This allows multiplayer to work with only PHP server running
- */
 function initPHPPolling() {
-    console.log("🔄 Using PHP polling mode (no WebSocket server required)");
+    console.log("🔄 PHP fallback mode no websocket detected");
     phpPolling = true;
     updateConnectionStatus('connected');
 }
 
-/**
- * Create lobby using PHP
- */
 function createLobbyPHP() {
     const code = Math.floor(1000 + Math.random() * 9000).toString();
     
@@ -517,9 +453,6 @@ function createLobbyPHP() {
         });
 }
 
-/**
- * Join lobby using PHP
- */
 function joinLobbyPHP(code) {
     fetch(`src/php/lobby.php?action=join&code=${code}`)
         .then(response => response.json())
@@ -541,12 +474,9 @@ function joinLobbyPHP(code) {
         });
 }
 
-/**
- * Poll lobby status waiting for guest
- */
 function startLobbyPolling() {
     let pollCount = 0;
-    const maxPolls = 60; // Poll for 2 minutes max
+    const maxPolls = 60;
     
     pollInterval = setInterval(() => {
         pollCount++;
@@ -586,9 +516,6 @@ function notifyPartnerPHP(role, code) {
         .catch(error => console.error('Error notifying partner:', error));
 }
 
-/**
- * Check if both players completed task (PHP version)
- */
 function checkBothPlayersDonePHP(code) {
     const checkInterval = setInterval(() => {
         fetch(`src/php/lobby.php?action=get_state&code=${code}`)
@@ -609,45 +536,10 @@ function checkBothPlayersDonePHP(code) {
             .catch(error => console.error('Error checking state:', error));
     }, 1000);
     
-    // Stop checking after 30 seconds
     setTimeout(() => clearInterval(checkInterval), 30000);
 }
 
-// --- 4. DEEPL TULKOŠANA ---
-
-async function translateText(text, targetLang) {
-    try {
-        const response = await fetch(`../php/translate.php?text=${encodeURIComponent(text)}&target=${targetLang}`);
-        const data = await response.json();
-        if (data && data.translations && data.translations[0]) {
-            return data.translations[0].text;
-        }
-    } catch (e) {
-        console.error("Tulkošanas kļūda:", e);
-    }
-    return text;
-}
-
-async function translateInterface(lang) {
-    // Tulko UI elementus
-    for (const key in uiTexts) {
-        const el = document.getElementById(key);
-        if (el) {
-            const original = uiTexts[key];
-            const translated = await translateText(original, lang.toUpperCase());
-            if (el.tagName === 'INPUT') el.placeholder = translated;
-            else el.innerText = translated;
-        }
-    }
-}
-
-function setLanguage(lang) {
-    currentLang = lang;
-    localStorage.setItem('lang', lang);
-    location.reload(); // Pārlādējam, lai ielādētos tulkojumi
-}
-
-// --- 5. MENU FUNKCIJAS ---
+// Menu functions
 
 function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
@@ -706,7 +598,7 @@ function joinGame() {
     }
 }
 
-// --- 6. SPĒLES LOĢIKA ---
+// Game logic
 
 function updateMapState() {
     const points = document.querySelectorAll('.point');
@@ -753,9 +645,8 @@ function showLocationThenStart(type, callback) {
     });
 }
 
-// --- 7. MINI SPĒLES & QUIZ ---
+// Mini games & quiz
 
-// Boat race game configuration
 const BOAT_RACE_CONFIG = {
     REQUIRED_PRESSES: 10,
     EXCELLENT_TIME: 3,
@@ -919,8 +810,18 @@ function checkMini() {
 }
 
 function sendReady() {
-    ws.send(JSON.stringify({ action: 'update_task', code: myLobbyCode, role: myRole }));
-    document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
+    // Handle both WebSocket and PHP polling modes
+    if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: 'update_task', code: myLobbyCode, role: myRole }));
+        document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
+    } else if (connectionMode === CONNECTION_MODE_PHP) {
+        notifyPartnerPHP(myRole, myLobbyCode);
+        document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
+    } else {
+        // Connection not available
+        showNotification("Savienojums nav pieejams!", 'error');
+        console.error("sendReady failed: No valid connection mode available");
+    }
 }
 
 async function showQuiz(type) {
@@ -928,7 +829,6 @@ async function showQuiz(type) {
     const task = questions[type];
     
     let q = task.q;
-    if(currentLang !== 'lv') q = await translateText(q, currentLang.toUpperCase());
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
@@ -951,8 +851,10 @@ function checkAns(type) {
     const correct = _d(questions[type]._a);
     if(val.toLowerCase() === correct.toLowerCase()) {
         GameState.addScore(10);
+        showNotification('✅ Pareiza atbilde! +10 punkti', 'success', 2000);
     } else {
         GameState.addScore(-5);
+        showNotification('❌ Nepareiza atbilde! -5 punkti', 'error', 2000);
     }
     
     document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
@@ -999,7 +901,7 @@ function finishGame(name, finalScore, time) {
         location.href = 'src/php/leaderboard.php';
     });
 }
-function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
+
 function exitGame() { window.close(); }
 function setMusicVolume(v) { 
     localStorage.setItem('musicVolume', v);
@@ -1012,7 +914,68 @@ function setSFXVolume(v) {
     }
 }
 
-// --- SPOTIFY MINI PLAYER ---
+// Theme system
+function setTheme(themeName) {
+    document.body.setAttribute('data-theme', themeName);
+    localStorage.setItem('theme', themeName);
+    
+    // Update active button
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-theme') === themeName) {
+            btn.classList.add('active');
+        }
+    });
+    
+    showNotification(`Tēma mainīta: ${getThemeLabel(themeName)}`, 'success', 2000);
+}
+
+function getThemeLabel(themeName) {
+    const labels = {
+        'default': 'Noklusējuma',
+        'dark': 'Tumša',
+        'light': 'Gaiša',
+        'blue': 'Zila'
+    };
+    return labels[themeName] || themeName;
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'default';
+    document.body.setAttribute('data-theme', savedTheme);
+    
+    // Update active theme button when available
+    updateActiveThemeButton(savedTheme);
+}
+
+function updateActiveThemeButton(savedTheme) {
+    const buttons = document.querySelectorAll('.theme-btn');
+    if (buttons.length === 0) {
+        // Settings modal not yet loaded, try again when it opens
+        return;
+    }
+    
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-theme') === savedTheme) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+function toggleModal(id) {
+    const modal = document.getElementById(id);
+    const isOpening = modal.style.display !== "block";
+    modal.style.display = isOpening ? "block" : "none";
+    
+    // Update theme button active state when settings modal opens
+    if (isOpening && id === 'settings-modal') {
+        const savedTheme = localStorage.getItem('theme') || 'default';
+        updateActiveThemeButton(savedTheme);
+    }
+}
+
+// Spotify mini player
 
 let spotifyEmbedController = null;
 let spotifyIsPlaying = false;
@@ -1037,10 +1000,9 @@ function spotifyInit(callback) {
         src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
         width="1" 
         height="1" 
-        frameBorder="0" 
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
         loading="lazy"
-        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;">
     </iframe>`;
     
     // Try connecting to the Spotify IFrame API
@@ -1132,14 +1094,8 @@ function spotifyToggleRepeat() {
     showNotification(spotifyRepeatOn ? '🔁 Repeat ON' : '🔁 Repeat OFF', 'info', 1500);
 }
 
-// --- NOTIFICATION SYSTEM (TOAST) ---
+// Notification system
 
-/**
- * Show a toast notification to the user
- * @param {string} message - Message to display
- * @param {string} type - Notification type: 'success', 'error', 'info', 'warning'
- * @param {number} duration - Duration in milliseconds (default: 3000)
- */
 function showNotification(message, type = 'info', duration = 3000) {
     // Create notification container if it doesn't exist
     let container = document.getElementById('notification-container');

@@ -1,3 +1,21 @@
+/* ============================================================================
+   LIEPĀJAS EKSKURSIJA - CUSTOM STYLES WITH BOOTSTRAP INTEGRATION
+   ============================================================================ */
+
+/* Bootstrap Override: Ensure custom container styles work */
+body #main-menu.container { 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    text-align: center; 
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+    max-width: 100%;
+    padding: 0;
+}
+
 body {
     margin: 0;
     height: 100vh;
@@ -11,17 +29,6 @@ body {
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
-}
-
-.container { 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100%;
-    text-align: center; 
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
 }
 
 .title { 
@@ -108,20 +115,19 @@ body {
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     position: relative;
     overflow: hidden;
-    animation: slideInFromRight 0.6s ease-out backwards;
+    animation: slideInFromRight 0.4s ease-out;
 }
 
-/* Staggered animation for buttons */
-.btn:nth-child(1) { animation-delay: 0.1s; }
-.btn:nth-child(2) { animation-delay: 0.2s; }
-.btn:nth-child(3) { animation-delay: 0.3s; }
-.btn:nth-child(4) { animation-delay: 0.4s; }
-.btn:nth-child(5) { animation-delay: 0.5s; }
+.btn:nth-child(1) { animation-delay: 0.05s; }
+.btn:nth-child(2) { animation-delay: 0.1s; }
+.btn:nth-child(3) { animation-delay: 0.15s; }
+.btn:nth-child(4) { animation-delay: 0.2s; }
+.btn:nth-child(5) { animation-delay: 0.25s; }
 
 @keyframes slideInFromRight {
     0% {
-        opacity: 0;
-        transform: translateX(50px);
+        opacity: 0.7;
+        transform: translateX(20px);
     }
     100% {
         opacity: 1;
@@ -1419,4 +1425,120 @@ input:focus-visible {
     .notification {
         border-left-width: 6px;
     }
+}
+
+/* Theme System */
+:root {
+    --bg-primary: #332222;
+    --bg-secondary: #2a1a1a;
+    --bg-tertiary: #1a1010;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --accent-primary: #ffaa00;
+    --accent-secondary: #ff8800;
+    --border-color: #553333;
+    --shadow-color: rgba(0, 0, 0, 0.8);
+}
+
+body[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #0f0f0f;
+    --bg-tertiary: #000000;
+    --text-primary: #ffffff;
+    --text-secondary: #aaaaaa;
+    --accent-primary: #00aaff;
+    --accent-secondary: #0088cc;
+    --border-color: #333333;
+    --shadow-color: rgba(0, 0, 0, 0.9);
+}
+
+body[data-theme="light"] {
+    --bg-primary: #f0f0f0;
+    --bg-secondary: #e0e0e0;
+    --bg-tertiary: #d0d0d0;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --accent-primary: #ff6600;
+    --accent-secondary: #ff8800;
+    --border-color: #cccccc;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+body[data-theme="blue"] {
+    --bg-primary: #1e3a5f;
+    --bg-secondary: #2c5f8d;
+    --bg-tertiary: #1a2f4a;
+    --text-primary: #ffffff;
+    --text-secondary: #d0e8ff;
+    --accent-primary: #ffd700;
+    --accent-secondary: #ffed4e;
+    --border-color: #4a7ba7;
+    --shadow-color: rgba(0, 0, 0, 0.7);
+}
+
+.theme-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+
+.theme-btn {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.theme-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    border-color: var(--accent-primary);
+}
+
+.theme-btn.active {
+    border-color: var(--accent-primary);
+    background: var(--bg-primary);
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+}
+
+.theme-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+}
+
+/* Update existing styles to use CSS variables */
+.btn {
+    background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+}
+
+.btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+}
+
+.notification {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-left: 4px solid var(--accent-primary);
 }
