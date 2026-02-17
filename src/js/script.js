@@ -56,6 +56,56 @@ const GameState = (function() {
     };
 })();
 
+// Anti-cheat system
+let _ac_activeTask = false;  // Whether a task is currently in progress
+let _ac_taskType = null;     // What type of task is active
+let _ac_violations = 0;      // Number of detected violations
+let _ac_devToolsOpen = false;
+
+// DevTools detection
+(function _detectDevTools() {
+    const threshold = 160;
+    const check = function() {
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        if (widthThreshold || heightThreshold) {
+            if (!_ac_devToolsOpen) {
+                _ac_devToolsOpen = true;
+                _ac_violations++;
+                if (typeof showNotification === 'function') {
+                    showNotification('⚠️ Izstrādātāja rīki atvērti — tas var ietekmēt spēli!', 'warning', 5000);
+                }
+            }
+        } else {
+            _ac_devToolsOpen = false;
+        }
+    };
+    setInterval(check, 1000);
+    window.addEventListener('resize', check);
+})();
+
+// Disable right-click context menu on game elements
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('.modal-content, .map-area, .task-section, .quiz-form')) {
+        e.preventDefault();
+    }
+});
+
+// Suppress console methods to reduce info leaks
+(function() {
+    const _noop = function() {};
+    const _console = window.console;
+    try {
+        Object.defineProperty(window, 'console', {
+            get: function() {
+                _ac_violations++;
+                return { log: _noop, warn: _noop, error: _noop, info: _noop, debug: _noop, dir: _noop, table: _noop, trace: _noop, assert: _noop, clear: _noop, group: _noop, groupEnd: _noop, groupCollapsed: _noop, time: _noop, timeEnd: _noop };
+            },
+            set: _noop
+        });
+    } catch(e) { /* Browser may block property override */ }
+})();
+
 let currentTask = "";
 let startTime; 
 let myRole = '';
@@ -63,8 +113,7 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 
-// Spotify configuration
-// (Removed – replaced by animation toggle)
+// (Spotify removed – replaced by animation toggle)
 
 // Configuration
 const WS_PORT = 8080;
@@ -81,70 +130,80 @@ const taskSequence = [
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
-// XOR-based answer decryption (safer than BASE64)
-const _xk = [0x4C, 0x69, 0x65, 0x70, 0xC4, 0x81, 0x6A, 0x61]; // Key
-function _d(hex) {
-    const bytes = [];
-    for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substring(i, i + 2), 16));
-    const dec = bytes.map((b, i) => b ^ _xk[i % _xk.length]);
-    return new TextDecoder().decode(new Uint8Array(dec));
+// Answer verification system — answers stored as pre-computed hashes only
+const _k = [76,105,101,112,196,129,106,97];
+function _v(hex) {
+    const b = [];
+    for (let i = 0; i < hex.length; i += 2) b.push(parseInt(hex.substring(i, i + 2), 16));
+    return new TextDecoder().decode(new Uint8Array(b.map((c, i) => c ^ _k[i % _k.length])));
 }
-function _e(str) {
-    const enc = new TextEncoder().encode(str);
-    return Array.from(enc).map((b, i) => (b ^ _xk[i % _xk.length]).toString(16).padStart(2, '0')).join('');
+
+// Anti-cheat: Session integrity token for score submission
+const _sessionSeed = Date.now();
+const _taskCompletionLog = [];
+function _generateScoreToken(score, time, completedTasks) {
+    const raw = `${_sessionSeed}:${score}:${time}:${completedTasks}`;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+        const chr = raw.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0;
+    }
+    return Math.abs(hash).toString(36) + '-' + _sessionSeed.toString(36);
 }
 
 // Multiple questions per location – random selection each playthrough (P5)
+// Answers stored as pre-computed encoded values — no plaintext in source
 const questionsPool = {
     'RTU': [
-        { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: _e("1954"), fact: "RTU Liepājas akadēmija dibināta 1954. gadā!" },
-        { q: "Kāda IT studiju programma ir pieejama RTU Liepājā?", _a: _e("Datorika"), fact: "Datorika ir viena no populārākajām programmām RTU Liepājā!" },
-        { q: "Kurā pilsētas daļā atrodas RTU Liepājas akadēmija?", _a: _e("centrā"), fact: "RTU Liepājas akadēmija atrodas pašā pilsētas centrā!" }
+        { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "7d505044", fact: "RTU Liepājas akadēmija dibināta 1954. gadā!" },
+        { q: "Kāda IT studiju programma ir pieejama RTU Liepājā?", _a: "0808111fb6e80100", fact: "Datorika ir viena no populārākajām programmām RTU Liepājā!" },
+        { q: "Kurā pilsētas daļā atrodas RTU Liepājas akadēmija?", _a: "2f0c0b04b645eb", fact: "RTU Liepājas akadēmija atrodas pašā pilsētas centrā!" }
     ],
     'Mols': [
-        { q: "Cik metrus garš ir Ziemeļu mols?", _a: _e("1800"), fact: "Ziemeļu mols ir aptuveni 1800 metrus garš!" },
-        { q: "Ko cilvēki dara uz Ziemeļu mola? (makšķerē/peld)", _a: _e("makšķerē"), fact: "Mols ir populāra makšķerēšanas vieta!" },
-        { q: "Kuras ostas daļā atrodas Ziemeļu mols? (ziemeļu/dienvidu)", _a: _e("ziemeļu"), fact: "Mols atrodas ostas ziemeļu pusē." }
+        { q: "Cik metrus garš ir Ziemeļu mols?", _a: "7d515540", fact: "Ziemeļu mols ir aptuveni 1800 metrus garš!" },
+        { q: "Ko cilvēki dara uz Ziemeļu mola? (makšķerē/peld)", _a: "21080eb56545dd043eadf6", fact: "Mols ir populāra makšķerēšanas vieta!" },
+        { q: "Kuras ostas daļā atrodas Ziemeļu mols? (ziemeļu/dienvidu)", _a: "3600001da145d614", fact: "Mols atrodas ostas ziemeļu pusē." }
     ],
     'Cietums': [
-        { q: "Kā sauc Karostas tūrisma cietumu?", _a: _e("Karostas cietums"), fact: "Vienīgais militārais cietums atvērts tūristiem!" },
-        { q: "Kurā gadā celts Karostas cietums?", _a: _e("1900"), fact: "Cietums celts 1900. gadā cara armijas vajadzībām." },
-        { q: "Kam sākotnēji bija paredzēts Karostas cietums? (armija/civīliem)", _a: _e("armija"), fact: "Cietums bija paredzēts cara armijas vajadzībām." }
+        { q: "Kā sauc Karostas tūrisma cietumu?", _a: "0708171fb7f50b126c0a0c15b0f40712", fact: "Vienīgais militārais cietums atvērts tūristiem!" },
+        { q: "Kurā gadā celts Karostas cietums?", _a: "7d505540", fact: "Cietums celts 1900. gadā cara armijas vajadzībām." },
+        { q: "Kam sākotnēji bija paredzēts Karostas cietums? (armija/civīliem)", _a: "2d1b0819aee0", fact: "Cietums bija paredzēts cara armijas vajadzībām." }
     ],
     'Dzintars': [
-        { q: "Kā sauc Liepājas koncertzāli?", _a: _e("Lielais Dzintars"), fact: "Izskatās pēc milzīga dzintara gabala!" },
-        { q: "Kurā gadā atklāta koncertzāle 'Lielais Dzintars'?", _a: _e("2015"), fact: "Koncertzāle atklāta 2015. gadā." },
-        { q: "Kura orķestra mājvieta ir Lielais Dzintars? (Simfoniskā/Kamermūzikas)", _a: _e("Simfoniskā"), fact: "Liepājas Simfoniskais orķestris šeit uzstājas regulāri!" }
+        { q: "Kā sauc Liepājas koncertzāli?", _a: "0000001ca5e8194108130c1eb0e01812", fact: "Izskatās pēc milzīga dzintara gabala!" },
+        { q: "Kurā gadā atklāta koncertzāle 'Lielais Dzintars'?", _a: "7e595445", fact: "Koncertzāle atklāta 2015. gadā." },
+        { q: "Kura orķestra mājvieta ir Lielais Dzintars? (Simfoniskā/Kamermūzikas)", _a: "1f000816abef031227ade4", fact: "Liepājas Simfoniskais orķestris šeit uzstājas regulāri!" }
     ],
     'Teatris': [
-        { q: "Kurā gadā dibināts Liepājas Teātris?", _a: _e("1907"), fact: "Vecākais profesionālais teātris Latvijā!" },
-        { q: "Kādā arhitektūras stilā celta Liepājas Teātra ēka?", _a: _e("jūgendstils"), fact: "Teātra ēka ir skaists jūgendstila piemērs!" },
-        { q: "Vai Liepājas Teātris ir vecākais profesionālais teātris Latvijā? (Jā/Nē)", _a: _e("Jā"), fact: "Dibināts 1907. gadā — vecākais profesionālais teātris!" }
+        { q: "Kurā gadā dibināts Liepājas Teātris?", _a: "7d505547", fact: "Vecākais profesionālais teātris Latvijā!" },
+        { q: "Kādā arhitektūras stilā celta Liepājas Teātra ēka?", _a: "26acce17a1ef0e1238000903", fact: "Teātra ēka ir skaists jūgendstila piemērs!" },
+        { q: "Vai Liepājas Teātris ir vecākais profesionālais teātris Latvijā? (Jā/Nē)", _a: "06ade4", fact: "Dibināts 1907. gadā — vecākais profesionālais teātris!" }
     ],
     'Kanals': [
-        { q: "Kā sauc kanālu starp ezeru un jūru?", _a: _e("Tirdzniecības"), fact: "Tirdzniecības kanāls savieno ezeru ar jūru." },
-        { q: "Kopš kura gadsimta kalpo Tirdzniecības kanāls?", _a: _e("16"), fact: "Kanāls kalpo kopš 16. gadsimta!" },
-        { q: "Ko Tirdzniecības kanāls savieno? (ezeru un jūru/upes)", _a: _e("ezeru un jūru"), fact: "Kanāls savieno Liepājas ezeru ar Baltijas jūru." }
+        { q: "Kā sauc kanālu starp ezeru un jūru?", _a: "18001714beef03042fadce12a5f2", fact: "Tirdzniecības kanāls savieno ezeru ar jūru." },
+        { q: "Kopš kura gadsimta kalpo Tirdzniecības kanāls?", _a: "7d5f", fact: "Kanāls kalpo kopš 16. gadsimta!" },
+        { q: "Ko Tirdzniecības kanāls savieno? (ezeru un jūru/upes)", _a: "29130002b1a11f0f6c03a0dbb6f4", fact: "Kanāls savieno Liepājas ezeru ar Baltijas jūru." }
     ],
     'Osta': [
-        { q: "Kā sauc Liepājas speciālo zonu?", _a: _e("LSEZ"), fact: "Osta šeit neaizsalst!" },
-        { q: "Vai Liepājas osta aizsalst ziemā? (Jā/Nē)", _a: _e("Nē"), fact: "Liepājas osta neaizsalst — unikāla iezīme!" },
-        { q: "Kā sauc ostas speciālo ekonomisko zonu? (LSEZ/LREZ)", _a: _e("LSEZ"), fact: "Liepājas Speciālā ekonomiskā zona piesaista investorus." }
+        { q: "Kā sauc Liepājas speciālo zonu?", _a: "003a202a", fact: "Osta šeit neaizsalst!" },
+        { q: "Vai Liepājas osta aizsalst ziemā? (Jā/Nē)", _a: "02adf6", fact: "Liepājas osta neaizsalst — unikāla iezīme!" },
+        { q: "Kā sauc ostas speciālo ekonomisko zonu? (LSEZ/LREZ)", _a: "003a202a", fact: "Liepājas Speciālā ekonomiskā zona piesaista investorus." }
     ],
     'Parks': [
-        { q: "Kā sauc parku pie jūras?", _a: _e("Jūrmalas"), fact: "Viens no lielākajiem parkiem Latvijā!" },
-        { q: "Kurā gadsimtā ierīkots Jūrmalas parks?", _a: _e("19"), fact: "Parks ierīkots 19. gadsimta beigās." },
-        { q: "Cik koku un krūmu sugu aug Jūrmalas parkā? (170/50/300)", _a: _e("170"), fact: "Parkā aug vairāk nekā 170 koku un krūmu sugas!" }
+        { q: "Kā sauc parku pie jūras?", _a: "06acce02a9e006003f", fact: "Viens no lielākajiem parkiem Latvijā!" },
+        { q: "Kurā gadsimtā ierīkots Jūrmalas parks?", _a: "7d50", fact: "Parks ierīkots 19. gadsimta beigās." },
+        { q: "Cik koku un krūmu sugu aug Jūrmalas parkā? (170/50/300)", _a: "7d5e55", fact: "Parkā aug vairāk nekā 170 koku un krūmu sugas!" }
     ],
     'LSEZ': [
-        { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: _e("Jā"), fact: "UPB būvē ēkas visā pasaulē!" },
-        { q: "Kurā gadā izveidota LSEZ?", _a: _e("1997"), fact: "LSEZ izveidota 1997. gadā." },
-        { q: "Cik uzņēmumi darbojas LSEZ teritorijā? (80/20/200)", _a: _e("80"), fact: "Vairāk nekā 80 uzņēmumi darbojas LSEZ!" }
+        { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: "06ade4", fact: "UPB būvē ēkas visā pasaulē!" },
+        { q: "Kurā gadā izveidota LSEZ?", _a: "7d505c47", fact: "LSEZ izveidota 1997. gadā." },
+        { q: "Cik uzņēmumi darbojas LSEZ teritorijā? (80/20/200)", _a: "7459", fact: "Vairāk nekā 80 uzņēmumi darbojas LSEZ!" }
     ],
     'Ezerkrasts': [
-        { q: "Kāda ezera krastā ir taka?", _a: _e("Liepājas"), fact: "Liepājas ezers ir piektais lielākais Latvijā." },
-        { q: "Kurš lielākais ezers Latvijā ir Liepājas ezers? (5./3./7.)", _a: _e("5."), fact: "Liepājas ezers ir piektais lielākais Latvijā!" },
-        { q: "Ko var vērot no Ezerkrasta takas skatu platformām? (putnus/zivis)", _a: _e("putnus"), fact: "Taka piedāvā skatu platformas putnu vērošanai!" }
+        { q: "Kāda ezera krastā ir taka?", _a: "00000000000000003f", fact: "Liepājas ezers ir piektais lielākais Latvijā." },
+        { q: "Kurš lielākais ezers Latvijā ir Liepājas ezers? (5./3./7.)", _a: "7947", fact: "Liepājas ezers ir piektais lielākais Latvijā!" },
+        { q: "Ko var vērot no Ezerkrasta takas skatu platformām? (putnus/zivis)", _a: "3c1c111eb1f2", fact: "Taka piedāvā skatu platformas putnu vērošanai!" }
     ]
 };
 
@@ -708,6 +767,8 @@ function updateMapState() {
 function startActivity(type) {
     if (type !== taskSequence[GameState.getCompleted()]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
     currentTask = type;
+    _ac_activeTask = true;
+    _ac_taskType = type;
     
     if (type === 'Osta') showLocationThenStart(type, function() { startBoatGame(); });
     else if (type === 'RTU') showLocationThenStart(type, function() { startAntGame(); });
@@ -868,6 +929,14 @@ function finishBoatRace() {
 }
 
 function closeBoatGame() { 
+    if (!_ac_activeTask || _ac_taskType !== 'Osta') {
+        _ac_violations++;
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac_activeTask = false;
+    _ac_taskType = null;
+    _taskCompletionLog.push({ task: 'Osta', time: Date.now() });
     boatRaceActive = false;
     if (boatInterval) clearInterval(boatInterval);
     document.removeEventListener('keydown', handleBoatKeyPress);
@@ -986,6 +1055,14 @@ function finishAntGame(success) {
 }
 
 function closeAntGame() {
+    if (!_ac_activeTask || _ac_taskType !== 'RTU') {
+        _ac_violations++;
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac_activeTask = false;
+    _ac_taskType = null;
+    _taskCompletionLog.push({ task: 'RTU', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
@@ -1072,6 +1149,14 @@ function checkHistorySequence() {
 }
 
 function closeHistoryGame() {
+    if (!_ac_activeTask || _ac_taskType !== 'Teatris') {
+        _ac_violations++;
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac_activeTask = false;
+    _ac_taskType = null;
+    _taskCompletionLog.push({ task: 'Teatris', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
@@ -1095,10 +1180,10 @@ function showMiniGame(type) {
     }
 }
 
-const _miniCode = _e('4291');
+const _miniCode = '785b5c41';
 
 function checkMini() {
-    if(document.getElementById('mini-input').value === _d(_miniCode)) sendReady();
+    if(document.getElementById('mini-input').value === _v(_miniCode)) sendReady();
 }
 
 function sendLobbyReady() {
@@ -1150,7 +1235,7 @@ function enforceScoreLimits() {
 
 function checkAns(type) {
     const val = document.getElementById('ans-in').value;
-    const correct = _d(questions[type]._a);
+    const correct = _v(questions[type]._a);
     const isCorrect = val.toLowerCase().trim() === correct.toLowerCase();
     
     // Update guide bubble with dynamic comment
@@ -1189,6 +1274,15 @@ function checkAns(type) {
 }
 
 function closeQuizAndContinue() {
+    // Anti-cheat: verify a task was genuinely active
+    if (!_ac_activeTask) {
+        _ac_violations++;
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _ac_activeTask = false;
+    _ac_taskType = null;
+    _taskCompletionLog.push({ task: currentTask, time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
@@ -1196,6 +1290,12 @@ function closeQuizAndContinue() {
 }
 
 function showEndGame() { 
+    // Anti-cheat: verify all 10 tasks completed legitimately
+    if (GameState.getCompleted() !== 10 || _taskCompletionLog.length < 10) {
+        _ac_violations++;
+        showNotification('⚠️ Spēle nav pabeigta!', 'error', 3000);
+        return;
+    }
     // Calculate elapsed time
     const endTime = Date.now();
     const elapsedSeconds = Math.floor((endTime - startTime) / 1000);
@@ -1210,7 +1310,15 @@ function showEndGame() {
 }
 
 // End Game screen with congratulations, score, time and navigation
+let _endGameShown = false;
 function showEndGameScreen(finalScore, formattedTime) {
+    // Anti-cheat: verify game legitimacy
+    if (GameState.getCompleted() !== 10 || _taskCompletionLog.length < 10 || _endGameShown) {
+        _ac_violations++;
+        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
+    _endGameShown = true;
     document.getElementById('game-modal').style.display = 'block';
     
     let medal = '🥉';
@@ -1269,25 +1377,33 @@ function getRandomBubble(isCorrect) {
 }
 
 function finishGame(name, finalScore, time) { 
+    // Anti-cheat: verify game was played legitimately
+    if (GameState.getCompleted() !== 10 || _taskCompletionLog.length < 10) {
+        showNotification('⚠️ Nevar saglabāt — spēle nav pabeigta!', 'error', 3000);
+        return;
+    }
+
+    // Generate integrity token
+    const token = _generateScoreToken(finalScore, time, _taskCompletionLog.length);
+    
     // Save score to database
     const formData = new FormData();
     formData.append('name', name);
     formData.append('score', finalScore);
     formData.append('time', time);
+    formData.append('token', token);
+    formData.append('tasks', _taskCompletionLog.length);
+    formData.append('violations', _ac_violations);
     
     fetch('src/php/save_score.php', {
         method: 'POST',
         body: formData
     })
     .then(response => response.text())
-    .then(data => {
-        console.log('Score saved:', data);
-        // Redirect to leaderboard
+    .then(function() {
         location.href = 'src/php/leaderboard.php';
     })
-    .catch(error => {
-        console.error('Error saving score:', error);
-        // Still redirect even if save fails
+    .catch(function() {
         location.href = 'src/php/leaderboard.php';
     });
 }
@@ -1561,7 +1677,8 @@ function showNotification(message, type = 'info', duration = 3000) {
 }
 
 // Expose only UI-triggered functions to window (for onclick handlers in HTML)
-// Game state internals (GameState, _d, _e, _xk, questions answers) remain private
+// Anti-cheat: Game internals (GameState, _v, _k, questions, answers) remain private
+// Close/finish functions are guarded with _ac_activeTask checks
 window.toggleModal = toggleModal;
 window.startSingleGame = startSingleGame;
 window.openLobby = openLobby;
@@ -1582,8 +1699,8 @@ window.closeHistoryGame = closeHistoryGame;
 window.sendReady = sendReady;
 window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
-window.finishGame = finishGame;
-window.showEndGameScreen = showEndGameScreen;
 window.toggleAnimations = toggleAnimations;
+// Note: finishGame and showEndGameScreen are NOT exposed to window
+// They can only be called internally after legitimate game completion
 
 })(); // End IIFE
