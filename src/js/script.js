@@ -94,23 +94,71 @@ function _e(str) {
     return Array.from(enc).map((b, i) => (b ^ _xk[i % _xk.length]).toString(16).padStart(2, '0')).join('');
 }
 
-const questions = {
-    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: _e("1954"), fact: "Šeit mācās gudrākie prāti!" },
-    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", _a: _e("1800"), fact: "Turi cepuri! Mols sargā ostu." },
-    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", _a: _e("Karostas cietums"), fact: "Vienīgais militārais cietums atvērts tūristiem!" },
-    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", _a: _e("Lielais Dzintars"), fact: "Izskatās pēc milzīga dzintara!" },
-    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", _a: _e("1907"), fact: "Vecākais profesionālais teātris Latvijā!" },
-    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", _a: _e("Tirdzniecības"), fact: "Savieno ezeru ar jūru." },
-    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", _a: _e("LSEZ"), fact: "Osta šeit neaizsalst." },
-    'Parks': { q: "Kā sauc parku pie jūras?", _a: _e("Jūrmalas"), fact: "Viens no lielākajiem parkiem Latvijā!" },
-    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: _e("Jā"), fact: "Būvē ēkas visā pasaulē!" },
-    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", _a: _e("Liepājas"), fact: "Piektais lielākais ezers Latvijā." }
+// Multiple questions per location – random selection each playthrough (P5)
+const questionsPool = {
+    'RTU': [
+        { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: _e("1954"), fact: "RTU Liepājas akadēmija dibināta 1954. gadā!" },
+        { q: "Kāda IT studiju programma ir pieejama RTU Liepājā?", _a: _e("Datorika"), fact: "Datorika ir viena no populārākajām programmām RTU Liepājā!" },
+        { q: "Kurā pilsētas daļā atrodas RTU Liepājas akadēmija?", _a: _e("centrā"), fact: "RTU Liepājas akadēmija atrodas pašā pilsētas centrā!" }
+    ],
+    'Mols': [
+        { q: "Cik metrus garš ir Ziemeļu mols?", _a: _e("1800"), fact: "Ziemeļu mols ir aptuveni 1800 metrus garš!" },
+        { q: "Ko cilvēki dara uz Ziemeļu mola? (makšķerē/peld)", _a: _e("makšķerē"), fact: "Mols ir populāra makšķerēšanas vieta!" },
+        { q: "Kuras ostas daļā atrodas Ziemeļu mols? (ziemeļu/dienvidu)", _a: _e("ziemeļu"), fact: "Mols atrodas ostas ziemeļu pusē." }
+    ],
+    'Cietums': [
+        { q: "Kā sauc Karostas tūrisma cietumu?", _a: _e("Karostas cietums"), fact: "Vienīgais militārais cietums atvērts tūristiem!" },
+        { q: "Kurā gadā celts Karostas cietums?", _a: _e("1900"), fact: "Cietums celts 1900. gadā cara armijas vajadzībām." },
+        { q: "Kam sākotnēji bija paredzēts Karostas cietums? (armija/civīliem)", _a: _e("armija"), fact: "Cietums bija paredzēts cara armijas vajadzībām." }
+    ],
+    'Dzintars': [
+        { q: "Kā sauc Liepājas koncertzāli?", _a: _e("Lielais Dzintars"), fact: "Izskatās pēc milzīga dzintara gabala!" },
+        { q: "Kurā gadā atklāta koncertzāle 'Lielais Dzintars'?", _a: _e("2015"), fact: "Koncertzāle atklāta 2015. gadā." },
+        { q: "Kura orķestra mājvieta ir Lielais Dzintars? (Simfoniskā/Kamermūzikas)", _a: _e("Simfoniskā"), fact: "Liepājas Simfoniskais orķestris šeit uzstājas regulāri!" }
+    ],
+    'Teatris': [
+        { q: "Kurā gadā dibināts Liepājas Teātris?", _a: _e("1907"), fact: "Vecākais profesionālais teātris Latvijā!" },
+        { q: "Kādā arhitektūras stilā celta Liepājas Teātra ēka?", _a: _e("jūgendstils"), fact: "Teātra ēka ir skaists jūgendstila piemērs!" },
+        { q: "Vai Liepājas Teātris ir vecākais profesionālais teātris Latvijā? (Jā/Nē)", _a: _e("Jā"), fact: "Dibināts 1907. gadā — vecākais profesionālais teātris!" }
+    ],
+    'Kanals': [
+        { q: "Kā sauc kanālu starp ezeru un jūru?", _a: _e("Tirdzniecības"), fact: "Tirdzniecības kanāls savieno ezeru ar jūru." },
+        { q: "Kopš kura gadsimta kalpo Tirdzniecības kanāls?", _a: _e("16"), fact: "Kanāls kalpo kopš 16. gadsimta!" },
+        { q: "Ko Tirdzniecības kanāls savieno? (ezeru un jūru/upes)", _a: _e("ezeru un jūru"), fact: "Kanāls savieno Liepājas ezeru ar Baltijas jūru." }
+    ],
+    'Osta': [
+        { q: "Kā sauc Liepājas speciālo zonu?", _a: _e("LSEZ"), fact: "Osta šeit neaizsalst!" },
+        { q: "Vai Liepājas osta aizsalst ziemā? (Jā/Nē)", _a: _e("Nē"), fact: "Liepājas osta neaizsalst — unikāla iezīme!" },
+        { q: "Kā sauc ostas speciālo ekonomisko zonu? (LSEZ/LREZ)", _a: _e("LSEZ"), fact: "Liepājas Speciālā ekonomiskā zona piesaista investorus." }
+    ],
+    'Parks': [
+        { q: "Kā sauc parku pie jūras?", _a: _e("Jūrmalas"), fact: "Viens no lielākajiem parkiem Latvijā!" },
+        { q: "Kurā gadsimtā ierīkots Jūrmalas parks?", _a: _e("19"), fact: "Parks ierīkots 19. gadsimta beigās." },
+        { q: "Cik koku un krūmu sugu aug Jūrmalas parkā? (170/50/300)", _a: _e("170"), fact: "Parkā aug vairāk nekā 170 koku un krūmu sugas!" }
+    ],
+    'LSEZ': [
+        { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: _e("Jā"), fact: "UPB būvē ēkas visā pasaulē!" },
+        { q: "Kurā gadā izveidota LSEZ?", _a: _e("1997"), fact: "LSEZ izveidota 1997. gadā." },
+        { q: "Cik uzņēmumi darbojas LSEZ teritorijā? (80/20/200)", _a: _e("80"), fact: "Vairāk nekā 80 uzņēmumi darbojas LSEZ!" }
+    ],
+    'Ezerkrasts': [
+        { q: "Kāda ezera krastā ir taka?", _a: _e("Liepājas"), fact: "Liepājas ezers ir piektais lielākais Latvijā." },
+        { q: "Kurš lielākais ezers Latvijā ir Liepājas ezers? (5./3./7.)", _a: _e("5."), fact: "Liepājas ezers ir piektais lielākais Latvijā!" },
+        { q: "Ko var vērot no Ezerkrasta takas skatu platformām? (putnus/zivis)", _a: _e("putnus"), fact: "Taka piedāvā skatu platformas putnu vērošanai!" }
+    ]
 };
+
+// Select one random question per location for this session
+const questions = {};
+for (const loc in questionsPool) {
+    const pool = questionsPool[loc];
+    questions[loc] = pool[Math.floor(Math.random() * pool.length)];
+}
 
 const locationInfo = {
     'RTU': {
         name: 'RTU Liepājas akadēmija',
-        desc: 'Rīgas Tehniskās universitātes Liepājas akadēmija (dibināta 1954. gadā) ir viena no nozīmīgākajām augstākās izglītības iestādēm Kurzemē. Tā piedāvā studiju programmas inženierzinātnēs, IT, ekonomikā un humanitārajās zinātnēs. Ēka atrodas Liepājas centrā un ir svarīgs reģionālās izglītības centrs.'
+        desc: 'Rīgas Tehniskās universitātes Liepājas akadēmija (dibināta 1954. gadā) ir viena no nozīmīgākajām augstākās izglītības iestādēm Kurzemē. Tā piedāvā studiju programmas inženierzinātnēs, IT (Datorika), ekonomikā un humanitārajās zinātnēs. Studiju programma "Datorika" ietver programmēšanu, datoru tīklus, datu bāzes un mākslīgo intelektu.'
     },
     'Dzintars': {
         name: 'Koncertzāle "Lielais Dzintars"',
@@ -839,8 +887,9 @@ const ANT_GAME_TIME = 15; // seconds
 function startAntGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐜 RTU Bioloģijas uzdevums</h2>
-        <p>Nospiez ${ANTS_REQUIRED} skudras ${ANT_GAME_TIME} sekunžu laikā!</p>
+        <h2>🐜 RTU Datorikas uzdevums</h2>
+        <p>Studiju programmā "Datorika" studenti mācās risināt problēmas ātri un precīzi.</p>
+        <p>Nospiez ${ANTS_REQUIRED} kļūdas (bugs) ${ANT_GAME_TIME} sekunžu laikā!</p>
         <button class="btn btn-full" onclick="initAntGame()">SĀKT</button>
     `;
 }
@@ -851,7 +900,7 @@ function initAntGame() {
     let timeLeft = ANT_GAME_TIME;
     
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐜 Ķer skudras!</h2>
+        <h2>🐛 Ķer kļūdas (bugs)!</h2>
         <p id="ant-timer" style="color: #ffaa00; font-size: 20px;">Laiks: ${timeLeft}s</p>
         <p id="ant-count" style="font-size: 18px;">Noķertas: 0/${ANTS_REQUIRED}</p>
         <div id="ant-field" style="position: relative; width: 100%; height: 250px; background: rgba(0,100,0,0.2); border: 2px solid #4CAF50; border-radius: 10px; overflow: hidden; cursor: crosshair;"></div>
@@ -874,7 +923,7 @@ function spawnAnt() {
     
     const ant = document.createElement('div');
     ant.className = 'game-ant';
-    ant.textContent = '🐜';
+    ant.textContent = '🐛';
     ant.style.cssText = `position: absolute; font-size: 28px; cursor: pointer; user-select: none; transition: all 0.3s ease; z-index: 10;`;
     ant.style.left = Math.random() * 85 + '%';
     ant.style.top = Math.random() * 85 + '%';
@@ -887,7 +936,7 @@ function spawnAnt() {
         setTimeout(() => { if (this.parentNode) this.parentNode.removeChild(this); }, 200);
         
         const countEl = document.getElementById('ant-count');
-        if (countEl) countEl.textContent = `Noķertas: ${antsCaught}/${ANTS_REQUIRED}`;
+        if (countEl) countEl.textContent = `Izlabotas: ${antsCaught}/${ANTS_REQUIRED}`;
         
         if (antsCaught >= ANTS_REQUIRED) { finishAntGame(true); }
         else { setTimeout(spawnAnt, 300); }
@@ -910,20 +959,30 @@ function finishAntGame(success) {
     antGameActive = false;
     if (antGameTimer) clearInterval(antGameTimer);
     
-    const points = success ? 10 : -5;
-    GameState.addScore(points);
-    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-    
     const guideHint = document.getElementById('guide-hint');
     if (guideHint) guideHint.textContent = getRandomBubble(success);
     
-    document.querySelector('.task-section').innerHTML = `
-        <h2>${success ? '✅ Lielisks darbs!' : '❌ Laiks beidzies!'}</h2>
-        <p>Noķertas skudras: ${antsCaught}/${ANTS_REQUIRED}</p>
-        <p style="color: ${success ? '#4CAF50' : '#f44336'};">${points > 0 ? '+' : ''}${points} punkti</p>
-        <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
-        <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
-    `;
+    if (success) {
+        GameState.addScore(10);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>✅ Lielisks darbs!</h2>
+            <p>Izlabotas kļūdas: ${antsCaught}/${ANTS_REQUIRED}</p>
+            <p style="color: #4CAF50;">+10 punkti</p>
+            <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
+            <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
+        `;
+    } else {
+        GameState.addScore(-5);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        // V18: Must retry on failure
+        document.querySelector('.task-section').innerHTML = `
+            <h2>❌ Laiks beidzies!</h2>
+            <p>Izlabotas kļūdas: ${antsCaught}/${ANTS_REQUIRED}</p>
+            <p style="color: #f44336;">-5 punkti. Mēģini vēlreiz!</p>
+            <button class="btn btn-full" onclick="initAntGame()">🔄 Mēģināt vēlreiz</button>
+        `;
+    }
 }
 
 function closeAntGame() {
@@ -983,24 +1042,33 @@ function checkHistorySequence() {
     const years = Array.from(items).map(item => parseInt(item.getAttribute('data-year')));
     const isCorrect = years.every((year, i) => i === 0 || year >= years[i - 1]);
     
-    const points = isCorrect ? 10 : -5;
-    GameState.addScore(points);
-    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-    
     const guideHint = document.getElementById('guide-hint');
     if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
     
-    const correctOrder = [...historyEvents].sort((a, b) => a.year - b.year);
-    document.querySelector('.task-section').innerHTML = `
-        <h2>${isCorrect ? '✅ Pareizi!' : '❌ Nepareizi!'}</h2>
-        <p>Pareizā secība:</p>
-        <ol style="margin: 10px 0; padding-left: 20px;">
-            ${correctOrder.map(ev => `<li>${ev.year}. g. — ${ev.text}</li>`).join('')}
-        </ol>
-        <p style="color: ${isCorrect ? '#4CAF50' : '#f44336'};">${points > 0 ? '+' : ''}${points} punkti</p>
-        <p style="color: #ffaa00; font-style: italic;">${questions['Teatris'].fact}</p>
-        <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt →</button>
-    `;
+    if (isCorrect) {
+        GameState.addScore(10);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        const correctOrder = [...historyEvents].sort((a, b) => a.year - b.year);
+        document.querySelector('.task-section').innerHTML = `
+            <h2>✅ Pareizi!</h2>
+            <p>Pareizā secība:</p>
+            <ol style="margin: 10px 0; padding-left: 20px;">
+                ${correctOrder.map(ev => `<li>${ev.year}. g. — ${ev.text}</li>`).join('')}
+            </ol>
+            <p style="color: #4CAF50;">+10 punkti</p>
+            <p style="color: #ffaa00; font-style: italic;">${questions['Teatris'].fact}</p>
+            <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt →</button>
+        `;
+    } else {
+        GameState.addScore(-5);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        // V18: Must retry on failure
+        document.querySelector('.task-section').innerHTML = `
+            <h2>❌ Nepareizi!</h2>
+            <p style="color: #f44336;">Secība nav pareiza. -5 punkti. Mēģini vēlreiz!</p>
+            <button class="btn btn-full" onclick="startHistorySequence()">🔄 Mēģināt vēlreiz</button>
+        `;
+    }
 }
 
 function closeHistoryGame() {
@@ -1083,30 +1151,41 @@ function enforceScoreLimits() {
 function checkAns(type) {
     const val = document.getElementById('ans-in').value;
     const correct = _d(questions[type]._a);
-    const isCorrect = val.toLowerCase() === correct.toLowerCase();
-    
-    if(isCorrect) {
-        GameState.addScore(10);
-        showNotification('✅ Pareiza atbilde! +10 punkti', 'success', 2000);
-    } else {
-        GameState.addScore(-5);
-        showNotification('❌ Nepareiza atbilde! -5 punkti', 'error', 2000);
-    }
+    const isCorrect = val.toLowerCase().trim() === correct.toLowerCase();
     
     // Update guide bubble with dynamic comment
     const guideHint = document.getElementById('guide-hint');
     if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
     
-    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-    
-    // Show fact before closing
-    document.querySelector('.task-section').innerHTML = `
-        <h2>${type}</h2>
-        <p style="color: ${isCorrect ? '#4CAF50' : '#f44336'}; font-size: 18px;">${isCorrect ? '✅ Pareizi!' : '❌ Nepareizi!'}</p>
-        <p><strong>Atbilde:</strong> ${correct}</p>
-        <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
-        <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
-    `;
+    if(isCorrect) {
+        GameState.addScore(10);
+        showNotification('✅ Pareiza atbilde! +10 punkti', 'success', 2000);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        
+        // Correct — show fact and allow continue
+        document.querySelector('.task-section').innerHTML = `
+            <h2>${type}</h2>
+            <p style="color: #4CAF50; font-size: 18px;">✅ Pareizi!</p>
+            <p><strong>Atbilde:</strong> ${correct}</p>
+            <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
+            <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
+        `;
+    } else {
+        GameState.addScore(-5);
+        showNotification('❌ Nepareiza atbilde! -5 punkti', 'error', 2000);
+        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+        
+        // Wrong — must retry (V16 + V18)
+        document.querySelector('.task-section').innerHTML = `
+            <h2>${type}</h2>
+            <p style="color: #f44336; font-size: 18px;">❌ Nepareizi! Mēģini vēlreiz.</p>
+            <p style="color: #aaa; font-size: 14px;">(-5 punkti par nepareizu atbildi)</p>
+            <div class="quiz-form">
+                <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
+                <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt atkārtoti</button>
+            </div>
+        `;
+    }
 }
 
 function closeQuizAndContinue() {
