@@ -922,10 +922,15 @@ function sendReady() {
     // Handle both WebSocket and PHP polling modes
     if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'update_task', code: myLobbyCode, role: myRole }));
+        document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
     } else if (connectionMode === CONNECTION_MODE_PHP) {
         notifyPartnerPHP(myRole, myLobbyCode);
+        document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
+    } else {
+        // Connection not available
+        showNotification("Savienojums nav pieejams!", 'error');
+        console.error("sendReady failed: No valid connection mode available");
     }
-    document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
 }
 
 async function showQuiz(type) {
