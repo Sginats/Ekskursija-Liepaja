@@ -22,10 +22,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('assets/atteli/background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary));
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
@@ -1444,7 +1441,8 @@ input:focus-visible {
 }
 
 /* Theme System */
-:root {
+:root,
+body[data-theme="default"] {
     --bg-primary: #332222;
     --bg-secondary: #2a1a1a;
     --bg-tertiary: #1a1010;
@@ -1566,6 +1564,11 @@ body[data-theme="blue"] {
     100% { background-position: 0% 50%; }
 }
 
+@keyframes floatParticle {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+    50% { transform: translateY(-30px) rotate(180deg); opacity: 0.6; }
+}
+
 body::before {
     content: '';
     position: fixed;
@@ -1573,12 +1576,30 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: -2;
     background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary), var(--bg-primary));
     background-size: 400% 400%;
     animation: bgShift 15s ease infinite;
-    opacity: 0.3;
     pointer-events: none;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: 
+        radial-gradient(ellipse at 20% 50%, rgba(255, 170, 0, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255, 170, 0, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(255, 136, 0, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.02) 0%, transparent 30%),
+        radial-gradient(circle at 90% 90%, rgba(255, 255, 255, 0.02) 0%, transparent 30%);
+    pointer-events: none;
+    animation: bgShift 20s ease-in-out infinite reverse;
+    background-size: 200% 200%;
 }
 
 /* History sequence mini-game styles */
