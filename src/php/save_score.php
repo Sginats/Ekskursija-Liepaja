@@ -24,8 +24,8 @@ if ($name === null) {
 }
 
 if ($name !== null && $score !== null) {
-    // Anti-cheat: require integrity token
-    if (empty($token) || strlen($token) < 3) {
+    // Anti-cheat: require integrity token (format: hash-nonce)
+    if (empty($token) || !preg_match('/^[a-z0-9]+-[a-z0-9]+$/', $token)) {
         echo "Error: Nav derīga spēles sesija";
         exit;
     }

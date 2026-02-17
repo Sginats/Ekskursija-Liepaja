@@ -56,11 +56,25 @@ const GameState = (function() {
     };
 })();
 
-// Anti-cheat system
-let _ac_activeTask = false;  // Whether a task is currently in progress
-let _ac_taskType = null;     // What type of task is active
-let _ac_violations = 0;      // Number of detected violations
-let _ac_devToolsOpen = false;
+// Anti-cheat: all state variables are inside the IIFE closure (not on global scope)
+const _ac = (function() {
+    let activeTask = false;
+    let taskType = null;
+    let violations = 0;
+    let devToolsOpen = false;
+    return {
+        get activeTask() { return activeTask; },
+        set activeTask(v) { activeTask = v; },
+        get taskType() { return taskType; },
+        set taskType(v) { taskType = v; },
+        get violations() { return violations; },
+        addViolation: function() { violations++; },
+        get devToolsOpen() { return devToolsOpen; },
+        set devToolsOpen(v) { devToolsOpen = v; }
+    };
+})();
+
+const TOTAL_TASKS = 10;
 
 // DevTools detection
 (function _detectDevTools() {
@@ -69,15 +83,15 @@ let _ac_devToolsOpen = false;
         const widthThreshold = window.outerWidth - window.innerWidth > threshold;
         const heightThreshold = window.outerHeight - window.innerHeight > threshold;
         if (widthThreshold || heightThreshold) {
-            if (!_ac_devToolsOpen) {
-                _ac_devToolsOpen = true;
-                _ac_violations++;
+            if (!_ac.devToolsOpen) {
+                _ac.devToolsOpen = true;
+                _ac.addViolation();
                 if (typeof showNotification === 'function') {
                     showNotification('⚠️ Izstrādātāja rīki atvērti — tas var ietekmēt spēli!', 'warning', 5000);
                 }
             }
         } else {
-            _ac_devToolsOpen = false;
+            _ac.devToolsOpen = false;
         }
     };
     setInterval(check, 1000);
@@ -94,11 +108,9 @@ document.addEventListener('contextmenu', function(e) {
 // Suppress console methods to reduce info leaks
 (function() {
     const _noop = function() {};
-    const _console = window.console;
     try {
         Object.defineProperty(window, 'console', {
             get: function() {
-                _ac_violations++;
                 return { log: _noop, warn: _noop, error: _noop, info: _noop, debug: _noop, dir: _noop, table: _noop, trace: _noop, assert: _noop, clear: _noop, group: _noop, groupEnd: _noop, groupCollapsed: _noop, time: _noop, timeEnd: _noop };
             },
             set: _noop
@@ -139,17 +151,26 @@ function _v(hex) {
 }
 
 // Anti-cheat: Session integrity token for score submission
-const _sessionSeed = Date.now();
+const _sessionNonce = (function() {
+    const arr = new Uint32Array(2);
+    if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(arr);
+    } else {
+        arr[0] = (Math.random() * 0xFFFFFFFF) >>> 0;
+        arr[1] = (Math.random() * 0xFFFFFFFF) >>> 0;
+    }
+    return arr[0].toString(36) + arr[1].toString(36);
+})();
 const _taskCompletionLog = [];
 function _generateScoreToken(score, time, completedTasks) {
-    const raw = `${_sessionSeed}:${score}:${time}:${completedTasks}`;
+    const raw = `${_sessionNonce}:${score}:${time}:${completedTasks}`;
     let hash = 0;
     for (let i = 0; i < raw.length; i++) {
         const chr = raw.charCodeAt(i);
         hash = ((hash << 5) - hash) + chr;
         hash |= 0;
     }
-    return Math.abs(hash).toString(36) + '-' + _sessionSeed.toString(36);
+    return Math.abs(hash).toString(36) + '-' + _sessionNonce;
 }
 
 // Multiple questions per location – random selection each playthrough (P5)
@@ -767,8 +788,8 @@ function updateMapState() {
 function startActivity(type) {
     if (type !== taskSequence[GameState.getCompleted()]) { showNotification("Lūdzu, izpildi uzdevumus pēc kārtas!", 'warning'); return; }
     currentTask = type;
-    _ac_activeTask = true;
-    _ac_taskType = type;
+    _ac.activeTask = true;
+    _ac.taskType = type;
     
     if (type === 'Osta') showLocationThenStart(type, function() { startBoatGame(); });
     else if (type === 'RTU') showLocationThenStart(type, function() { startAntGame(); });
@@ -929,13 +950,13 @@ function finishBoatRace() {
 }
 
 function closeBoatGame() { 
-    if (!_ac_activeTask || _ac_taskType !== 'Osta') {
-        _ac_violations++;
+    if (!_ac.activeTask || _ac.taskType !== 'Osta') {
+        _ac.addViolation();
         showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
         return;
     }
-    _ac_activeTask = false;
-    _ac_taskType = null;
+    _ac.activeTask = false;
+    _ac.taskType = null;
     _taskCompletionLog.push({ task: 'Osta', time: Date.now() });
     boatRaceActive = false;
     if (boatInterval) clearInterval(boatInterval);
@@ -943,7 +964,7 @@ function closeBoatGame() {
     document.getElementById('game-modal').style.display = 'none'; 
     GameState.completeTask(); 
     updateMapState(); 
-    if(GameState.getCompleted() === 10) showEndGame(); 
+    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame(); 
 }
 
 // RTU Ant (Bug) Mini-Game
@@ -1055,18 +1076,18 @@ function finishAntGame(success) {
 }
 
 function closeAntGame() {
-    if (!_ac_activeTask || _ac_taskType !== 'RTU') {
-        _ac_violations++;
+    if (!_ac.activeTask || _ac.taskType !== 'RTU') {
+        _ac.addViolation();
         showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
         return;
     }
-    _ac_activeTask = false;
-    _ac_taskType = null;
+    _ac.activeTask = false;
+    _ac.taskType = null;
     _taskCompletionLog.push({ task: 'RTU', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === 10) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
 // Historical Sequence Mini-Game (Teatris location)
@@ -1149,18 +1170,18 @@ function checkHistorySequence() {
 }
 
 function closeHistoryGame() {
-    if (!_ac_activeTask || _ac_taskType !== 'Teatris') {
-        _ac_violations++;
+    if (!_ac.activeTask || _ac.taskType !== 'Teatris') {
+        _ac.addViolation();
         showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
         return;
     }
-    _ac_activeTask = false;
-    _ac_taskType = null;
+    _ac.activeTask = false;
+    _ac.taskType = null;
     _taskCompletionLog.push({ task: 'Teatris', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === 10) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
 
@@ -1275,24 +1296,24 @@ function checkAns(type) {
 
 function closeQuizAndContinue() {
     // Anti-cheat: verify a task was genuinely active
-    if (!_ac_activeTask) {
-        _ac_violations++;
+    if (!_ac.activeTask) {
+        _ac.addViolation();
         showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
         return;
     }
-    _ac_activeTask = false;
-    _ac_taskType = null;
+    _ac.activeTask = false;
+    _ac.taskType = null;
     _taskCompletionLog.push({ task: currentTask, time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if(GameState.getCompleted() === 10) showEndGame();
+    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
 function showEndGame() { 
     // Anti-cheat: verify all 10 tasks completed legitimately
-    if (GameState.getCompleted() !== 10 || _taskCompletionLog.length < 10) {
-        _ac_violations++;
+    if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
+        _ac.addViolation();
         showNotification('⚠️ Spēle nav pabeigta!', 'error', 3000);
         return;
     }
@@ -1313,8 +1334,8 @@ function showEndGame() {
 let _endGameShown = false;
 function showEndGameScreen(finalScore, formattedTime) {
     // Anti-cheat: verify game legitimacy
-    if (GameState.getCompleted() !== 10 || _taskCompletionLog.length < 10 || _endGameShown) {
-        _ac_violations++;
+    if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS || _endGameShown) {
+        _ac.addViolation();
         showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
         return;
     }
@@ -1378,7 +1399,7 @@ function getRandomBubble(isCorrect) {
 
 function finishGame(name, finalScore, time) { 
     // Anti-cheat: verify game was played legitimately
-    if (GameState.getCompleted() !== 10 || _taskCompletionLog.length < 10) {
+    if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
         showNotification('⚠️ Nevar saglabāt — spēle nav pabeigta!', 'error', 3000);
         return;
     }
@@ -1393,7 +1414,7 @@ function finishGame(name, finalScore, time) {
     formData.append('time', time);
     formData.append('token', token);
     formData.append('tasks', _taskCompletionLog.length);
-    formData.append('violations', _ac_violations);
+    formData.append('violations', _ac.violations);
     
     fetch('src/php/save_score.php', {
         method: 'POST',
@@ -1678,7 +1699,7 @@ function showNotification(message, type = 'info', duration = 3000) {
 
 // Expose only UI-triggered functions to window (for onclick handlers in HTML)
 // Anti-cheat: Game internals (GameState, _v, _k, questions, answers) remain private
-// Close/finish functions are guarded with _ac_activeTask checks
+// Close/finish functions are guarded with _ac.activeTask checks
 window.toggleModal = toggleModal;
 window.startSingleGame = startSingleGame;
 window.openLobby = openLobby;
