@@ -181,7 +181,7 @@ wss.on('connection', (ws, req) => {
                 if (lobbies[code].hostDone && lobbies[code].guestDone) {
                     const msg = JSON.stringify({ type: 'sync_complete' });
                     
-                    if (lobbies[code].host.readyState === WebSocket.OPEN) {
+                    if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
                         lobbies[code].host.send(msg);
                     }
                     if (lobbies[code].guest && lobbies[code].guest.readyState === WebSocket.OPEN) {
@@ -265,7 +265,7 @@ setInterval(() => {
     for (const code in lobbies) {
         if (now - lobbies[code].lastActive > LOBBY_TIMEOUT) {
             // Close connections gracefully
-            if (lobbies[code].host.readyState === WebSocket.OPEN) {
+            if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
                 lobbies[code].host.close(1000, 'Lobby timeout');
             }
             if (lobbies[code].guest && lobbies[code].guest.readyState === WebSocket.OPEN) {

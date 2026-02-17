@@ -23,7 +23,6 @@ body {
     justify-content: center;
     align-items: center;
     background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary));
-    background-size: cover;
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
