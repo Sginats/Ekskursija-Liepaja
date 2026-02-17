@@ -1103,7 +1103,7 @@ input[type=range] {
         border-width: 2px;
     }
     
-    /* Prevent points from overlapping - add spacing via z-index layering */
+    /* Bring active point to front to prevent overlap with inactive points */
     .active-point {
         z-index: 100;
     }

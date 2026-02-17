@@ -85,7 +85,7 @@ const taskSequence = [
 const _xk = [0x4C, 0x69, 0x65, 0x70, 0xC4, 0x81, 0x6A, 0x61]; // Key
 function _d(hex) {
     const bytes = [];
-    for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substr(i, 2), 16));
+    for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substring(i, i + 2), 16));
     const dec = bytes.map((b, i) => b ^ _xk[i % _xk.length]);
     return new TextDecoder().decode(new Uint8Array(dec));
 }
@@ -878,8 +878,8 @@ function spawnAnt() {
         ant.style.top = Math.random() * 85 + '%';
     }, 800);
     
-    // Spawn additional ants for difficulty
-    if (antsCaught > 2) setTimeout(spawnAnt, 2000);
+    // Spawn additional ants for difficulty (only if game still active)
+    if (antsCaught > 2 && antGameActive) setTimeout(() => { if (antGameActive) spawnAnt(); }, 2000);
 }
 
 function finishAntGame(success) {
@@ -1003,8 +1003,10 @@ function showMiniGame(type) {
     }
 }
 
+const _miniCode = _e('4291');
+
 function checkMini() {
-    if(document.getElementById('mini-input').value === _d(_e('4291'))) sendReady();
+    if(document.getElementById('mini-input').value === _d(_miniCode)) sendReady();
 }
 
 function sendReady() {
@@ -1111,12 +1113,23 @@ function showEndGameScreen(finalScore, formattedTime) {
                 <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">⏱ Laiks: <strong>${formattedTime}</strong></p>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-full" onclick="finishGame('${globalName.replace(/'/g, "\\'")}', ${finalScore}, '${formattedTime}')">🏆 Saglabāt un skatīt TOP 10</button>
-                <button class="btn btn-full" onclick="location.href='index.html'">🔙 Atpakaļ uz menu</button>
-                <button class="btn btn-full" onclick="location.href='map.html?name=${encodeURIComponent(globalName)}'">🔄 Spēlēt vēlreiz</button>
+                <button class="btn btn-full" id="btn-save-score">🏆 Saglabāt un skatīt TOP 10</button>
+                <button class="btn btn-full" id="btn-back-menu">🔙 Atpakaļ uz menu</button>
+                <button class="btn btn-full" id="btn-play-again">🔄 Spēlēt vēlreiz</button>
             </div>
         </div>
     `;
+    
+    // Attach event listeners safely instead of inline onclick
+    document.getElementById('btn-save-score').addEventListener('click', function() {
+        finishGame(globalName, finalScore, formattedTime);
+    });
+    document.getElementById('btn-back-menu').addEventListener('click', function() {
+        location.href = 'index.html';
+    });
+    document.getElementById('btn-play-again').addEventListener('click', function() {
+        location.href = 'map.html?name=' + encodeURIComponent(globalName);
+    });
 }
 
 // Guide character dynamic text bubbles

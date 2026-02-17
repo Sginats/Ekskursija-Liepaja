@@ -42,15 +42,10 @@ if ($name !== null && $score !== null) {
     }
     
     // Minimum time validation: 10 tasks × ~3 seconds minimum per task = 30 seconds
+    // This also covers negative and zero times
     $MIN_GAME_TIME = 30;
     if ($timeInSeconds < $MIN_GAME_TIME) {
         echo "Error: Laiks ir pārāk īss, lai būtu reāls (minimums: {$MIN_GAME_TIME}s)";
-        exit;
-    }
-    
-    // Reject negative or zero times
-    if ($timeInSeconds <= 0) {
-        echo "Error: Nederīgs laika formāts";
         exit;
     }
     
