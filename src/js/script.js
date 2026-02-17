@@ -5,6 +5,10 @@
 // quiz system, and user interface management.
 // ============================================================================
 
+// Wrap everything in IIFE to prevent console access to game internals
+(function() {
+'use strict';
+
 // Protected game state
 const GameState = (function() {
     let _score = 0;
@@ -1406,3 +1410,34 @@ function showNotification(message, type = 'info', duration = 3000) {
         }, 300);
     }, duration);
 }
+
+// Expose only UI-triggered functions to window (for onclick handlers in HTML)
+// Game state internals (GameState, _d, _e, _xk, questions answers) remain private
+window.toggleModal = toggleModal;
+window.startSingleGame = startSingleGame;
+window.openLobby = openLobby;
+window.joinGame = joinGame;
+window.exitGame = exitGame;
+window.setMusicVolume = setMusicVolume;
+window.setSFXVolume = setSFXVolume;
+window.setTheme = setTheme;
+window.startActivity = startActivity;
+window.checkAns = checkAns;
+window.closeQuizAndContinue = closeQuizAndContinue;
+window.initBoatRace = initBoatRace;
+window.closeBoatGame = closeBoatGame;
+window.initAntGame = initAntGame;
+window.closeAntGame = closeAntGame;
+window.checkHistorySequence = checkHistorySequence;
+window.closeHistoryGame = closeHistoryGame;
+window.sendReady = sendReady;
+window.checkMini = checkMini;
+window.finishGame = finishGame;
+window.showEndGameScreen = showEndGameScreen;
+window.spotifyPlayPause = spotifyPlayPause;
+window.spotifyNext = spotifyNext;
+window.spotifyPrev = spotifyPrev;
+window.spotifyToggleShuffle = spotifyToggleShuffle;
+window.spotifyToggleRepeat = spotifyToggleRepeat;
+
+})(); // End IIFE
