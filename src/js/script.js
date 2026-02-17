@@ -907,10 +907,10 @@ function showMiniGame(type) {
         content.innerHTML = `<h2>Cietums</h2><p>Kods: ${code}</p>
             <div class="quiz-form">
                 <input id="mini-input" placeholder="Ievadi kodu...">
-                <button class="btn close-btn" onclick="checkMini()">OK</button>
+                <button class="btn btn-full" onclick="checkMini()">OK</button>
             </div>`;
     } else {
-        content.innerHTML = `<h2>Gatavs?</h2><button class="btn close-btn" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
+        content.innerHTML = `<h2>Gatavs?</h2><button class="btn btn-full" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
     }
 }
 
@@ -934,7 +934,7 @@ async function showQuiz(type) {
         <h2>${type}</h2><p>${q}</p>
         <div class="quiz-form">
             <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
-            <button class="btn close-btn" onclick="checkAns('${type}')">Iesniegt</button>
+            <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
         </div>
     `;
 }
@@ -1033,7 +1033,6 @@ function toggleSpotifyPlayback() {
                 width="100%" 
                 height="152" 
                 frameBorder="0" 
-                allowfullscreen="" 
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                 loading="lazy"
                 style="border-radius: 12px;">

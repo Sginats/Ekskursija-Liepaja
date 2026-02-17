@@ -564,6 +564,12 @@ input[type=range] {
     box-sizing: border-box;
 }
 
+.btn-full {
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
 .quiz-layout {
     display: flex;
     align-items: center;
