@@ -13,6 +13,7 @@ const lobbies = {};
 const HEARTBEAT_INTERVAL = 30000;
 const CLEANUP_INTERVAL = 600000; // 10 minutes
 const LOBBY_TIMEOUT = 3600000; // 1 hour
+const RECONNECT_GRACE_PERIOD = 30000; // 30 seconds grace period for page navigation
 
 const heartbeatInterval = setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
@@ -93,13 +94,75 @@ wss.on('connection', (ws, req) => {
                 
                 lobbies[code].guest = ws;
                 lobbies[code].lastActive = Date.now();
+                lobbies[code].hostReady = false;
+                lobbies[code].guestReady = false;
                 
-                // Notify both players
-                if (lobbies[code].host.readyState === WebSocket.OPEN) {
-                    lobbies[code].host.send(JSON.stringify({ type: 'start_game', role: 'host' }));
+                // Notify both players that guest joined - ask for ready confirmation
+                if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
+                    lobbies[code].host.send(JSON.stringify({ type: 'guest_joined' }));
                 }
-                ws.send(JSON.stringify({ type: 'start_game', role: 'guest' }));
-                console.log(`[JOIN] Guest joined lobby ${code}. Total lobbies: ${Object.keys(lobbies).length}`);
+                ws.send(JSON.stringify({ type: 'joined_lobby', code: code }));
+                console.log(`[JOIN] Guest joined lobby ${code}. Waiting for ready confirmation.`);
+            }
+
+            else if (action === 'ready') {
+                if (!lobbies[code]) {
+                    ws.send(JSON.stringify({ 
+                        type: 'error', 
+                        msg: 'Istaba nav atrasta.' 
+                    }));
+                    return;
+                }
+
+                if (role === 'host') lobbies[code].hostReady = true;
+                if (role === 'guest') lobbies[code].guestReady = true;
+                lobbies[code].lastActive = Date.now();
+
+                if (lobbies[code].hostReady && lobbies[code].guestReady) {
+                    // Both ready - start the game
+                    if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
+                        lobbies[code].host.send(JSON.stringify({ type: 'start_game', role: 'host' }));
+                    }
+                    if (lobbies[code].guest && lobbies[code].guest.readyState === WebSocket.OPEN) {
+                        lobbies[code].guest.send(JSON.stringify({ type: 'start_game', role: 'guest' }));
+                    }
+                    console.log(`[READY] Both players ready in lobby ${code}. Starting game.`);
+                } else {
+                    // Notify the other player that this player is ready
+                    const otherPlayer = role === 'host' ? lobbies[code].guest : lobbies[code].host;
+                    if (otherPlayer && otherPlayer.readyState === WebSocket.OPEN) {
+                        otherPlayer.send(JSON.stringify({ type: 'player_ready', readyRole: role }));
+                    }
+                    console.log(`[READY] ${role} is ready in lobby ${code}. Waiting for other player.`);
+                }
+            }
+
+            else if (action === 'rejoin') {
+                if (!lobbies[code]) {
+                    ws.send(JSON.stringify({ 
+                        type: 'error', 
+                        msg: 'Istaba nav atrasta.' 
+                    }));
+                    return;
+                }
+
+                if (role === 'host') {
+                    lobbies[code].host = ws;
+                    if (lobbies[code].hostReconnectTimeout) {
+                        clearTimeout(lobbies[code].hostReconnectTimeout);
+                        lobbies[code].hostReconnectTimeout = null;
+                    }
+                } else if (role === 'guest') {
+                    lobbies[code].guest = ws;
+                    if (lobbies[code].guestReconnectTimeout) {
+                        clearTimeout(lobbies[code].guestReconnectTimeout);
+                        lobbies[code].guestReconnectTimeout = null;
+                    }
+                }
+
+                lobbies[code].lastActive = Date.now();
+                ws.send(JSON.stringify({ type: 'rejoined', role: role }));
+                console.log(`[REJOIN] ${role} rejoined lobby ${code}`);
             }
 
             else if (action === 'update_task') {
@@ -148,20 +211,43 @@ wss.on('connection', (ws, req) => {
     ws.on('close', (code, reason) => {
         console.log(`Client disconnected. Code: ${code}, Reason: ${reason}`);
         
-        // Remove client from lobbies
+        // Use grace period instead of immediate deletion to allow page navigation reconnects
         for (const lobbyCode in lobbies) {
             const lobby = lobbies[lobbyCode];
-            if (lobby.host === ws || lobby.guest === ws) {
-                // Notify the other player
-                const otherPlayer = lobby.host === ws ? lobby.guest : lobby.host;
-                if (otherPlayer && otherPlayer.readyState === WebSocket.OPEN) {
-                    otherPlayer.send(JSON.stringify({
-                        type: 'player_disconnected',
-                        msg: 'Otrs spēlētājs atvienojās.'
-                    }));
-                }
-                delete lobbies[lobbyCode];
-                console.log(`[CLOSE] Lobby ${lobbyCode} closed due to disconnect. Total lobbies: ${Object.keys(lobbies).length}`);
+            if (lobby.host === ws) {
+                lobby.host = null;
+                lobby.hostReconnectTimeout = setTimeout(() => {
+                    if (!lobby.host) {
+                        if (lobby.guest && lobby.guest.readyState === WebSocket.OPEN) {
+                            lobby.guest.send(JSON.stringify({
+                                type: 'player_disconnected',
+                                msg: 'Otrs spēlētājs atvienojās.'
+                            }));
+                        }
+                        if (!lobby.guest) {
+                            delete lobbies[lobbyCode];
+                            console.log(`[CLOSE] Lobby ${lobbyCode} closed (both disconnected). Total lobbies: ${Object.keys(lobbies).length}`);
+                        }
+                    }
+                }, RECONNECT_GRACE_PERIOD);
+                console.log(`[DISCONNECT] Host disconnected from lobby ${lobbyCode}. Grace period started.`);
+            } else if (lobby.guest === ws) {
+                lobby.guest = null;
+                lobby.guestReconnectTimeout = setTimeout(() => {
+                    if (!lobby.guest) {
+                        if (lobby.host && lobby.host.readyState === WebSocket.OPEN) {
+                            lobby.host.send(JSON.stringify({
+                                type: 'player_disconnected',
+                                msg: 'Otrs spēlētājs atvienojās.'
+                            }));
+                        }
+                        if (!lobby.host) {
+                            delete lobbies[lobbyCode];
+                            console.log(`[CLOSE] Lobby ${lobbyCode} closed (both disconnected). Total lobbies: ${Object.keys(lobbies).length}`);
+                        }
+                    }
+                }, RECONNECT_GRACE_PERIOD);
+                console.log(`[DISCONNECT] Guest disconnected from lobby ${lobbyCode}. Grace period started.`);
             }
         }
     });

@@ -232,6 +232,12 @@ async function initSmartConnection() {
             connectionMode = CONNECTION_MODE_WS;
             updateConnectionStatus('connected');
             showNotification('WebSocket detected', 'success', 2000);
+            
+            // If we're on map.html with multiplayer params, rejoin the lobby
+            if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
+                console.log(`Rejoining lobby ${myLobbyCode} as ${myRole}`);
+            }
             return;
         } else {
             console.log("⚠️ WebSocket unavailable, using PHP polling");
@@ -306,12 +312,43 @@ function handleWebSocketMessage(data) {
         toggleModal('mode-modal');
         setTimeout(() => { toggleModal('lobby-modal'); }, 100);
     }
+    else if (data.type === 'guest_joined') {
+        // Host receives this when guest joins - show ready prompt
+        myRole = 'host';
+        const waitEl = document.getElementById('lobby-wait');
+        if (waitEl) {
+            waitEl.innerHTML = '👥 Spēlētājs pievienojās!<br><button class="btn" id="btn-host-ready" style="margin-top:15px;" onclick="sendLobbyReady()">✅ Esmu gatavs!</button><p id="lobby-ready-status" style="color:#ccc;margin-top:10px;"></p>';
+        }
+    }
+    else if (data.type === 'joined_lobby') {
+        // Guest receives this - show ready prompt in lobby modal
+        myRole = 'guest';
+        myLobbyCode = data.code;
+        toggleModal('mode-modal');
+        setTimeout(() => {
+            toggleModal('lobby-modal');
+            const lobbyCodeEl = document.getElementById('lobby-code');
+            if (lobbyCodeEl) lobbyCodeEl.innerText = myLobbyCode;
+            const waitEl = document.getElementById('lobby-wait');
+            if (waitEl) {
+                waitEl.innerHTML = '👥 Pievienojies istabai!<br><button class="btn" id="btn-guest-ready" style="margin-top:15px;" onclick="sendLobbyReady()">✅ Esmu gatavs!</button><p id="lobby-ready-status" style="color:#ccc;margin-top:10px;"></p>';
+            }
+        }, 100);
+    }
+    else if (data.type === 'player_ready') {
+        // Other player is ready
+        const statusEl = document.getElementById('lobby-ready-status');
+        if (statusEl) statusEl.innerText = '✅ Otrs spēlētājs ir gatavs!';
+    }
     else if (data.type === 'start_game') {
         myRole = data.role;
         showNotification(`Spēle sākas! Tava loma: ${myRole}`, 'success');
         setTimeout(() => {
             location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
         }, 1500);
+    }
+    else if (data.type === 'rejoined') {
+        console.log(`Successfully rejoined lobby as ${data.role}`);
     }
     else if (data.type === 'sync_complete') {
         const statusEl = document.getElementById('partner-status');
@@ -323,6 +360,9 @@ function handleWebSocketMessage(data) {
     }
     else if (data.type === 'pong') {
         console.log('WebSocket alive');
+    }
+    else if (data.type === 'player_disconnected') {
+        showNotification(data.msg, 'warning');
     }
 }
 
@@ -354,29 +394,7 @@ function connectWebSocket() {
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                
-                if (data.type === 'created') {
-                    myLobbyCode = data.code;
-                    const lobbyCodeEl = document.getElementById('lobby-code');
-                    if (lobbyCodeEl) lobbyCodeEl.innerText = myLobbyCode;
-                    toggleModal('mode-modal');
-                    setTimeout(() => { toggleModal('lobby-modal'); }, 100);
-                }
-                else if (data.type === 'start_game') {
-                    myRole = data.role;
-                    showNotification(`Spēle sākas! Tava loma: ${myRole}`, 'success');
-                    setTimeout(() => {
-                        location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
-                    }, 1500);
-                }
-                else if (data.type === 'sync_complete') {
-                    const statusEl = document.getElementById('partner-status');
-                    if (statusEl) statusEl.innerText = "Partneris gatavs!";
-                    setTimeout(() => { showQuiz(currentTask); }, 1000);
-                }
-                else if (data.type === 'error') {
-                    showNotification(data.msg, 'error');
-                }
+                handleWebSocketMessage(data);
             } catch (e) {
                 console.error("Error parsing WebSocket message:", e);
             }
@@ -1009,6 +1027,16 @@ function checkMini() {
     if(document.getElementById('mini-input').value === _d(_miniCode)) sendReady();
 }
 
+function sendLobbyReady() {
+    if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: 'ready', code: myLobbyCode, role: myRole }));
+        const statusEl = document.getElementById('lobby-ready-status');
+        if (statusEl) statusEl.innerText = '⏳ Gaidu otru spēlētāju...';
+        const readyBtn = document.getElementById('btn-host-ready') || document.getElementById('btn-guest-ready');
+        if (readyBtn) readyBtn.disabled = true;
+    }
+}
+
 function sendReady() {
     // Handle both WebSocket and PHP polling modes
     if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
@@ -1218,19 +1246,9 @@ function getThemeLabel(themeName) {
 }
 
 function initTheme() {
-    // Day/Night auto-cycle based on user's local time
-    const hour = new Date().getHours();
-    const savedTheme = localStorage.getItem('theme');
-    
-    if (!savedTheme) {
-        // Auto-detect: 7AM-7PM = light, otherwise dark
-        const autoTheme = (hour >= 7 && hour < 19) ? 'light' : 'dark';
-        document.body.setAttribute('data-theme', autoTheme);
-        updateActiveThemeButton(autoTheme);
-    } else {
-        document.body.setAttribute('data-theme', savedTheme);
-        updateActiveThemeButton(savedTheme);
-    }
+    const savedTheme = localStorage.getItem('theme') || 'default';
+    document.body.setAttribute('data-theme', savedTheme);
+    updateActiveThemeButton(savedTheme);
 }
 
 function updateActiveThemeButton(savedTheme) {
@@ -1444,6 +1462,7 @@ window.closeAntGame = closeAntGame;
 window.checkHistorySequence = checkHistorySequence;
 window.closeHistoryGame = closeHistoryGame;
 window.sendReady = sendReady;
+window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
 window.finishGame = finishGame;
 window.showEndGameScreen = showEndGameScreen;

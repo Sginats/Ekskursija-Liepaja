@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Top 10 Rezultāti</title>
     <link rel="stylesheet" href="../../style.css">
+    <script src="../../src/js/script.js?v=20260216194225" defer></script>
     <style>
         .sort-indicator {
             font-size: 12px;
@@ -25,9 +26,11 @@
     </style>
 </head>
 <body>
-    <audio id="bg-music" loop>
-        <source src="../../skana/music.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="hover-sound" src="../../assets/skana/hover.mp3" preload="auto"></audio>
+
+    <!-- Connection Status Indicator -->
+    <div id="connection-status" class="connection-status" style="display: none;"></div>
+
     <div class="container">
         <h1 class="title">🏆 Top 10 Rezultāti</h1>
         <p class="sort-info">Kārtots pēc: <span id="sort-mode">Kombinētā vērtējuma (Punkti + Laiks)</span></p>
@@ -176,17 +179,6 @@
         
         // Initialize with combo sort
         sortByCombo();
-
-        // Initialize background music
-        const music = document.getElementById('bg-music');
-        if (music) {
-            music.volume = 0.3;
-            const playAudio = () => {
-                music.play().catch(() => {});
-                document.removeEventListener('click', playAudio);
-            };
-            document.addEventListener('click', playAudio);
-        }
     </script>
 </body>
 </html>
