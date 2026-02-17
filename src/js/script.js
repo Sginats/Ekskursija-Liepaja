@@ -1042,10 +1042,9 @@ function spotifyInit(callback) {
         src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
         width="1" 
         height="1" 
-        frameBorder="0" 
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
         loading="lazy"
-        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;">
     </iframe>`;
     
     // Try connecting to the Spotify IFrame API
