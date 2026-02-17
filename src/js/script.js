@@ -1091,17 +1091,19 @@ function spotifyPlayPause() {
 
 function spotifyNext() {
     if (!spotifyLoaded) { spotifyInit(); return; }
-    // The Spotify IFrame API doesn't expose next/prev directly,
-    // but we can use loadUri to skip or use the seek workaround.
-    // For the embedded player, loadUri with offset works:
+    // Spotify Embed IFrame API has limited skip support.
+    // We restart the playlist which triggers the next track if shuffle is on in the player.
     if (spotifyEmbedController) {
-        spotifyEmbedController.loadUri(SPOTIFY_PLAYLIST_URL.replace('https://open.spotify.com/', 'spotify:').replace(/\//g, ':'));
+        const playlistUri = SPOTIFY_PLAYLIST_URL.replace('https://open.spotify.com/', 'spotify:').replace(/\//g, ':');
+        spotifyEmbedController.loadUri(playlistUri);
+        spotifyEmbedController.play();
     }
     showNotification('⏭ Nākamā dziesma', 'info', 1500);
 }
 
 function spotifyPrev() {
     if (!spotifyLoaded) { spotifyInit(); return; }
+    // Seek to start of current track (standard prev behavior)
     if (spotifyEmbedController) {
         spotifyEmbedController.seek(0);
     }
@@ -1109,6 +1111,8 @@ function spotifyPrev() {
 }
 
 function spotifyToggleShuffle() {
+    // Note: Spotify Embed IFrame API does not expose shuffle control directly.
+    // This toggles the UI state; actual shuffle depends on the user's Spotify app settings.
     spotifyShuffleOn = !spotifyShuffleOn;
     const btn = document.getElementById('smp-shuffle');
     if (btn) {
@@ -1118,6 +1122,8 @@ function spotifyToggleShuffle() {
 }
 
 function spotifyToggleRepeat() {
+    // Note: Spotify Embed IFrame API does not expose repeat control directly.
+    // This toggles the UI state; actual repeat depends on the user's Spotify app settings.
     spotifyRepeatOn = !spotifyRepeatOn;
     const btn = document.getElementById('smp-repeat');
     if (btn) {
