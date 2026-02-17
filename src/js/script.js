@@ -759,7 +759,7 @@ function showLocationThenStart(type, callback) {
             <h3>📍 ${info.name}</h3>
             <p>${info.desc}</p>
         </div>
-        <button class="btn" onclick="void(0)" id="btn-start-task">Turpināt uz uzdevumu →</button>
+        <button class="btn" id="btn-start-task">Turpināt uz uzdevumu →</button>
     `;
     document.getElementById('btn-start-task').addEventListener('click', function() {
         document.getElementById('game-modal').style.display = 'none';
@@ -840,7 +840,7 @@ function initBoatRace() {
 }
 
 function handleBoatTap(e) {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     if (!boatRaceActive) return;
     registerBoatPress();
 }
