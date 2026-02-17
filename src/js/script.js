@@ -77,19 +77,30 @@ const taskSequence = [
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
-function _d(s) { return decodeURIComponent(escape(atob(s))); }
+// XOR-based answer decryption (safer than BASE64)
+const _xk = [0x4C, 0x69, 0x65, 0x70, 0xC4, 0x81, 0x6A, 0x61]; // Key
+function _d(hex) {
+    const bytes = [];
+    for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substr(i, 2), 16));
+    const dec = bytes.map((b, i) => b ^ _xk[i % _xk.length]);
+    return new TextDecoder().decode(new Uint8Array(dec));
+}
+function _e(str) {
+    const enc = new TextEncoder().encode(str);
+    return Array.from(enc).map((b, i) => (b ^ _xk[i % _xk.length]).toString(16).padStart(2, '0')).join('');
+}
 
 const questions = {
-    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "MTk1NA==", fact: "Šeit mācās gudrākie prāti!" },
-    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", _a: "MTgwMA==", fact: "Turi cepuri! Mols sargā ostu." },
-    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", _a: "S2Fyb3N0YXMgY2lldHVtcw==", fact: "Vienīgais militārais cietums atvērts tūristiem!" },
-    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", _a: "TGllbGFpcyBEemludGFycw==", fact: "Izskatās pēc milzīga dzintara!" },
-    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", _a: "MTkwNw==", fact: "Vecākais profesionālais teātris Latvijā!" },
-    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", _a: "VGlyZHpuaWVjxKtiYXM=", fact: "Savieno ezeru ar jūru." },
-    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", _a: "TFNFWg==", fact: "Osta šeit neaizsalst." },
-    'Parks': { q: "Kā sauc parku pie jūras?", _a: "SsWrcm1hbGFz", fact: "Viens no lielākajiem parkiem Latvijā!" },
-    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: "SsSB", fact: "Būvē ēkas visā pasaulē!" },
-    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", _a: "TGllcMSBamFz", fact: "Piektais lielākais ezers Latvijā." }
+    'RTU': { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: _e("1954"), fact: "Šeit mācās gudrākie prāti!" },
+    'Mols': { q: "Cik metrus garš ir Ziemeļu mols?", _a: _e("1800"), fact: "Turi cepuri! Mols sargā ostu." },
+    'Cietums': { q: "Kā sauc Karostas tūrisma cietumu?", _a: _e("Karostas cietums"), fact: "Vienīgais militārais cietums atvērts tūristiem!" },
+    'Dzintars': { q: "Kā sauc Liepājas koncertzāli?", _a: _e("Lielais Dzintars"), fact: "Izskatās pēc milzīga dzintara!" },
+    'Teatris': { q: "Kurā gadā dibināts Liepājas Teātris?", _a: _e("1907"), fact: "Vecākais profesionālais teātris Latvijā!" },
+    'Kanals': { q: "Kā sauc kanālu starp ezeru un jūru?", _a: _e("Tirdzniecības"), fact: "Savieno ezeru ar jūru." },
+    'Osta': { q: "Kā sauc Liepājas speciālo zonu?", _a: _e("LSEZ"), fact: "Osta šeit neaizsalst." },
+    'Parks': { q: "Kā sauc parku pie jūras?", _a: _e("Jūrmalas"), fact: "Viens no lielākajiem parkiem Latvijā!" },
+    'LSEZ': { q: "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", _a: _e("Jā"), fact: "Būvē ēkas visā pasaulē!" },
+    'Ezerkrasts': { q: "Kāda ezera krastā ir taka?", _a: _e("Liepājas"), fact: "Piektais lielākais ezers Latvijā." }
 };
 
 const locationInfo = {
@@ -623,6 +634,8 @@ function startActivity(type) {
     currentTask = type;
     
     if (type === 'Osta') showLocationThenStart(type, function() { startBoatGame(); });
+    else if (type === 'RTU') showLocationThenStart(type, function() { startAntGame(); });
+    else if (type === 'Teatris') showLocationThenStart(type, function() { startHistorySequence(); });
     else if (myRole && myLobbyCode) showLocationThenStart(type, function() { showMiniGame(type); });
     else showLocationThenStart(type, function() { showQuiz(type); });
 }
@@ -788,6 +801,187 @@ function closeBoatGame() {
     if(GameState.getCompleted() === 10) showEndGame(); 
 }
 
+// RTU Ant (Bug) Mini-Game
+let antGameActive = false;
+let antsCaught = 0;
+let antGameTimer = null;
+const ANTS_REQUIRED = 5;
+const ANT_GAME_TIME = 15; // seconds
+
+function startAntGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🐜 RTU Bioloģijas uzdevums</h2>
+        <p>Nospiez ${ANTS_REQUIRED} skudras ${ANT_GAME_TIME} sekunžu laikā!</p>
+        <button class="btn btn-full" onclick="initAntGame()">SĀKT</button>
+    `;
+}
+
+function initAntGame() {
+    antGameActive = true;
+    antsCaught = 0;
+    let timeLeft = ANT_GAME_TIME;
+    
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🐜 Ķer skudras!</h2>
+        <p id="ant-timer" style="color: #ffaa00; font-size: 20px;">Laiks: ${timeLeft}s</p>
+        <p id="ant-count" style="font-size: 18px;">Noķertas: 0/${ANTS_REQUIRED}</p>
+        <div id="ant-field" style="position: relative; width: 100%; height: 250px; background: rgba(0,100,0,0.2); border: 2px solid #4CAF50; border-radius: 10px; overflow: hidden; cursor: crosshair;"></div>
+    `;
+    
+    antGameTimer = setInterval(() => {
+        timeLeft--;
+        const timerEl = document.getElementById('ant-timer');
+        if (timerEl) timerEl.textContent = `Laiks: ${timeLeft}s`;
+        if (timeLeft <= 0) finishAntGame(false);
+    }, 1000);
+    
+    spawnAnt();
+}
+
+function spawnAnt() {
+    if (!antGameActive) return;
+    const field = document.getElementById('ant-field');
+    if (!field) return;
+    
+    const ant = document.createElement('div');
+    ant.className = 'game-ant';
+    ant.textContent = '🐜';
+    ant.style.cssText = `position: absolute; font-size: 28px; cursor: pointer; user-select: none; transition: all 0.3s ease; z-index: 10;`;
+    ant.style.left = Math.random() * 85 + '%';
+    ant.style.top = Math.random() * 85 + '%';
+    
+    ant.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!antGameActive) return;
+        antsCaught++;
+        this.textContent = '💥';
+        setTimeout(() => { if (this.parentNode) this.parentNode.removeChild(this); }, 200);
+        
+        const countEl = document.getElementById('ant-count');
+        if (countEl) countEl.textContent = `Noķertas: ${antsCaught}/${ANTS_REQUIRED}`;
+        
+        if (antsCaught >= ANTS_REQUIRED) { finishAntGame(true); }
+        else { setTimeout(spawnAnt, 300); }
+    });
+    
+    field.appendChild(ant);
+    
+    // Move the ant around
+    const moveAnt = setInterval(() => {
+        if (!antGameActive || !ant.parentNode) { clearInterval(moveAnt); return; }
+        ant.style.left = Math.random() * 85 + '%';
+        ant.style.top = Math.random() * 85 + '%';
+    }, 800);
+    
+    // Spawn additional ants for difficulty
+    if (antsCaught > 2) setTimeout(spawnAnt, 2000);
+}
+
+function finishAntGame(success) {
+    antGameActive = false;
+    if (antGameTimer) clearInterval(antGameTimer);
+    
+    const points = success ? 10 : -5;
+    GameState.addScore(points);
+    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+    
+    const guideHint = document.getElementById('guide-hint');
+    if (guideHint) guideHint.textContent = getRandomBubble(success);
+    
+    document.querySelector('.task-section').innerHTML = `
+        <h2>${success ? '✅ Lielisks darbs!' : '❌ Laiks beidzies!'}</h2>
+        <p>Noķertas skudras: ${antsCaught}/${ANTS_REQUIRED}</p>
+        <p style="color: ${success ? '#4CAF50' : '#f44336'};">${points > 0 ? '+' : ''}${points} punkti</p>
+        <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
+        <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
+    `;
+}
+
+function closeAntGame() {
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask();
+    updateMapState();
+    if (GameState.getCompleted() === 10) showEndGame();
+}
+
+// Historical Sequence Mini-Game (Teatris location)
+const historyEvents = [
+    { year: 1625, text: "Liepāja iegūst pilsētas tiesības" },
+    { year: 1907, text: "Dibināts Liepājas Teātris" },
+    { year: 2015, text: "Atklāta koncertzāle 'Lielais Dzintars'" }
+];
+
+function startHistorySequence() {
+    document.getElementById('game-modal').style.display = 'block';
+    
+    const shuffled = [...historyEvents].sort(() => Math.random() - 0.5);
+    
+    document.querySelector('.task-section').innerHTML = `
+        <h2>📜 Vēsturiskā secība</h2>
+        <p>Sakārto notikumus hronoloģiskā secībā (no senākā uz jaunāko)!</p>
+        <div id="history-slots" style="display: flex; flex-direction: column; gap: 10px; margin: 15px 0;">
+            ${shuffled.map((ev, i) => `
+                <div class="history-item" draggable="true" data-year="${ev.year}" 
+                     style="background: rgba(0,0,0,0.3); border: 2px solid #ffaa00; border-radius: 8px; padding: 12px; cursor: grab; user-select: none; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #ffaa00; font-weight: bold; font-size: 18px;">${i + 1}.</span>
+                    <span>${ev.text}</span>
+                </div>
+            `).join('')}
+        </div>
+        <p style="font-size: 12px; color: #aaa;">💡 Spied uz notikumiem lai pārvietotu augšup</p>
+        <button class="btn btn-full" onclick="checkHistorySequence()">Iesniegt secību</button>
+    `;
+    
+    // Add click-to-reorder functionality
+    document.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const container = document.getElementById('history-slots');
+            const items = Array.from(container.querySelectorAll('.history-item'));
+            const idx = items.indexOf(this);
+            if (idx > 0) {
+                container.insertBefore(this, items[idx - 1]);
+                // Update numbering
+                container.querySelectorAll('.history-item').forEach((el, i) => {
+                    el.querySelector('span').textContent = (i + 1) + '.';
+                });
+            }
+        });
+    });
+}
+
+function checkHistorySequence() {
+    const items = document.querySelectorAll('.history-item');
+    const years = Array.from(items).map(item => parseInt(item.getAttribute('data-year')));
+    const isCorrect = years.every((year, i) => i === 0 || year >= years[i - 1]);
+    
+    const points = isCorrect ? 10 : -5;
+    GameState.addScore(points);
+    document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+    
+    const guideHint = document.getElementById('guide-hint');
+    if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
+    
+    const correctOrder = [...historyEvents].sort((a, b) => a.year - b.year);
+    document.querySelector('.task-section').innerHTML = `
+        <h2>${isCorrect ? '✅ Pareizi!' : '❌ Nepareizi!'}</h2>
+        <p>Pareizā secība:</p>
+        <ol style="margin: 10px 0; padding-left: 20px;">
+            ${correctOrder.map(ev => `<li>${ev.year}. g. — ${ev.text}</li>`).join('')}
+        </ol>
+        <p style="color: ${isCorrect ? '#4CAF50' : '#f44336'};">${points > 0 ? '+' : ''}${points} punkti</p>
+        <p style="color: #ffaa00; font-style: italic;">${questions['Teatris'].fact}</p>
+        <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt →</button>
+    `;
+}
+
+function closeHistoryGame() {
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask();
+    updateMapState();
+    if (GameState.getCompleted() === 10) showEndGame();
+}
+
 
 function showMiniGame(type) {
     document.getElementById('game-modal').style.display = "block";
@@ -806,7 +1000,7 @@ function showMiniGame(type) {
 }
 
 function checkMini() {
-    if(document.getElementById('mini-input').value === _d('NDI5MQ==')) sendReady();
+    if(document.getElementById('mini-input').value === _d(_e('4291'))) sendReady();
 }
 
 function sendReady() {
@@ -849,7 +1043,9 @@ function enforceScoreLimits() {
 function checkAns(type) {
     const val = document.getElementById('ans-in').value;
     const correct = _d(questions[type]._a);
-    if(val.toLowerCase() === correct.toLowerCase()) {
+    const isCorrect = val.toLowerCase() === correct.toLowerCase();
+    
+    if(isCorrect) {
         GameState.addScore(10);
         showNotification('✅ Pareiza atbilde! +10 punkti', 'success', 2000);
     } else {
@@ -857,7 +1053,23 @@ function checkAns(type) {
         showNotification('❌ Nepareiza atbilde! -5 punkti', 'error', 2000);
     }
     
+    // Update guide bubble with dynamic comment
+    const guideHint = document.getElementById('guide-hint');
+    if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
+    
     document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+    
+    // Show fact before closing
+    document.querySelector('.task-section').innerHTML = `
+        <h2>${type}</h2>
+        <p style="color: ${isCorrect ? '#4CAF50' : '#f44336'}; font-size: 18px;">${isCorrect ? '✅ Pareizi!' : '❌ Nepareizi!'}</p>
+        <p><strong>Atbilde:</strong> ${correct}</p>
+        <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
+        <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
+    `;
+}
+
+function closeQuizAndContinue() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
@@ -868,14 +1080,62 @@ function showEndGame() {
     // Calculate elapsed time
     const endTime = Date.now();
     const elapsedSeconds = Math.floor((endTime - startTime) / 1000);
-    const hours = Math.floor(elapsedSeconds / 3600);
-    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+    const minutes = Math.floor(elapsedSeconds / 60);
     const seconds = elapsedSeconds % 60;
-    const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
     const finalScore = GameState.getScore();
     
-    finishGame(globalName, finalScore, formattedTime); 
+    // Show end game screen instead of immediately redirecting
+    showEndGameScreen(finalScore, formattedTime);
+}
+
+// End Game screen with congratulations, score, time and navigation
+function showEndGameScreen(finalScore, formattedTime) {
+    document.getElementById('game-modal').style.display = 'block';
+    
+    let medal = '🥉';
+    if (finalScore >= 80) medal = '🥇';
+    else if (finalScore >= 50) medal = '🥈';
+    
+    document.querySelector('.task-section').innerHTML = `
+        <div style="text-align: center;">
+            <h2 style="color: #ffaa00; font-size: 28px;">${medal} Apsveicam! ${medal}</h2>
+            <p style="font-size: 18px;">Tu esi pabeidzis ekskursiju pa Liepāju!</p>
+            <div style="background: rgba(0,0,0,0.3); border: 2px solid #ffaa00; border-radius: 12px; padding: 20px; margin: 15px 0;">
+                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">🏆 Punkti: <strong>${finalScore}</strong>/100</p>
+                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">⏱ Laiks: <strong>${formattedTime}</strong></p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-full" onclick="finishGame('${globalName.replace(/'/g, "\\'")}', ${finalScore}, '${formattedTime}')">🏆 Saglabāt un skatīt TOP 10</button>
+                <button class="btn btn-full" onclick="location.href='index.html'">🔙 Atpakaļ uz menu</button>
+                <button class="btn btn-full" onclick="location.href='map.html?name=${encodeURIComponent(globalName)}'">🔄 Spēlēt vēlreiz</button>
+            </div>
+        </div>
+    `;
+}
+
+// Guide character dynamic text bubbles
+const guideBubbles = {
+    correct: [
+        "Lielisks darbs! Tu esi īsts Liepājas eksperts! 🎉",
+        "Pareizi! Tu zini Liepāju kā savu kabatu! 🗺️",
+        "Bravo! Tā turpini! 💪",
+        "Izcili! Tu esi pelnījis aplausus! 👏",
+        "Super! Nākamais izaicinājums gaida! 🌟"
+    ],
+    wrong: [
+        "Hmm, tā nav pareizā atbilde... Mēģini vēlreiz nākamreiz! 🤔",
+        "Nekas, arī kļūdīties ir cilvēcīgi! 😅",
+        "Ak, gandrīz! Bet nepadodies! 💭",
+        "Tā nebija... Bet galvenais ir mācīties! 📚",
+        "Ups! Nākamreiz noteikti sanāks! 🍀"
+    ]
+};
+
+function getRandomBubble(isCorrect) {
+    const arr = isCorrect ? guideBubbles.correct : guideBubbles.wrong;
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function finishGame(name, finalScore, time) { 
@@ -941,11 +1201,19 @@ function getThemeLabel(themeName) {
 }
 
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'default';
-    document.body.setAttribute('data-theme', savedTheme);
+    // Day/Night auto-cycle based on user's local time
+    const hour = new Date().getHours();
+    const savedTheme = localStorage.getItem('theme');
     
-    // Update active theme button when available
-    updateActiveThemeButton(savedTheme);
+    if (!savedTheme) {
+        // Auto-detect: 7AM-7PM = light, otherwise dark
+        const autoTheme = (hour >= 7 && hour < 19) ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', autoTheme);
+        updateActiveThemeButton(autoTheme);
+    } else {
+        document.body.setAttribute('data-theme', savedTheme);
+        updateActiveThemeButton(savedTheme);
+    }
 }
 
 function updateActiveThemeButton(savedTheme) {

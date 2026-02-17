@@ -52,14 +52,22 @@
                         if (count($parts) >= 3) {
                             $timeParts = explode(':', $parts[2]);
                             $timeInSeconds = 0;
-                            if (count($timeParts) === 3) {
+                            // Support both MM:SS and legacy HH:MM:SS formats
+                            if (count($timeParts) === 2) {
+                                $timeInSeconds = (int)$timeParts[0] * 60 + (int)$timeParts[1];
+                            } elseif (count($timeParts) === 3) {
                                 $timeInSeconds = (int)$timeParts[0] * 3600 + (int)$timeParts[1] * 60 + (int)$timeParts[2];
                             }
+                            
+                            // Normalize display to MM:SS
+                            $displayMinutes = floor($timeInSeconds / 60);
+                            $displaySeconds = $timeInSeconds % 60;
+                            $displayTime = sprintf("%02d:%02d", $displayMinutes, $displaySeconds);
                             
                             $results[] = [
                                 'name' => $parts[0],
                                 'score' => (int)$parts[1],
-                                'time' => $parts[2],
+                                'time' => $displayTime,
                                 'timeInSeconds' => $timeInSeconds
                             ];
                         }
