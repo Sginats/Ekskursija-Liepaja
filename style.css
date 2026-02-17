@@ -503,11 +503,19 @@ input[type=range] {
     border-radius: 12px;
 }
 
+/* Quiz form layout - stacked input + button */
+.quiz-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
 /* Game Input Fields - Make them match the design */
 #ans-in, #mini-input {
     width: 100%;
     padding: 15px 20px;
-    margin: 15px 0;
+    margin: 0;
     font-size: 18px;
     font-weight: 500;
     color: #ffaa00;
@@ -521,6 +529,7 @@ input[type=range] {
         0 2px 8px rgba(0, 0, 0, 0.2);
     text-align: center;
     letter-spacing: 1px;
+    display: block;
 }
 
 #ans-in::placeholder, #mini-input::placeholder {

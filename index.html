@@ -11,9 +11,6 @@
 </head>
 <body>
     <audio id="hover-sound" src="assets/skana/hover.mp3" preload="auto"></audio>
-<audio id="bg-music" loop>
-    <source src="assets/skana/music.mp3" type="audio/mpeg">
-</audio>
 
     <!-- Connection Status Indicator -->
     <div id="connection-status" class="connection-status" style="display: none;"></div>
@@ -76,23 +73,8 @@
             <h2 id="settings-title">Iestatījumi</h2>
             
             <h3 id="audio-title" class="section-title">Audio</h3>
-            <label id="vol-music">Mūzika</label>
-            <input type="range" min="0" max="100" value="30" oninput="setMusicVolume(this.value)">
-            
             <label id="vol-sfx">Skaņas efekti</label>
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
-
-            <h3 class="section-title">🎵 Spotify Playlist</h3>
-            <div class="spotify-player-minimal">
-                <button id="spotify-play-btn" class="spotify-btn-large" onclick="toggleSpotifyPlayback()">
-                    <span style="font-size: 24px; margin-right: 8px;">▶️</span>
-                    <span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>
-                </button>
-                <p class="spotify-info">Liepājas Ekskursija Playlist</p>
-                <div id="spotify-embed-container" style="display: none; margin-top: 15px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(29, 185, 84, 0.2);">
-                    <!-- Spotify embed will be inserted here -->
-                </div>
-            </div>
 
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
         </div>
@@ -158,8 +140,10 @@
                 </ul>
             </div>
 
-            <button id="btn-start-about" class="btn" onclick="toggleModal('about-modal'); toggleModal('mode-modal');" style="width: 100%; margin-top: 20px; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">SĀKT SPĒLI</button>
-            <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+                <button id="btn-start-about" class="btn" onclick="toggleModal('about-modal'); toggleModal('mode-modal');" style="width: 100%; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">SĀKT SPĒLI</button>
+                <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
+            </div>
         </div>
     </div>
 </body>

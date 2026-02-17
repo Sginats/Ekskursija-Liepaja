@@ -60,10 +60,6 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 
-// --- SPOTIFY CONFIGURATION ---
-// Spotify playlist URL for the game
-const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/2FJVi4yazmR6yUDFkOu9ep';
-
 // --- CONFIGURATION ---
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -214,31 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initialize background music with user interaction requirement
-    const music = document.getElementById('bg-music');
-    if (music) {
-        // Load saved volume or use default
-        const savedMusicVolume = localStorage.getItem('musicVolume');
-        music.volume = savedMusicVolume ? savedMusicVolume / 100 : 0.3;
-        const playAudio = () => {
-            music.play().catch(() => {});
-            document.removeEventListener('click', playAudio);
-        };
-        document.addEventListener('click', playAudio);
-    }
-
     // Load saved SFX volume
     const sfx = document.getElementById('hover-sound');
     if (sfx) {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
-    }
-
-    // Set volume slider values from localStorage
-    const musicSlider = document.querySelector('input[oninput*="setMusicVolume"]');
-    if (musicSlider) {
-        const savedMusicVolume = localStorage.getItem('musicVolume');
-        musicSlider.value = savedMusicVolume || 30;
     }
 
     const sfxSlider = document.querySelector('input[oninput*="setSFXVolume"]');
@@ -918,9 +894,13 @@ function showMiniGame(type) {
     
     if (type === 'Cietums') {
         const code = myRole === 'host' ? "4 2 _ _" : "_ _ 9 1";
-        content.innerHTML = `<h2>Cietums</h2><p>Kods: ${code}</p><input id="mini-input"><button class="btn" onclick="checkMini()">OK</button>`;
+        content.innerHTML = `<h2>Cietums</h2><p>Kods: ${code}</p>
+            <div class="quiz-form">
+                <input id="mini-input" placeholder="Ievadi kodu...">
+                <button class="btn close-btn" onclick="checkMini()">OK</button>
+            </div>`;
     } else {
-        content.innerHTML = `<h2>Gatavs?</h2><button class="btn" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
+        content.innerHTML = `<h2>Gatavs?</h2><button class="btn close-btn" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
     }
 }
 
@@ -942,7 +922,10 @@ async function showQuiz(type) {
 
     document.querySelector('.task-section').innerHTML = `
         <h2>${type}</h2><p>${q}</p>
-        <input id="ans-in" placeholder="Tava atbilde..." maxlength="50"><button class="btn" onclick="checkAns('${type}')">Iesniegt</button>
+        <div class="quiz-form">
+            <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
+            <button class="btn close-btn" onclick="checkAns('${type}')">Iesniegt</button>
+        </div>
     `;
 }
 
@@ -1008,57 +991,11 @@ function finishGame(name, finalScore, time) {
 }
 function toggleModal(id) { document.getElementById(id).style.display = document.getElementById(id).style.display==="block"?"none":"block"; }
 function exitGame() { window.close(); }
-function setMusicVolume(v) { 
-    const music = document.getElementById('bg-music');
-    if (music) {
-        music.volume = v/100;
-        localStorage.setItem('musicVolume', v);
-    }
-}
 function setSFXVolume(v) { 
     const sfx = document.getElementById('hover-sound');
     if (sfx) {
         sfx.volume = v/100;
         localStorage.setItem('sfxVolume', v);
-    }
-}
-
-// --- SPOTIFY PLAYER INTEGRATION ---
-
-/**
- * Toggle Spotify playlist playback
- * Creates a minimalistic embedded player on first play
- */
-function toggleSpotifyPlayback() {
-    const container = document.getElementById('spotify-embed-container');
-    const button = document.getElementById('spotify-play-btn');
-    
-    if (container.style.display === 'none') {
-        // First time - load the Spotify embed
-        if (!container.innerHTML.trim()) {
-            const playlistId = SPOTIFY_PLAYLIST_URL.split('/').pop().split('?')[0];
-            
-            container.innerHTML = `<iframe 
-                src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0" 
-                width="100%" 
-                height="152" 
-                frameBorder="0" 
-                allowfullscreen="" 
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                loading="lazy">
-            </iframe>`;
-            
-            // Pause local music when Spotify starts
-            const localMusic = document.getElementById('bg-music');
-            if (localMusic) {
-                localMusic.pause();
-            }
-        }
-        container.style.display = 'block';
-        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">⏸️</span><span style="font-size: 16px; font-weight: bold;">Paslēpt Spotify</span>';
-    } else {
-        container.style.display = 'none';
-        button.innerHTML = '<span style="font-size: 24px; margin-right: 8px;">▶️</span><span style="font-size: 16px; font-weight: bold;">Atskaņot Spotify</span>';
     }
 }
 
