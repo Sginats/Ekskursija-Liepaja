@@ -129,8 +129,8 @@ const CONNECTION_MODE_WS = 'websocket';
 let connectionMode = CONNECTION_MODE_PHP;
 
 const taskSequence = [
-    'RTU', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
-    'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
+    'Mols', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
+    'LSEZ', 'Cietums', 'RTU', 'Ezerkrasts', 'Parks'
 ];
 
 // Answer verification system — answers stored as pre-computed hashes only
@@ -756,10 +756,11 @@ function startActivity(type) {
     currentTask = type;
     _ac.activeTask = true;
     _ac.taskType = type;
-    
+
     if (type === 'Osta') showLocationThenStart(type, function() { startBoatGame(); });
     else if (type === 'RTU') showLocationThenStart(type, function() { startAntGame(); });
     else if (type === 'Teatris') showLocationThenStart(type, function() { startHistorySequence(); });
+    else if (type === 'Mols') showLocationThenStart(type, function() { startFishingGame(); });
     else if (myRole && myLobbyCode) showLocationThenStart(type, function() { showMiniGame(type); });
     else showLocationThenStart(type, function() { showQuiz(type); });
 }
@@ -1700,6 +1701,153 @@ function showNotification(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
+// Fishing mini-game
+const FISHING_CONFIG = {
+    TENSION_INCREASE: 0.6,
+    TENSION_DECREASE: 0.4,
+    START_DISTANCE: 15.00,
+    PROGRESS_DECAY: 0.005,
+    DEADLINE_THRESHOLD: 80,
+    FAIL_TIME_MAX: 1.5
+};
+
+let fishingActive = false;
+let tension = 0;
+let distance = FISHING_CONFIG.START_DISTANCE;
+let failTimer = 0;
+let isHolding = false;
+
+function startFishingGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <div id="fishing-container">
+            <canvas id="fishingCanvas" width="400" height="400"></canvas>
+            <div id="fish-btn">HOLD!</div>
+        </div>
+    `;
+
+    initFishingLogic();
+}
+
+function initFishingLogic() {
+    fishingActive = true;
+    tension = 0;
+    distance = FISHING_CONFIG.START_DISTANCE;
+    
+    const btn = document.getElementById('fish-btn');
+    const canvas = document.getElementById('fishingCanvas');
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    btn.addEventListener('mousedown', () => isHolding = true);
+    window.addEventListener('mouseup', () => isHolding = false);
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); isHolding = true; });
+    btn.addEventListener('touchend', () => isHolding = false);
+
+    function gameLoop() {
+        if (!fishingActive) return;
+        if (isHolding) {
+            tension += FISHING_CONFIG.TENSION_INCREASE;
+            distance -= 0.05;
+        } else {
+            tension -= FISHING_CONFIG.TENSION_DECREASE;
+            distance += FISHING_CONFIG.PROGRESS_DECAY;
+        }
+
+        tension = Math.max(0, Math.min(tension, 100));
+        distance = Math.max(0, Math.min(distance, FISHING_CONFIG.START_DISTANCE));
+
+        if (tension >= FISHING_CONFIG.DEADLINE_THRESHOLD) {
+            failTimer += 0.016;
+            if (failTimer >= FISHING_CONFIG.FAIL_TIME_MAX || tension >= 100) return finishFishing(false);
+        } else {
+            failTimer = Math.max(0, failTimer - 0.01);
+        }
+
+        if (distance <= 0) return finishFishing(true);
+
+        draw(ctx, canvas);
+        requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
+}
+
+function draw(ctx, canvas) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "white";
+    ctx.font = "bold 28px Arial";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.fillText(`${distance.toFixed(2)} m`, 240, 200);
+    ctx.shadowBlur = 0;
+
+    const barX = 85, barY = 30, barW = 200, barH = 15;
+    
+    ctx.fillStyle = "#1a2a3a";
+    ctx.beginPath();
+    ctx.arc(barX - 10, barY + 7, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#44ff44";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(barX, barY, barW, barH);
+    
+    let grd = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grd.addColorStop(0, "#44ff44");
+    grd.addColorStop(0.8, "#ffaa00");
+    grd.addColorStop(1, "#ff4444");
+    
+    ctx.fillStyle = grd;
+    ctx.fillRect(barX, barY, (tension / 100) * barW, barH);
+
+    ctx.strokeStyle = "#8b4513";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(10, 400);
+    const curveOffset = isHolding ? (tension * 0.5) : 20; 
+    ctx.quadraticCurveTo(40, 200 - curveOffset, 190, 50); 
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.6)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(190, 50);
+    ctx.lineTo(280, 180);
+    ctx.stroke();
+    
+    if (tension > FISHING_CONFIG.DEADLINE_THRESHOLD) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${Math.abs(Math.sin(Date.now()/100))})`;
+        ctx.font = "bold 16px Arial";
+        ctx.fillText("UZMANĪBU!", barX + 50, barY - 10);
+    }
+}
+
+function finishFishing(success) {
+    fishingActive = false;
+    const container = document.querySelector('.task-section');
+    if (success) {
+        GameState.addScore(15);
+        container.innerHTML = `<h2>Zivs noķerta!</h2><button class="btn" onclick="closeFishingGame()">Turpināt</button>`;
+    } else {
+        container.innerHTML = `<h2>Aukla pārtrūka!</h2><button class="btn" onclick="startFishingGame()">Mēģināt vēlreiz</button>`;
+    }
+}
+
+function closeFishingGame() {
+    _ac.activeTask = false;
+    _ac.taskType = null;
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask();
+    updateMapState();
+}
+
+window.startFishingGame = startFishingGame;
+window.closeFishingGame = closeFishingGame;
 window.toggleModal = toggleModal;
 window.startSingleGame = startSingleGame;
 window.openLobby = openLobby;
