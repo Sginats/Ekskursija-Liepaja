@@ -1,19 +1,14 @@
 const WebSocket = require('ws');
-
-// Create WebSocket server with enhanced configuration
 const wss = new WebSocket.Server({ 
     port: 8080,
-    perMessageDeflate: false, // Disable compression for better performance on small messages
+    perMessageDeflate: false,
     clientTracking: true
 });
-
 const lobbies = {};
-
-// Heartbeat interval (checks if clients are alive)
 const HEARTBEAT_INTERVAL = 30000;
-const CLEANUP_INTERVAL = 600000; // 10 minutes
-const LOBBY_TIMEOUT = 3600000; // 1 hour
-const RECONNECT_GRACE_PERIOD = 30000; // 30 seconds grace period for page navigation
+const CLEANUP_INTERVAL = 600000;
+const LOBBY_TIMEOUT = 3600000;
+const RECONNECT_GRACE_PERIOD = 30000; 
 
 const heartbeatInterval = setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
@@ -25,8 +20,6 @@ const heartbeatInterval = setInterval(function ping() {
         ws.ping();
     });
 }, HEARTBEAT_INTERVAL);
-
-// Cleanup interval on server close
 wss.on('close', function close() {
     clearInterval(heartbeatInterval);
     console.log('WebSocket server closed, cleanup completed');
@@ -80,8 +73,6 @@ wss.on('connection', (ws, req) => {
                 lobbies[code].lastActive = Date.now();
                 lobbies[code].hostReady = false;
                 lobbies[code].guestReady = false;
-                
-                // Notify both players that guest joined - ask for ready confirmation
                 if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
                     lobbies[code].host.send(JSON.stringify({ type: 'guest_joined' }));
                 }
@@ -103,7 +94,6 @@ wss.on('connection', (ws, req) => {
                 lobbies[code].lastActive = Date.now();
 
                 if (lobbies[code].hostReady && lobbies[code].guestReady) {
-                    // Both ready - start the game
                     if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
                         lobbies[code].host.send(JSON.stringify({ type: 'start_game', role: 'host' }));
                     }
@@ -112,7 +102,6 @@ wss.on('connection', (ws, req) => {
                     }
                     console.log(`[READY] Both players ready in lobby ${code}. Starting game.`);
                 } else {
-                    // Notify the other player that this player is ready
                     const otherPlayer = role === 'host' ? lobbies[code].guest : lobbies[code].host;
                     if (otherPlayer && otherPlayer.readyState === WebSocket.OPEN) {
                         otherPlayer.send(JSON.stringify({ type: 'player_ready', readyRole: role }));
@@ -171,8 +160,6 @@ wss.on('connection', (ws, req) => {
                     if (lobbies[code].guest && lobbies[code].guest.readyState === WebSocket.OPEN) {
                         lobbies[code].guest.send(msg);
                     }
-                    
-                    // Reset
                     lobbies[code].hostDone = false;
                     lobbies[code].guestDone = false;
                     console.log(`[SYNC] Task synchronized in lobby ${code}`);
@@ -194,8 +181,6 @@ wss.on('connection', (ws, req) => {
 
     ws.on('close', (code, reason) => {
         console.log(`Client disconnected. Code: ${code}, Reason: ${reason}`);
-        
-        // Use grace period instead of immediate deletion to allow page navigation reconnects
         for (const lobbyCode in lobbies) {
             const lobby = lobbies[lobbyCode];
             if (lobby.host === ws) {
@@ -241,14 +226,12 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-// Cleanup: Delete lobbies older than 1 hour
 setInterval(() => {
     const now = Date.now();
     let cleaned = 0;
     
     for (const code in lobbies) {
         if (now - lobbies[code].lastActive > LOBBY_TIMEOUT) {
-            // Close connections gracefully
             if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
                 lobbies[code].host.close(1000, 'Lobby timeout');
             }
@@ -266,7 +249,6 @@ setInterval(() => {
     }
 }, CLEANUP_INTERVAL);
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM received, closing server...');
     wss.close(() => {

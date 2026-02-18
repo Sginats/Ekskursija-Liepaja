@@ -677,13 +677,22 @@ body.no-animations::after {
 }
 
 /* Leaderboard */
-
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 947px;
+    max-height: 400px;
+}
 .container p {
     color: #aaa; 
     margin-bottom: 20px; 
     font-style: italic;
 }
-
+.btnLead{
+    width: 100%;
+    max-width: 250px;
+}
 .tabulaLead{
     margin: 20px auto; 
     border-collapse: collapse; 
@@ -1149,6 +1158,7 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         padding: 15px 10px;
     }
 
+
 /* Tablet breakpoint */
 @media (min-width: 769px) and (max-width: 1024px) {
     .title {
@@ -1166,6 +1176,7 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         width: 100%;
         width: 280px;
     }
+    
 }
 
 /* Large screens */
@@ -1181,8 +1192,10 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     .btn {
         font-size: 20px;    
     }
+    
     .btnLead{
-        margin: 0 auto;
+        width: 100%;
+        max-width: 250px;
     }
 }
 

@@ -31,8 +31,6 @@
 </head>
 <body>
     <audio id="hover-sound" src="../../assets/skana/hover.mp3" preload="auto"></audio>
-
-    <!-- Connection Status Indicator -->
     <div id="connection-status" class="connection-status" style="display: none;"></div>
 
     <div class="container">
@@ -59,14 +57,12 @@
                         if (count($parts) >= 3) {
                             $timeParts = explode(':', $parts[2]);
                             $timeInSeconds = 0;
-                            // Support both MM:SS and legacy HH:MM:SS formats
                             if (count($timeParts) === 2) {
                                 $timeInSeconds = (int)$timeParts[0] * 60 + (int)$timeParts[1];
                             } elseif (count($timeParts) === 3) {
                                 $timeInSeconds = (int)$timeParts[0] * 3600 + (int)$timeParts[1] * 60 + (int)$timeParts[2];
                             }
-                            
-                            // Normalize display to MM:SS
+                        
                             $displayMinutes = floor($timeInSeconds / 60);
                             $displaySeconds = $timeInSeconds % 60;
                             $displayTime = sprintf("%02d:%02d", $displayMinutes, $displaySeconds);
@@ -79,8 +75,6 @@
                             ];
                         }
                     }
-
-                    // Output as JSON for JavaScript
                     echo "<script>const leaderboardData = " . json_encode($results) . ";</script>";
                 } else {
                     echo "<script>const leaderboardData = [];</script>";
@@ -92,16 +86,11 @@
     </div>
     <script>
         let currentSort = 'combo';
-        
-        // Calculate combo score (higher score + faster time = better)
+
         function calculateComboScore(entry) {
-            // Score component: 0-100 points
             const scoreComponent = entry.score;
-            // Time component: Assuming max reasonable game completion time is 60 minutes
-            // This value is based on typical game completion being 10-30 minutes
             const maxTime = 3600;
             const timeComponent = Math.max(0, (maxTime - entry.timeInSeconds) / maxTime * 100);
-            // Combined score: 60% weight on points (knowledge), 40% weight on time (efficiency)
             return (scoreComponent * 0.6) + (timeComponent * 0.4);
         }
         
@@ -180,8 +169,6 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         }
-        
-        // Initialize with combo sort
         sortByCombo();
     </script>
 </body>

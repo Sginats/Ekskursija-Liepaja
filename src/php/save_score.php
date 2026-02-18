@@ -24,58 +24,38 @@ if ($name === null) {
 }
 
 if ($name !== null && $score !== null) {
-    // Anti-cheat: require integrity token (format: hash-nonce)
     if (empty($token) || !preg_match('/^[a-z0-9]+-[a-z0-9]+$/', $token)) {
         echo "Error: Nav derīga spēles sesija";
         exit;
     }
-    
-    // Anti-cheat: require 10 completed tasks
     if ($tasks < 10) {
         echo "Error: Spēle nav pabeigta";
         exit;
     }
-
-    // Anti-cheat: flag submissions with violations
     $flagged = ($violations > 3);
-
-    // Validate and sanitize name
     $name = preg_replace('/[^a-zA-Z0-9āčēģīķļņšūž\s]/u', '', $name);
     $name = substr($name, 0, 8);
     $name = htmlspecialchars($name);
     if ($name == "") $name = "Nezinams";
-    
-    // Validate score range
     $score = intval($score);
-    if ($score > 100) $score = 100; // Max 10 questions × 10 points
-    if ($score < -50) $score = -50; // Minimum possible score
-    
-    // Validate time format (MM:SS) and minimum time
+    if ($score > 100) $score = 100;
+    if ($score < -50) $score = -50;
     $time = htmlspecialchars($time ? $time : '00:00');
     $timeInSeconds = 0;
-    
-    // Support both MM:SS and HH:MM:SS formats
     $timeParts = explode(':', $time);
     if (count($timeParts) === 2) {
         $timeInSeconds = (int)$timeParts[0] * 60 + (int)$timeParts[1];
     } elseif (count($timeParts) === 3) {
         $timeInSeconds = (int)$timeParts[0] * 3600 + (int)$timeParts[1] * 60 + (int)$timeParts[2];
     }
-    
-    // Minimum time validation: 10 tasks × ~3 seconds minimum per task = 30 seconds
-    // This also covers negative and zero times
     $MIN_GAME_TIME = 30;
     if ($timeInSeconds < $MIN_GAME_TIME) {
         echo "Error: Laiks ir pārāk īss, lai būtu reāls (minimums: {$MIN_GAME_TIME}s)";
         exit;
     }
-    
-    // Normalize time to MM:SS format
     $normalizedMinutes = floor($timeInSeconds / 60);
     $normalizedSeconds = $timeInSeconds % 60;
     $time = sprintf("%02d:%02d", $normalizedMinutes, $normalizedSeconds);
-
-    // If flagged for cheating, add marker
     if ($flagged) {
         $name = $name . "*";
     }

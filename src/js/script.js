@@ -48,7 +48,6 @@ const GameState = (function() {
     };
 })();
 
-// Anti-cheat: all state variables are inside the IIFE closure (not on global scope)
 const _ac = (function() {
     let activeTask = false;
     let taskType = null;
@@ -165,8 +164,6 @@ function _generateScoreToken(score, time, completedTasks) {
     return Math.abs(hash).toString(36) + '-' + _sessionNonce;
 }
 
-// Multiple questions per location – random selection each playthrough (P5)
-// Answers stored as pre-computed encoded values — no plaintext in source
 const questionsPool = {
     'RTU': [
         { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "7d505044", fact: "RTU Liepājas akadēmija dibināta 1954. gadā!" },
@@ -220,7 +217,6 @@ const questionsPool = {
     ]
 };
 
-// Select one random question per location for this session
 const questions = {};
 for (const loc in questionsPool) {
     const pool = questionsPool[loc];
@@ -277,11 +273,7 @@ const locationInfo = {
 document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
     startTime = Date.now();
-    
-    // Initialize theme
     initTheme();
-    
-    // Initialize animated triangle background
     initTriangleBackground();
     
     const pathname = window.location.pathname;
@@ -315,15 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
             p.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
         });
     }
-
-    // Load saved SFX volume
     const sfx = document.getElementById('hover-sound');
     if (sfx) {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
     }
-
-    // Set volume slider values from localStorage
     const musicSlider = document.querySelector('input[oninput*="setMusicVolume"]');
     if (musicSlider) {
         const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -335,8 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfxSlider.value = savedSFXVolume || 50;
     }
-
-    // Initialize cursor trail effect
     initAnimationToggle();
     if (animationsEnabled) {
         initCursorTrail();
@@ -361,8 +347,6 @@ async function initSmartConnection() {
             connectionMode = CONNECTION_MODE_WS;
             updateConnectionStatus('connected');
             showNotification('WebSocket detected', 'success', 2000);
-            
-            // If we're on map.html with multiplayer params, rejoin the lobby
             if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
                 console.log(`Rejoining lobby ${myLobbyCode} as ${myRole}`);
@@ -405,7 +389,6 @@ function tryWebSocketConnection() {
             
             ws.onclose = () => {
                 if (connectionMode === CONNECTION_MODE_WS) {
-                    // Only try to reconnect if we were using WebSocket mode
                     console.log("WebSocket disconnected, attempting reconnection...");
                     setTimeout(() => {
                         if (connectionMode === CONNECTION_MODE_WS) {
@@ -442,7 +425,6 @@ function handleWebSocketMessage(data) {
         setTimeout(() => { toggleModal('lobby-modal'); }, 100);
     }
     else if (data.type === 'guest_joined') {
-        // Host receives this when guest joins - show ready prompt
         myRole = 'host';
         const waitEl = document.getElementById('lobby-wait');
         if (waitEl) {
@@ -450,7 +432,6 @@ function handleWebSocketMessage(data) {
         }
     }
     else if (data.type === 'joined_lobby') {
-        // Guest receives this - show ready prompt in lobby modal
         myRole = 'guest';
         myLobbyCode = data.code;
         toggleModal('mode-modal');
@@ -465,7 +446,6 @@ function handleWebSocketMessage(data) {
         }, 100);
     }
     else if (data.type === 'player_ready') {
-        // Other player is ready
         const statusEl = document.getElementById('lobby-ready-status');
         if (statusEl) statusEl.innerText = 'Otrs spēlētājs ir gatavs!';
     }
@@ -503,20 +483,18 @@ const wsBaseReconnectDelay = 1000;
 let wsReconnectTimeout = null;
 
 function connectWebSocket() {
-    // Prevent multiple simultaneous connection attempts
     if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
         return;
     }
 
     try {
-        // Use environment-aware WebSocket URL
         const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
         
         ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
             console.log("WebSocket savienots!");
-            wsReconnectAttempts = 0; // Reset reconnection counter
+            wsReconnectAttempts = 0;
             updateConnectionStatus('connected');
         };
         
@@ -537,8 +515,6 @@ function connectWebSocket() {
         ws.onclose = (event) => {
             console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
             updateConnectionStatus('disconnected');
-            
-            // Attempt reconnection with exponential backoff
             if (wsReconnectAttempts < wsMaxReconnectAttempts) {
                 const delay = wsBaseReconnectDelay * Math.pow(2, wsReconnectAttempts);
                 wsReconnectAttempts++;
@@ -604,8 +580,6 @@ function createLobbyPHP() {
                 if (lobbyCodeEl) lobbyCodeEl.innerText = myLobbyCode;
                 toggleModal('mode-modal');
                 setTimeout(() => { toggleModal('lobby-modal'); }, 100);
-                
-                // Start polling for guest to join
                 startLobbyPolling();
             }
         })
@@ -672,7 +646,6 @@ function notifyPartnerPHP(role, code) {
     fetch(`src/php/lobby.php?action=update_game&code=${code}&role=${role}`)
         .then(response => response.json())
         .then(() => {
-            // Start polling to check if both players are done
             checkBothPlayersDonePHP(code);
         })
         .catch(error => console.error('Error notifying partner:', error));
@@ -687,8 +660,6 @@ function checkBothPlayersDonePHP(code) {
                     clearInterval(checkInterval);
                     const statusEl = document.getElementById('partner-status');
                     if (statusEl) statusEl.innerText = "Partneris gatavs!";
-                    
-                    // Reset for next task
                     fetch(`src/php/lobby.php?action=reset_task&code=${code}`)
                         .then(() => {
                             setTimeout(() => { showQuiz(currentTask); }, 1000);
@@ -1341,7 +1312,6 @@ function showEndGame() {
 
 let _endGameShown = false;
 function showEndGameScreen(finalScore, formattedTime) {
-    // Anti-cheat: verify game legitimacy
     if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS || _endGameShown) {
         _ac.addViolation();
         showNotification('Aizdomīga darbība!', 'error', 3000);
