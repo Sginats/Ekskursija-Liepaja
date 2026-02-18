@@ -1708,7 +1708,14 @@ const FISHING_CONFIG = {
     START_DISTANCE: 15.00,
     PROGRESS_DECAY: 0.005,
     DEADLINE_THRESHOLD: 80,
-    FAIL_TIME_MAX: 1.5
+    FAIL_TIME_MAX: 1.5,
+    FISH_PULL_CHANCE: 0.015,
+    FISH_PULL_STRENGTH: 0.5,
+    EXCELLENT_TIME: 10,
+    GOOD_TIME: 20,
+    EXCELLENT_POINTS: 15,
+    GOOD_POINTS: 10,
+    NORMAL_POINTS: 5
 };
 
 let fishingActive = false;
@@ -1716,24 +1723,68 @@ let tension = 0;
 let distance = FISHING_CONFIG.START_DISTANCE;
 let failTimer = 0;
 let isHolding = false;
+let fishingStartTime = 0;
+let fishPullTimer = 0;
+let waveOffset = 0;
+
+function handleFishingKeyDown(e) {
+    if (!fishingActive) return;
+    if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        isHolding = true;
+    }
+}
+
+function handleFishingKeyUp(e) {
+    if (e.code === 'Space' || e.key === ' ') {
+        isHolding = false;
+    }
+}
+
+function handleFishingMouseUp() {
+    isHolding = false;
+}
+
+function cleanupFishingListeners() {
+    document.removeEventListener('keydown', handleFishingKeyDown);
+    document.removeEventListener('keyup', handleFishingKeyUp);
+    window.removeEventListener('mouseup', handleFishingMouseUp);
+}
 
 function startFishingGame() {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const instruction = isTouchDevice
+        ? 'Turi pogu nospiestu, lai pietuvinātu zivi! Nepārvelc auklu!'
+        : 'Turi SPACE vai pogu nospiestu, lai pietuvinātu zivi! Nepārvelc auklu!';
+
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <div id="fishing-container">
-            <canvas id="fishingCanvas" width="400" height="400"></canvas>
-            <div id="fish-btn">HOLD!</div>
-        </div>
+        <h2>🎣 Makšķerēšana</h2>
+        <p>${instruction}</p>
+        <p style="font-size: 13px; opacity: 0.7;">Sprieguma josla rāda auklas stāvokli — ja tā kļūst sarkana, aukla var pārtrūkt!</p>
+        <button class="btn btn-full" onclick="initFishingLogic()">SĀKT</button>
     `;
-
-    initFishingLogic();
 }
 
 function initFishingLogic() {
     fishingActive = true;
     tension = 0;
     distance = FISHING_CONFIG.START_DISTANCE;
-    
+    failTimer = 0;
+    isHolding = false;
+    fishPullTimer = 0;
+    waveOffset = 0;
+    fishingStartTime = Date.now();
+
+    cleanupFishingListeners();
+
+    document.querySelector('.task-section').innerHTML = `
+        <div id="fishing-container">
+            <canvas id="fishingCanvas" width="400" height="400"></canvas>
+            <div id="fish-btn">🎣</div>
+        </div>
+    `;
+
     const btn = document.getElementById('fish-btn');
     const canvas = document.getElementById('fishingCanvas');
     const ctx = canvas.getContext('2d');
@@ -1742,18 +1793,27 @@ function initFishingLogic() {
     canvas.height = rect.height;
 
     btn.addEventListener('mousedown', () => isHolding = true);
-    window.addEventListener('mouseup', () => isHolding = false);
+    window.addEventListener('mouseup', handleFishingMouseUp);
     btn.addEventListener('touchstart', (e) => { e.preventDefault(); isHolding = true; });
     btn.addEventListener('touchend', () => isHolding = false);
+    document.addEventListener('keydown', handleFishingKeyDown);
+    document.addEventListener('keyup', handleFishingKeyUp);
 
     function gameLoop() {
         if (!fishingActive) return;
+
+        if (Math.random() < FISHING_CONFIG.FISH_PULL_CHANCE) {
+            fishPullTimer = 15;
+        }
+        const fishPulling = fishPullTimer > 0;
+        if (fishPullTimer > 0) fishPullTimer--;
+
         if (isHolding) {
-            tension += FISHING_CONFIG.TENSION_INCREASE;
+            tension += FISHING_CONFIG.TENSION_INCREASE + (fishPulling ? FISHING_CONFIG.FISH_PULL_STRENGTH : 0);
             distance -= 0.05;
         } else {
             tension -= FISHING_CONFIG.TENSION_DECREASE;
-            distance += FISHING_CONFIG.PROGRESS_DECAY;
+            distance += FISHING_CONFIG.PROGRESS_DECAY + (fishPulling ? 0.02 : 0);
         }
 
         tension = Math.max(0, Math.min(tension, 100));
@@ -1768,83 +1828,240 @@ function initFishingLogic() {
 
         if (distance <= 0) return finishFishing(true);
 
-        draw(ctx, canvas);
+        waveOffset += 0.03;
+        drawFishing(ctx, canvas, fishPulling);
         requestAnimationFrame(gameLoop);
     }
     gameLoop();
 }
 
-function draw(ctx, canvas) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawFishing(ctx, canvas, fishPulling) {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
 
-    ctx.fillStyle = "white";
-    ctx.font = "bold 28px Arial";
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.fillText(`${distance.toFixed(2)} m`, 240, 200);
-    ctx.shadowBlur = 0;
-
-    const barX = 85, barY = 30, barW = 200, barH = 15;
-    
-    ctx.fillStyle = "#1a2a3a";
+    // Water waves
+    const waterY = H * 0.45;
+    ctx.fillStyle = 'rgba(30, 80, 140, 0.3)';
     ctx.beginPath();
-    ctx.arc(barX - 10, barY + 7, 20, 0, Math.PI * 2);
+    ctx.moveTo(0, waterY);
+    for (let x = 0; x <= W; x += 5) {
+        ctx.lineTo(x, waterY + Math.sin(x * 0.02 + waveOffset) * 6 + Math.sin(x * 0.05 + waveOffset * 1.5) * 3);
+    }
+    ctx.lineTo(W, H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#44ff44";
-    ctx.lineWidth = 2;
-    ctx.stroke();
 
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.fillRect(barX, barY, barW, barH);
-    
-    let grd = ctx.createLinearGradient(barX, 0, barX + barW, 0);
-    grd.addColorStop(0, "#44ff44");
-    grd.addColorStop(0.8, "#ffaa00");
-    grd.addColorStop(1, "#ff4444");
-    
-    ctx.fillStyle = grd;
-    ctx.fillRect(barX, barY, (tension / 100) * barW, barH);
-
-    ctx.strokeStyle = "#8b4513";
-    ctx.lineWidth = 6;
+    ctx.fillStyle = 'rgba(20, 60, 120, 0.2)';
     ctx.beginPath();
-    ctx.moveTo(10, 400);
-    const curveOffset = isHolding ? (tension * 0.5) : 20; 
-    ctx.quadraticCurveTo(40, 200 - curveOffset, 190, 50); 
+    ctx.moveTo(0, waterY + 15);
+    for (let x = 0; x <= W; x += 5) {
+        ctx.lineTo(x, waterY + 15 + Math.sin(x * 0.03 + waveOffset * 0.7 + 2) * 5);
+    }
+    ctx.lineTo(W, H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Fishing rod
+    ctx.strokeStyle = '#6b3a1f';
+    ctx.lineWidth = Math.min(6, W * 0.015);
+    ctx.beginPath();
+    ctx.moveTo(W * 0.03, H * 0.95);
+    const curveOffset = isHolding ? (tension * 0.4) : 15;
+    const tipX = W * 0.45;
+    const tipY = H * 0.1;
+    ctx.quadraticCurveTo(W * 0.1, H * 0.5 - curveOffset, tipX, tipY);
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(255,255,255,0.6)";
+    // Fishing line
+    const progress = 1 - (distance / FISHING_CONFIG.START_DISTANCE);
+    const bobberX = tipX + (W * 0.55 - tipX) * (0.3 + progress * 0.5);
+    const bobberY = waterY + 5 + Math.sin(waveOffset * 2) * 3;
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(190, 50);
-    ctx.lineTo(280, 180);
+    ctx.moveTo(tipX, tipY);
+    ctx.quadraticCurveTo(bobberX, tipY + (bobberY - tipY) * 0.3, bobberX, bobberY);
     ctx.stroke();
-    
-    if (tension > FISHING_CONFIG.DEADLINE_THRESHOLD) {
-        ctx.fillStyle = `rgba(255, 0, 0, ${Math.abs(Math.sin(Date.now()/100))})`;
-        ctx.font = "bold 16px Arial";
-        ctx.fillText("UZMANĪBU!", barX + 50, barY - 10);
+
+    // Bobber
+    ctx.fillStyle = '#ff3333';
+    ctx.beginPath();
+    ctx.arc(bobberX, bobberY - 4, Math.min(6, W * 0.015), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(bobberX, bobberY + 2, Math.min(5, W * 0.012), 0, Math.PI * 2);
+    ctx.fill();
+
+    // Fish silhouette
+    const fishDist = distance / FISHING_CONFIG.START_DISTANCE;
+    const fishX = bobberX + fishDist * W * 0.3;
+    const fishY = waterY + 30 + Math.sin(waveOffset * 3 + 1) * 8;
+    const fishSize = Math.min(18, W * 0.04);
+
+    ctx.fillStyle = fishPulling ? 'rgba(255, 180, 50, 0.9)' : 'rgba(180, 200, 220, 0.7)';
+    ctx.beginPath();
+    ctx.ellipse(fishX, fishY, fishSize, fishSize * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Tail
+    ctx.beginPath();
+    ctx.moveTo(fishX + fishSize, fishY);
+    ctx.lineTo(fishX + fishSize + fishSize * 0.5, fishY - fishSize * 0.4);
+    ctx.lineTo(fishX + fishSize + fishSize * 0.5, fishY + fishSize * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    // Eye
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(fishX - fishSize * 0.4, fishY - fishSize * 0.1, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Fish pull indicator
+    if (fishPulling) {
+        ctx.fillStyle = `rgba(255, 170, 0, ${0.5 + Math.sin(Date.now() / 80) * 0.5})`;
+        ctx.font = `bold ${Math.min(14, W * 0.035)}px Poppins, Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText('🐟 Zivs velk!', W * 0.5, waterY - 15);
+        ctx.textAlign = 'start';
     }
+
+    // Tension bar
+    const barW = Math.min(200, W * 0.5);
+    const barH = Math.min(18, H * 0.045);
+    const barX = (W - barW) / 2;
+    const barY = 15;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    roundRect(ctx, barX - 2, barY - 2, barW + 4, barH + 4, 6);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    roundRect(ctx, barX, barY, barW, barH, 4);
+    ctx.fill();
+
+    const tensionW = (tension / 100) * barW;
+    let grd = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grd.addColorStop(0, '#44ff44');
+    grd.addColorStop(0.6, '#ffaa00');
+    grd.addColorStop(1, '#ff4444');
+    ctx.fillStyle = grd;
+    roundRect(ctx, barX, barY, tensionW, barH, 4);
+    ctx.fill();
+
+    // Tension label
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = `bold ${Math.min(11, W * 0.028)}px Poppins, Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Spriegums', W * 0.5, barY + barH + 14);
+
+    // Warning text
+    if (tension > FISHING_CONFIG.DEADLINE_THRESHOLD) {
+        ctx.fillStyle = `rgba(255, 50, 50, ${0.5 + Math.abs(Math.sin(Date.now() / 100)) * 0.5})`;
+        ctx.font = `bold ${Math.min(16, W * 0.04)}px Poppins, Arial`;
+        ctx.fillText('⚠ UZMANĪBU!', W * 0.5, barY + barH + 32);
+    }
+
+    // Distance display
+    const distBarW = Math.min(160, W * 0.4);
+    const distBarH = Math.min(10, H * 0.025);
+    const distBarX = (W - distBarW) / 2;
+    const distBarY = H - 50;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    roundRect(ctx, distBarX - 1, distBarY - 1, distBarW + 2, distBarH + 2, 4);
+    ctx.fill();
+
+    const distProgress = 1 - (distance / FISHING_CONFIG.START_DISTANCE);
+    let distGrd = ctx.createLinearGradient(distBarX, 0, distBarX + distBarW, 0);
+    distGrd.addColorStop(0, '#4488ff');
+    distGrd.addColorStop(1, '#44ffaa');
+    ctx.fillStyle = distGrd;
+    roundRect(ctx, distBarX, distBarY, distProgress * distBarW, distBarH, 3);
+    ctx.fill();
+
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${Math.min(20, W * 0.05)}px Poppins, Arial`;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.fillText(`${distance.toFixed(2)} m`, W * 0.5, distBarY - 10);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = `${Math.min(11, W * 0.028)}px Poppins, Arial`;
+    ctx.fillText('Attālums līdz zivij', W * 0.5, distBarY + distBarH + 16);
+    ctx.textAlign = 'start';
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    if (w < 0) w = 0;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
 }
 
 function finishFishing(success) {
     fishingActive = false;
+    cleanupFishingListeners();
     const container = document.querySelector('.task-section');
+    const elapsed = ((Date.now() - fishingStartTime) / 1000).toFixed(1);
+
     if (success) {
-        GameState.addScore(15);
-        container.innerHTML = `<h2>Zivs noķerta!</h2><button class="btn" onclick="closeFishingGame()">Turpināt</button>`;
+        let points = FISHING_CONFIG.NORMAL_POINTS;
+        if (elapsed < FISHING_CONFIG.EXCELLENT_TIME) {
+            points = FISHING_CONFIG.EXCELLENT_POINTS;
+        } else if (elapsed < FISHING_CONFIG.GOOD_TIME) {
+            points = FISHING_CONFIG.GOOD_POINTS;
+        }
+        const newScore = GameState.addScore(points);
+        document.getElementById('score-display').innerText = 'Punkti: ' + newScore;
+
+        container.innerHTML = `
+            <div style="text-align:center;">
+                <h2 style="color:#44ff88;">🐟 Zivs noķerta!</h2>
+                <p>Laiks: ${elapsed} s</p>
+                <p style="color:#ffaa00; font-size:20px; font-weight:bold;">+${points} punkti!</p>
+                <button class="btn btn-full" onclick="closeFishingGame()">Turpināt</button>
+            </div>`;
     } else {
-        container.innerHTML = `<h2>Aukla pārtrūka!</h2><button class="btn" onclick="startFishingGame()">Mēģināt vēlreiz</button>`;
+        container.innerHTML = `
+            <div style="text-align:center;">
+                <h2 style="color:#ff6666;">💥 Aukla pārtrūka!</h2>
+                <p style="opacity:0.7;">Centies kontrolēt spriegumu — netur pogu pārāk ilgi!</p>
+                <button class="btn btn-full" onclick="startFishingGame()">Mēģināt vēlreiz</button>
+            </div>`;
     }
 }
 
 function closeFishingGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'Mols') {
+        _ac.addViolation();
+        showNotification('Aizdomīga darbība!', 'error', 3000);
+        return;
+    }
     _ac.activeTask = false;
     _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Mols', time: Date.now() });
+    fishingActive = false;
+    cleanupFishingListeners();
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
+
+window.initFishingLogic = initFishingLogic;
 
 window.startFishingGame = startFishingGame;
 window.closeFishingGame = closeFishingGame;

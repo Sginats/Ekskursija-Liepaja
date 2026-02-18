@@ -1735,17 +1735,18 @@ body[data-theme="blue"] #tabulaiTR {
 #fishing-container {
     position: relative;
     width: 100%;
-    height: 350px; 
-    max-height: 60vh;
-    background: linear-gradient(to bottom, #87ceeb, #4682b4);
-    border-radius: 12px;
+    height: 380px;
+    max-height: 65vh;
+    background: linear-gradient(to bottom, #5fb8e0 0%, #3a8fbf 40%, #1a5a8a 70%, #0e3d5e 100%);
+    border-radius: 14px;
     overflow: hidden;
     cursor: crosshair;
     margin: 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 40px rgba(0, 0, 0, 0.1);
 }
 
 #fishingCanvas {
@@ -1758,20 +1759,41 @@ body[data-theme="blue"] #tabulaiTR {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    background: #ffd700;
-    border: 4px solid #fff;
-    color: #d44;
+    background: radial-gradient(circle at 35% 35%, #ffe866, #ffd700, #e6b800);
+    border: 4px solid rgba(255, 255, 255, 0.9);
+    color: #333;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 28px;
     z-index: 10;
     user-select: none;
     touch-action: none;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+#fish-btn:active {
+    transform: scale(0.88);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.4);
+    border-color: #ffaa00;
+}
+
+@media (max-width: 480px) {
+    #fishing-container {
+        height: 300px;
+        max-height: 55vh;
+    }
+    #fish-btn {
+        width: 70px;
+        height: 70px;
+        font-size: 24px;
+        bottom: 15px;
+        right: 15px;
+    }
 }
