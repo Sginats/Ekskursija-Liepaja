@@ -2,8 +2,6 @@
 
 Interaktīva tīmekļa spēle, kuras mērķis ir iepazīstināt lietotājus ar Liepājas kultūrvēsturiskajām vietām, uzņēmumiem un izglītības iespējām, pildot dažādus uzdevumus un sacenšoties par labākajiem rezultātiem.
 
-![title](https://i.ytimg.com/vi/pTI00QxgScI/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLBMQu4OX7XOQC2yuU-ApsFXK1TvHA)
-
 ---
 
 ## 📝 Par projektu
@@ -33,34 +31,39 @@ Interaktīva tīmekļa spēle, kuras mērķis ir iepazīstināt lietotājus ar L
     * 🔴 **Sarkans:** Industrija un osta
 
 ### 🎯 Uzdevumu sistēma
-* Katrai vietai ir unikāls interaktīvs uzdevums
+* Katrai vietai ir unikāls interaktīvs uzdevums (viktorīnas, mini-spēles, secības uzdevumi)
 * Punktu skaitīšana:
-    * ✅ Pareiza atbilde: **+10 punkti**
-    * ❌ Nepareiza atbilde: **-5 punkti**
-* Faktu uzrādīšana pēc atbildes sniegšanas
+    * ✅ Pareiza atbilde pirmajā mēģinājumā: **+10 punkti**
+    * ⚠️ Pareiza atbilde pēc 1 nepareizas: **+5 punkti**
+    * ❌ 2 nepareizas atbildes: **0 punkti**, atbilde tiek parādīta
+* Teorija par vietu tiek parādīta pirms uzdevuma — atbildes jāatrod pašam
 * Secīga vietu izpilde (jāievēro noteikta kārta)
 
 ### 📊 Rezultātu sistēma
-* **Top 10 rezultātu tabula** ar ātrākajiem spēlētājiem
+* **Top 10 rezultātu tabula** ar labākajiem spēlētājiem
+* Kombinēts vērtējums: punkti + laiks
 * Laika uzskaite spēles laikā
 * Rezultātu saglabāšana servera pusē (PHP + leaderboard.txt)
-* Rezultāti kārtoti pēc pabeigšanas laika
 
 ### 🎨 Lietotāja saskarne
-* Profesionāls, tumšs dizains ar zelta akcentiem
-* Animētas modālās lodziņi un pogās
-* Custom paziņojumu sistēma (nevis browser alerts)
-* Smooth hover efekti un transitions
-* Responsive dizains
+* Animēts trīsstūru fona efekts ar 3D perspektīvu
+* 4 krāsu tēmas (Noklusējuma, Violeta, Tumši sarkana, Zila)
+* Virsraksts un akcenti mainās atbilstoši izvēlētajai tēmai
+* Poppins fonts visam tekstam
+* Animētas modālās lodziņi un pogas
+* Custom paziņojumu sistēma
+* Responsive dizains visiem ekrāna izmēriem
 
 ### ⚙️ Iestatījumi
 * Mūzikas skaļuma kontrole
 * Skaņas efektu skaļuma kontrole
-* Valodu maiņa (Latviešu/Angļu) ar DeepL API integrāciju
+* 4 krāsu tēmas
+* Animāciju ieslēgšana/izslēgšana
 * Iestatījumi pieejami gan galvenajā izvēlnē, gan spēles laikā
 
 ### 🔌 Real-time funkcionalitāte
 * WebSocket savienojums multiplayer režīmam
+* PHP polling kā fallback hostinga vidēm
 * Connection status indikators
 * Lobby sistēma ar unikāliem kodiem
 * Reāllaika spēlētāju sinhronizācija
@@ -73,6 +76,7 @@ Interaktīva tīmekļa spēle, kuras mērķis ir iepazīstināt lietotājus ar L
   * HTML5 - Semantiska lapas struktūra
   * CSS3 - Moderns dizains ar gradientiem, animācijām un pārejām
   * JavaScript (ES6+) - Spēles loģika, WebSocket komunikācija, DOM manipulācija
+  * Google Fonts (Poppins) - Tipografija
 
 * **Backend:**
   * PHP - Rezultātu saglabāšana un leaderboard API
@@ -80,8 +84,8 @@ Interaktīva tīmekļa spēle, kuras mērķis ir iepazīstināt lietotājus ar L
 
 * **Papildus:**
   * WebSocket - Reāllaika divvirzienu komunikācija
-  * DeepL API - Automātiska tulkošana
-  * LocalStorage - Lietotāja preferenču saglabāšana
+  * LocalStorage - Lietotāja preferenču saglabāšana (tēma, skaļums, animācijas)
+  * Bootstrap 5.3.2 - UI komponentu bāze
 
 ---
 
@@ -92,7 +96,7 @@ Ekskursija-Liepaja/
 ├── index.html              # Galvenā izvēlne
 ├── map.html                # Spēles karte
 ├── style.css               # Visi stili
-├── atteli/                 # Attēli (karte, fons, gids)
+├── atteli/                 # Attēli (karte, gids)
 ├── skana/                  # Audio faili (mūzika, skaņas)
 └── src/
     ├── js/
@@ -101,9 +105,11 @@ Ekskursija-Liepaja/
     ├── php/
     │   ├── leaderboard.php # Rezultātu tabula
     │   ├── save_score.php  # Rezultātu saglabāšana
-    │   └── translate.php   # Tulkošanas API
+    │   ├── lobby.php       # Multiplayer lobby backend
+    │   └── mini_backend.php # Mini-spēļu backend
     └── data/
-        └── leaderboard.txt # Rezultātu fails
+        ├── leaderboard.txt # Rezultātu fails
+        └── lobbies.json    # Aktīvo lobby stāvoklis
 ```
 
 ---
@@ -112,16 +118,18 @@ Ekskursija-Liepaja/
 
 ### ✅ Pilnībā implementēts
 * [x] Interaktīva karte ar tooltip sistēmu
-* [x] 10 apmeklējuma vietas ar unikāliem jautājumiem
-* [x] Punktu skaitīšana (+10/-5 sistēma)
+* [x] 10 apmeklējuma vietas ar unikāliem uzdevumiem
+* [x] Punktu skaitīšana (+10/+5/0 sistēma)
+* [x] Mini-spēles: laivas sacīkstes, kukaiņu ķeršana, vēstures secība
 * [x] "Par spēli" logs ar pilnu informāciju
-* [x] Iestatījumu logs (audio + valoda)
-* [x] Top 10 rezultātu tabula
-* [x] Rezultātu saglabāšana serverī
-* [x] Valodu atbalsts (LV/EN)
-* [x] Multiplayer režīms ar WebSocket
+* [x] Iestatījumu logs (audio, tēma, animācijas)
+* [x] Top 10 rezultātu tabula ar kombinēto vērtējumu
+* [x] Rezultātu saglabāšana serverī ar anti-cheat validāciju
+* [x] Multiplayer režīms ar WebSocket + PHP polling fallback
 * [x] Custom paziņojumu sistēma (bez browser alerts)
-* [x] Profesionāls UX/UI dizains
+* [x] 4 krāsu tēmas ar dinamisku virsrakstu
+* [x] Animēts 3D trīsstūru fona efekts
+* [x] Poppins fonts visam tekstam
 * [x] Animētas pārejas un efekti
 * [x] Connection status indikators
 * [x] Sākuma ekrāns ar autoriem
@@ -169,8 +177,6 @@ Ja vēlies ātrāku multiplayer lokāli:
    http://localhost:8000/index.html
    ```
 
-**Pilnu problēmu risinājumu skatīt [SETUP.md](SETUP.md) failā.**
-
 ---
 
 ## 📊 Multiplayer sistēma
@@ -185,12 +191,12 @@ Sistēma automātiski izvēlas labāko pieejamo variantu.
 
 ## 📚 Izmantotie resursi
 
-* **Karte:** OpenStreetMap
-* **Attēli:** 
-  * Fons: Freepik
+* **Karte:** OpenStreetMap (© OpenStreetMap contributors)
+* **Attēli:**
   * Kaija (Gids): Autoru oriģinālzīmējums
-* **Informācija:** liepaja.lv, rtu.lv
-* **Mūzika un skaņas:** Autoru izvēle
+* **Informācija:** liepaja.lv, rtu.lv, Liepājas muzejs, wikipedia.org
+* **Fonts:** Google Fonts (Poppins)
+* **Tehnoloģijas:** Bootstrap 5.3.2, Node.js, WebSocket
 
 ---
 

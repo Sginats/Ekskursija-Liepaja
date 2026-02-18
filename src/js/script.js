@@ -281,6 +281,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme
     initTheme();
     
+    // Initialize animated triangle background
+    initTriangleBackground();
+    
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
                           (myRole && myLobbyCode);
@@ -1215,7 +1218,6 @@ async function showQuiz(type) {
             <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
             <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
         </div>
-        <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
     `;
     setupQuizEnterKey(type);
 }
@@ -1253,7 +1255,6 @@ function showQuizForm(type) {
             <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
             <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
         </div>
-        <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
     `;
     setupQuizEnterKey(type);
 }
@@ -1300,7 +1301,6 @@ function checkAns(type) {
                     <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
                     <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt atkārtoti</button>
                 </div>
-                <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
             `;
             setupQuizEnterKey(type);
         }
@@ -1591,6 +1591,52 @@ function updateActiveThemeButton(savedTheme) {
             btn.classList.add('active');
         }
     });
+}
+
+function initTriangleBackground() {
+    const wrap = document.getElementById('bg-wrap');
+    if (!wrap) return;
+    
+    const total = 200;
+    const time = 10;
+    const styleEl = document.createElement('style');
+    let css = '';
+    
+    for (let i = 1; i <= total; i++) {
+        const size = Math.floor(Math.random() * 50) + 1;
+        const rotate = Math.floor(Math.random() * 360);
+        const hue = Math.floor(Math.random() * 360);
+        const endX = Math.floor(Math.random() * 1000);
+        const endY = Math.floor(Math.random() * 1000);
+        const delay = -(i * (time / total));
+        
+        const tri = document.createElement('div');
+        tri.className = 'tri';
+        tri.style.cssText = `
+            border-top: ${size}px solid hsla(${hue}, 100%, 50%, 1);
+            border-right: ${size}px solid transparent;
+            border-left: ${size}px solid transparent;
+            margin-left: -${size / 2}px;
+            margin-top: -${size / 2}px;
+            transform: rotate(${rotate}deg) translate3d(0,0,-1500px) scale(0);
+            animation: triAnim${i} ${time}s infinite linear;
+            animation-delay: ${delay}s;
+            opacity: 0;
+        `;
+        wrap.appendChild(tri);
+        
+        css += `
+            @keyframes triAnim${i} {
+                0% {
+                    opacity: 1;
+                    transform: rotate(${rotate * 1.5}deg) translate3d(${endX}px, ${endY}px, 1000px) scale(1);
+                }
+            }
+        `;
+    }
+    
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
 }
 
 function toggleModal(id) {
