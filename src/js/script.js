@@ -1,7 +1,6 @@
 (function() {
 'use strict';
 
-// Protected game state
 const GameState = (function() {
     let _score = 0;
     let _completedTasks = 0;
@@ -48,7 +47,6 @@ const GameState = (function() {
     };
 })();
 
-// Anti-cheat: all state variables are inside the IIFE closure (not on global scope)
 const _ac = (function() {
     let activeTask = false;
     let taskType = null;
@@ -68,7 +66,6 @@ const _ac = (function() {
 
 const TOTAL_TASKS = 10;
 
-// DevTools detection
 (function _detectDevTools() {
     const threshold = 160;
     const check = function() {
@@ -90,14 +87,12 @@ const TOTAL_TASKS = 10;
     window.addEventListener('resize', check);
 })();
 
-// Disable right-click context menu on game elements
 document.addEventListener('contextmenu', function(e) {
     if (e.target.closest('.modal-content, .map-area, .task-section, .quiz-form')) {
         e.preventDefault();
     }
 });
 
-// Suppress console methods to reduce info leaks
 (function() {
     const _noop = function() {};
     try {
@@ -116,9 +111,9 @@ let myRole = '';
 let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
+let quizWrongCount = 0;
 
 
-// Configuration
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const POLL_INTERVAL = 2000;
@@ -133,7 +128,6 @@ const taskSequence = [
     'LSEZ', 'Cietums', 'Mols', 'Ezerkrasts', 'Parks'
 ];
 
-// Answer verification system — answers stored as pre-computed hashes only
 const _k = [76,105,101,112,196,129,106,97];
 function _v(hex) {
     const b = [];
@@ -141,7 +135,6 @@ function _v(hex) {
     return new TextDecoder().decode(new Uint8Array(b.map((c, i) => c ^ _k[i % _k.length])));
 }
 
-// Anti-cheat: Session integrity token for score submission
 const _sessionNonce = (function() {
     const arr = new Uint32Array(2);
     if (window.crypto && window.crypto.getRandomValues) {
@@ -164,8 +157,6 @@ function _generateScoreToken(score, time, completedTasks) {
     return Math.abs(hash).toString(36) + '-' + _sessionNonce;
 }
 
-// Multiple questions per location – random selection each playthrough (P5)
-// Answers stored as pre-computed encoded values — no plaintext in source
 const questionsPool = {
     'RTU': [
         { q: "Kurā gadā dibināta Liepājas akadēmija?", _a: "7d505044", fact: "RTU Liepājas akadēmija dibināta 1954. gadā!" },
@@ -219,7 +210,6 @@ const questionsPool = {
     ]
 };
 
-// Select one random question per location for this session
 const questions = {};
 for (const loc in questionsPool) {
     const pool = questionsPool[loc];
@@ -269,15 +259,10 @@ const locationInfo = {
     }
 };
 
-// ============================================================================
-// INITIALIZATION & EVENT LISTENERS
-// ============================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
     startTime = Date.now();
     
-    // Initialize theme
     initTheme();
     
     const pathname = window.location.pathname;
@@ -312,14 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Load saved SFX volume
     const sfx = document.getElementById('hover-sound');
     if (sfx) {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
     }
 
-    // Set volume slider values from localStorage
     const musicSlider = document.querySelector('input[oninput*="setMusicVolume"]');
     if (musicSlider) {
         const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -332,14 +315,11 @@ document.addEventListener('DOMContentLoaded', () => {
         sfxSlider.value = savedSFXVolume || 50;
     }
 
-    // Initialize cursor trail effect
     initAnimationToggle();
     if (animationsEnabled) {
         initCursorTrail();
     }
 });
-
-// Connection manager
 
 async function initSmartConnection() {
     console.log("Initializing multiplayer connection...");
@@ -358,7 +338,6 @@ async function initSmartConnection() {
             updateConnectionStatus('connected');
             showNotification('WebSocket detected', 'success', 2000);
             
-            // If we're on map.html with multiplayer params, rejoin the lobby
             if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
                 console.log(`Rejoining lobby ${myLobbyCode} as ${myRole}`);
@@ -401,7 +380,6 @@ function tryWebSocketConnection() {
             
             ws.onclose = () => {
                 if (connectionMode === CONNECTION_MODE_WS) {
-                    // Only try to reconnect if we were using WebSocket mode
                     console.log("WebSocket disconnected, attempting reconnection...");
                     setTimeout(() => {
                         if (connectionMode === CONNECTION_MODE_WS) {
@@ -438,7 +416,6 @@ function handleWebSocketMessage(data) {
         setTimeout(() => { toggleModal('lobby-modal'); }, 100);
     }
     else if (data.type === 'guest_joined') {
-        // Host receives this when guest joins - show ready prompt
         myRole = 'host';
         const waitEl = document.getElementById('lobby-wait');
         if (waitEl) {
@@ -446,7 +423,6 @@ function handleWebSocketMessage(data) {
         }
     }
     else if (data.type === 'joined_lobby') {
-        // Guest receives this - show ready prompt in lobby modal
         myRole = 'guest';
         myLobbyCode = data.code;
         toggleModal('mode-modal');
@@ -461,7 +437,6 @@ function handleWebSocketMessage(data) {
         }, 100);
     }
     else if (data.type === 'player_ready') {
-        // Other player is ready
         const statusEl = document.getElementById('lobby-ready-status');
         if (statusEl) statusEl.innerText = 'Otrs spēlētājs ir gatavs!';
     }
@@ -491,7 +466,6 @@ function handleWebSocketMessage(data) {
     }
 }
 
-// Legacy WebSocket functions
 
 let wsReconnectAttempts = 0;
 const wsMaxReconnectAttempts = 5;
@@ -499,13 +473,11 @@ const wsBaseReconnectDelay = 1000;
 let wsReconnectTimeout = null;
 
 function connectWebSocket() {
-    // Prevent multiple simultaneous connection attempts
     if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
         return;
     }
 
     try {
-        // Use environment-aware WebSocket URL
         const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
         
         ws = new WebSocket(wsUrl);
@@ -534,7 +506,6 @@ function connectWebSocket() {
             console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
             updateConnectionStatus('disconnected');
             
-            // Attempt reconnection with exponential backoff
             if (wsReconnectAttempts < wsMaxReconnectAttempts) {
                 const delay = wsBaseReconnectDelay * Math.pow(2, wsReconnectAttempts);
                 wsReconnectAttempts++;
@@ -577,7 +548,6 @@ function updateConnectionStatus(status) {
     indicator.title = statusText[status] || '';
 }
 
-// PHP polling alternative
 
 let pollInterval = null;
 let phpPolling = false;
@@ -601,7 +571,6 @@ function createLobbyPHP() {
                 toggleModal('mode-modal');
                 setTimeout(() => { toggleModal('lobby-modal'); }, 100);
                 
-                // Start polling for guest to join
                 startLobbyPolling();
             }
         })
@@ -668,7 +637,6 @@ function notifyPartnerPHP(role, code) {
     fetch(`src/php/lobby.php?action=update_game&code=${code}&role=${role}`)
         .then(response => response.json())
         .then(() => {
-            // Start polling to check if both players are done
             checkBothPlayersDonePHP(code);
         })
         .catch(error => console.error('Error notifying partner:', error));
@@ -684,7 +652,6 @@ function checkBothPlayersDonePHP(code) {
                     const statusEl = document.getElementById('partner-status');
                     if (statusEl) statusEl.innerText = "Partneris gatavs!";
                     
-                    // Reset for next task
                     fetch(`src/php/lobby.php?action=reset_task&code=${code}`)
                         .then(() => {
                             setTimeout(() => { showQuiz(currentTask); }, 1000);
@@ -696,8 +663,6 @@ function checkBothPlayersDonePHP(code) {
     
     setTimeout(() => clearInterval(checkInterval), 30000);
 }
-
-// Menu functions
 
 function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
@@ -756,8 +721,6 @@ function joinGame() {
     }
 }
 
-// Game logic
-
 function updateMapState() {
     const points = document.querySelectorAll('.point');
     const completed = GameState.getCompleted();
@@ -806,8 +769,6 @@ function showLocationThenStart(type, callback) {
         callback();
     });
 }
-
-// Mini games & quiz
 
 const BOAT_RACE_CONFIG = {
     REQUIRED_PRESSES: 10,
@@ -989,10 +950,14 @@ function spawnAnt() {
     const field = document.getElementById('ant-field');
     if (!field) return;
     
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const antSize = isTouchDevice ? 44 : 28;
+    const moveInterval = isTouchDevice ? 1400 : 800;
+    
     const ant = document.createElement('div');
     ant.className = 'game-ant';
     ant.textContent = '🐛';
-    ant.style.cssText = `position: absolute; font-size: 28px; cursor: pointer; user-select: none; transition: all 0.3s ease; z-index: 10;`;
+    ant.style.cssText = `position: absolute; font-size: ${antSize}px; cursor: pointer; user-select: none; transition: all 0.3s ease; z-index: 10; padding: ${isTouchDevice ? '8px' : '0'};`;
     ant.style.left = Math.random() * 85 + '%';
     ant.style.top = Math.random() * 85 + '%';
     
@@ -1015,7 +980,7 @@ function spawnAnt() {
         if (!antGameActive || !ant.parentNode) { clearInterval(moveAnt); return; }
         ant.style.left = Math.random() * 85 + '%';
         ant.style.top = Math.random() * 85 + '%';
-    }, 800);
+    }, moveInterval);
     if (antsCaught > 2 && antGameActive) setTimeout(() => { if (antGameActive) spawnAnt(); }, 2000);
 }
 
@@ -1200,6 +1165,7 @@ function sendReady() {
 async function showQuiz(type) {
     document.getElementById('game-modal').style.display = "block";
     const task = questions[type];
+    quizWrongCount = 0;
     
     let q = task.q;
 
@@ -1209,7 +1175,47 @@ async function showQuiz(type) {
             <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
             <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
         </div>
+        <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
     `;
+    setupQuizEnterKey(type);
+}
+
+function setupQuizEnterKey(type) {
+    const input = document.getElementById('ans-in');
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); checkAns(type); }
+        });
+        input.focus();
+    }
+}
+
+function showTheory(type) {
+    const info = locationInfo[type];
+    if (!info) return;
+    document.querySelector('.task-section').innerHTML = `
+        <div class="location-info">
+            <h3>📍 ${info.name}</h3>
+            <p>${info.desc}</p>
+        </div>
+        <button class="btn" id="btn-back-to-quiz">Atpakaļ uz jautājumu →</button>
+    `;
+    document.getElementById('btn-back-to-quiz').addEventListener('click', function() {
+        showQuizForm(type);
+    });
+}
+
+function showQuizForm(type) {
+    const task = questions[type];
+    document.querySelector('.task-section').innerHTML = `
+        <h2>${type}</h2><p>${task.q}</p>
+        <div class="quiz-form">
+            <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
+            <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
+        </div>
+        <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
+    `;
+    setupQuizEnterKey(type);
 }
 
 function checkAns(type) {
@@ -1220,8 +1226,9 @@ function checkAns(type) {
     if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
     
     if(isCorrect) {
-        GameState.addScore(10);
-        showNotification('Pareiza atbilde! +10 punkti', 'success', 2000);
+        const points = quizWrongCount === 0 ? 10 : 5;
+        GameState.addScore(points);
+        showNotification(`Pareiza atbilde! +${points} punkti`, 'success', 2000);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>${type}</h2>
@@ -1231,18 +1238,32 @@ function checkAns(type) {
             <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
         `;
     } else {
-        GameState.addScore(-5);
-        showNotification('Nepareiza atbilde! -5 punkti', 'error', 2000);
-        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-        document.querySelector('.task-section').innerHTML = `
-            <h2>${type}</h2>
-            <p style="color: #f44336; font-size: 18px;">Nepareizi! Mēģini vēlreiz.</p>
-            <p style="color: #aaa; font-size: 14px;">(-5 punkti par nepareizu atbildi)</p>
-            <div class="quiz-form">
-                <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
-                <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt atkārtoti</button>
-            </div>
-        `;
+        quizWrongCount++;
+        if (quizWrongCount >= 2) {
+            showNotification('2 nepareizas atbildes. 0 punkti.', 'error', 3000);
+            document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+            document.querySelector('.task-section').innerHTML = `
+                <h2>${type}</h2>
+                <p style="color: #f44336; font-size: 18px;">Nepareizi!</p>
+                <p style="color: #aaa; font-size: 14px;">2 nepareizas atbildes — 0 punkti</p>
+                <p><strong>Pareizā atbilde:</strong> ${correct}</p>
+                <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
+                <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
+            `;
+        } else {
+            showNotification('Nepareiza atbilde! Vēl 1 mēģinājums.', 'error', 2000);
+            document.querySelector('.task-section').innerHTML = `
+                <h2>${type}</h2>
+                <p style="color: #f44336; font-size: 18px;">Nepareizi! Vēl 1 mēģinājums.</p>
+                <p style="color: #aaa; font-size: 14px;">(Pareiza atbilde tagad dos +5 punktus)</p>
+                <div class="quiz-form">
+                    <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
+                    <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt atkārtoti</button>
+                </div>
+                <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
+            `;
+            setupQuizEnterKey(type);
+        }
     }
 }
 
@@ -1279,7 +1300,6 @@ function showEndGame() {
 
 let _endGameShown = false;
 function showEndGameScreen(finalScore, formattedTime) {
-    // Anti-cheat: verify game legitimacy
     if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS || _endGameShown) {
         _ac.addViolation();
         showNotification('Aizdomīga darbība!', 'error', 3000);
@@ -1379,7 +1399,6 @@ function setSFXVolume(v) {
     }
 }
 
-// Cursor trail effect
 function getTrailColor() {
     const theme = document.body.getAttribute('data-theme') || 'default';
     const colors = {
@@ -1392,6 +1411,8 @@ function getTrailColor() {
 }
 
 function initCursorTrail() {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) return;
     const canvas = document.getElementById('cursor-canvas');
     if (!canvas) return;
     if (cursorTrailAnimId) {
@@ -1485,7 +1506,6 @@ function initCursorTrail() {
     cursorTrailAnimId = window.requestAnimationFrame(update);
 }
 
-// Theme system
 function setTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('theme', themeName);
@@ -1631,6 +1651,7 @@ window.setSFXVolume = setSFXVolume;
 window.setTheme = setTheme;
 window.startActivity = startActivity;
 window.checkAns = checkAns;
+window.showTheory = showTheory;
 window.closeQuizAndContinue = closeQuizAndContinue;
 window.initBoatRace = initBoatRace;
 window.closeBoatGame = closeBoatGame;
