@@ -1600,9 +1600,17 @@ function initTriangleBackground() {
     const total = 200;
     const time = 10;
     const styleEl = document.createElement('style');
-    let css = '';
+    styleEl.textContent = `
+        @keyframes triAnim {
+            0% {
+                opacity: 1;
+                transform: rotate(var(--tri-end-rotate)) translate3d(var(--tri-end-x), var(--tri-end-y), 1000px) scale(1);
+            }
+        }
+    `;
+    document.head.appendChild(styleEl);
     
-    for (let i = 1; i <= total; i++) {
+    for (let i = 0; i < total; i++) {
         const size = Math.floor(Math.random() * 50) + 1;
         const rotate = Math.floor(Math.random() * 360);
         const hue = Math.floor(Math.random() * 360);
@@ -1618,25 +1626,16 @@ function initTriangleBackground() {
             border-left: ${size}px solid transparent;
             margin-left: -${size / 2}px;
             margin-top: -${size / 2}px;
+            --tri-end-rotate: ${rotate * 1.5}deg;
+            --tri-end-x: ${endX}px;
+            --tri-end-y: ${endY}px;
             transform: rotate(${rotate}deg) translate3d(0,0,-1500px) scale(0);
-            animation: triAnim${i} ${time}s infinite linear;
+            animation: triAnim ${time}s infinite linear;
             animation-delay: ${delay}s;
             opacity: 0;
         `;
         wrap.appendChild(tri);
-        
-        css += `
-            @keyframes triAnim${i} {
-                0% {
-                    opacity: 1;
-                    transform: rotate(${rotate * 1.5}deg) translate3d(${endX}px, ${endY}px, 1000px) scale(1);
-                }
-            }
-        `;
     }
-    
-    styleEl.textContent = css;
-    document.head.appendChild(styleEl);
 }
 
 function toggleModal(id) {
