@@ -116,6 +116,7 @@ let myRole = '';
 let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
+let quizWrongCount = 0;
 
 
 // Configuration
@@ -989,10 +990,14 @@ function spawnAnt() {
     const field = document.getElementById('ant-field');
     if (!field) return;
     
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const antSize = isTouchDevice ? 44 : 28;
+    const moveInterval = isTouchDevice ? 1400 : 800;
+    
     const ant = document.createElement('div');
     ant.className = 'game-ant';
     ant.textContent = '🐛';
-    ant.style.cssText = `position: absolute; font-size: 28px; cursor: pointer; user-select: none; transition: all 0.3s ease; z-index: 10;`;
+    ant.style.cssText = `position: absolute; font-size: ${antSize}px; cursor: pointer; user-select: none; transition: all 0.3s ease; z-index: 10; padding: ${isTouchDevice ? '8px' : '0'};`;
     ant.style.left = Math.random() * 85 + '%';
     ant.style.top = Math.random() * 85 + '%';
     
@@ -1015,7 +1020,7 @@ function spawnAnt() {
         if (!antGameActive || !ant.parentNode) { clearInterval(moveAnt); return; }
         ant.style.left = Math.random() * 85 + '%';
         ant.style.top = Math.random() * 85 + '%';
-    }, 800);
+    }, moveInterval);
     if (antsCaught > 2 && antGameActive) setTimeout(() => { if (antGameActive) spawnAnt(); }, 2000);
 }
 
@@ -1200,6 +1205,7 @@ function sendReady() {
 async function showQuiz(type) {
     document.getElementById('game-modal').style.display = "block";
     const task = questions[type];
+    quizWrongCount = 0;
     
     let q = task.q;
 
@@ -1209,7 +1215,47 @@ async function showQuiz(type) {
             <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
             <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
         </div>
+        <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
     `;
+    setupQuizEnterKey(type);
+}
+
+function setupQuizEnterKey(type) {
+    const input = document.getElementById('ans-in');
+    if (input) {
+        input.onkeydown = function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); checkAns(type); }
+        };
+        input.focus();
+    }
+}
+
+function showTheory(type) {
+    const info = locationInfo[type];
+    if (!info) return;
+    document.querySelector('.task-section').innerHTML = `
+        <div class="location-info">
+            <h3>📍 ${info.name}</h3>
+            <p>${info.desc}</p>
+        </div>
+        <button class="btn" id="btn-back-to-quiz">Atpakaļ uz jautājumu →</button>
+    `;
+    document.getElementById('btn-back-to-quiz').addEventListener('click', function() {
+        showQuizForm(type);
+    });
+}
+
+function showQuizForm(type) {
+    const task = questions[type];
+    document.querySelector('.task-section').innerHTML = `
+        <h2>${type}</h2><p>${task.q}</p>
+        <div class="quiz-form">
+            <input id="ans-in" placeholder="Tava atbilde..." maxlength="50">
+            <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt</button>
+        </div>
+        <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
+    `;
+    setupQuizEnterKey(type);
 }
 
 function checkAns(type) {
@@ -1220,8 +1266,9 @@ function checkAns(type) {
     if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
     
     if(isCorrect) {
-        GameState.addScore(10);
-        showNotification('Pareiza atbilde! +10 punkti', 'success', 2000);
+        const points = quizWrongCount === 0 ? 10 : 5;
+        GameState.addScore(points);
+        showNotification(`Pareiza atbilde! +${points} punkti`, 'success', 2000);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>${type}</h2>
@@ -1231,18 +1278,32 @@ function checkAns(type) {
             <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
         `;
     } else {
-        GameState.addScore(-5);
-        showNotification('Nepareiza atbilde! -5 punkti', 'error', 2000);
-        document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-        document.querySelector('.task-section').innerHTML = `
-            <h2>${type}</h2>
-            <p style="color: #f44336; font-size: 18px;">Nepareizi! Mēģini vēlreiz.</p>
-            <p style="color: #aaa; font-size: 14px;">(-5 punkti par nepareizu atbildi)</p>
-            <div class="quiz-form">
-                <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
-                <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt atkārtoti</button>
-            </div>
-        `;
+        quizWrongCount++;
+        if (quizWrongCount >= 2) {
+            showNotification('2 nepareizas atbildes. 0 punkti.', 'error', 3000);
+            document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
+            document.querySelector('.task-section').innerHTML = `
+                <h2>${type}</h2>
+                <p style="color: #f44336; font-size: 18px;">Nepareizi!</p>
+                <p style="color: #aaa; font-size: 14px;">2 nepareizas atbildes — 0 punkti</p>
+                <p><strong>Pareizā atbilde:</strong> ${correct}</p>
+                <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
+                <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
+            `;
+        } else {
+            showNotification('Nepareiza atbilde! Vēl 1 mēģinājums.', 'error', 2000);
+            document.querySelector('.task-section').innerHTML = `
+                <h2>${type}</h2>
+                <p style="color: #f44336; font-size: 18px;">Nepareizi! Vēl 1 mēģinājums.</p>
+                <p style="color: #aaa; font-size: 14px;">(Pareiza atbilde tagad dos +5 punktus)</p>
+                <div class="quiz-form">
+                    <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
+                    <button class="btn btn-full" onclick="checkAns('${type}')">Iesniegt atkārtoti</button>
+                </div>
+                <button class="btn" style="margin-top:10px;font-size:13px;" onclick="showTheory('${type}')">← Teorija</button>
+            `;
+            setupQuizEnterKey(type);
+        }
     }
 }
 
@@ -1252,6 +1313,7 @@ function closeQuizAndContinue() {
         showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
+    quizWrongCount = 0;
     _ac.activeTask = false;
     _ac.taskType = null;
     _taskCompletionLog.push({ task: currentTask, time: Date.now() });
@@ -1392,6 +1454,8 @@ function getTrailColor() {
 }
 
 function initCursorTrail() {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) return;
     const canvas = document.getElementById('cursor-canvas');
     if (!canvas) return;
     if (cursorTrailAnimId) {
@@ -1631,6 +1695,7 @@ window.setSFXVolume = setSFXVolume;
 window.setTheme = setTheme;
 window.startActivity = startActivity;
 window.checkAns = checkAns;
+window.showTheory = showTheory;
 window.closeQuizAndContinue = closeQuizAndContinue;
 window.initBoatRace = initBoatRace;
 window.closeBoatGame = closeBoatGame;

@@ -32,23 +32,7 @@ wss.on('close', function close() {
     console.log('WebSocket server closed, cleanup completed');
 });
 
-console.log("🚀 Professional WebSocket server started on port 8080!");
-console.log("Features: Auto-reconnect, Heartbeat, Lobby cleanup");
-console.log("Debug mode: Enabled");
-
-function logServerState() {
-    const lobbyCount = Object.keys(lobbies).length;
-    const clientCount = wss.clients.size;
-    console.log(`[STATE] Lobbies: ${lobbyCount}, Connected clients: ${clientCount}`);
-    if (lobbyCount > 0) {
-        Object.keys(lobbies).forEach(code => {
-            const lobby = lobbies[code];
-            console.log(`  - Lobby ${code}: host=${!!lobby.host}, guest=${!!lobby.guest}, hostDone=${lobby.hostDone}, guestDone=${lobby.guestDone}`);
-        });
-    }
-}
-
-setInterval(logServerState, 30000);
+console.log("WebSocket server started on port 8080");
 
 wss.on('connection', (ws, req) => {
     ws.isAlive = true;
