@@ -109,7 +109,6 @@ body {
     overflow: hidden;
     animation: slideInFromRight 0.4s ease-out;
     will-change: transform;
-    
 }
 
 .btn:nth-child(1) { animation-delay: 0.05s; }
@@ -449,7 +448,6 @@ input[type=range] {
     letter-spacing: 0.5px;
 }
 
-/* Styled input wrapper for better presentation */
 .input-wrapper {
     position: relative;
     width: 100%;
@@ -477,7 +475,6 @@ input[type=range] {
     pointer-events: none;
 }
 
-/* Animation Toggle */
 .animation-toggle {
     margin: 15px 0;
 }
@@ -532,7 +529,6 @@ input[type=range] {
     transform: translateX(24px);
 }
 
-/* Animations disabled state */
 body.no-animations,
 body.no-animations * {
     animation-duration: 0s !important;
@@ -550,7 +546,6 @@ body.no-animations::after {
     animation: none !important;
 }
 
-/* Quiz form layout - stacked input + button */
 .quiz-form {
     display: flex;
     flex-direction: column;
@@ -558,7 +553,6 @@ body.no-animations::after {
     margin-top: 15px;
 }
 
-/* Game Input Fields - Make them match the design */
 #ans-in, #mini-input {
     width: 100%;
     padding: 15px 20px;
@@ -596,7 +590,6 @@ body.no-animations::after {
     transform: translateY(-2px);
 }
 
-/* Hide language switcher */
 .lang-switch {
     display: none;
 }
@@ -606,10 +599,11 @@ body.no-animations::after {
 }
 
 .close-btn {
-    width: 100%;    
+    min-height: 55.8px;
+    margin-top: 10px;
+    width: 100%;
     padding: 14px 40px;
     box-sizing: border-box;
-    margin: 0 auto;
 }
 
 .btn-full {
@@ -759,7 +753,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     color: #ffaa00; 
     width: 100px;
 }
-/* --- CONNECTION STATUS INDICATOR --- */
 
 .connection-status {
     position: fixed;
@@ -807,7 +800,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     50% { opacity: 0.7; transform: scale(0.95); }
 }
 
-/* --- NOTIFICATION SYSTEM (TOAST) --- */
 
 .notification-container {
     position: fixed;
@@ -881,7 +873,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(0, 0, 0, 0.9));
 }
 
-/* --- LOADING STATES --- */
 
 .btn-loading {
     position: relative;
@@ -914,7 +905,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     pointer-events: none;
 }
 
-/* --- SMOOTH TRANSITIONS --- */
 
 .modal {
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -935,9 +925,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     }
 }
 
-/* --- RESPONSIVE DESIGN IMPROVEMENTS --- */
-
-/* Mobile-first breakpoints */
 @media (max-width: 768px) {
     .title {
         font-size: 42px;
@@ -997,7 +984,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         padding: 14px 18px;
     }
     
-    /* Map page responsive - fix point overlapping */
     .map-area {
         height: 70vh;
         width: calc(70vh * 0.5);
@@ -1009,7 +995,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         border-width: 2px;
     }
     
-    /* Ensure points don't overlap location names on mobile */
     .point::after {
         display: none;
     }
@@ -1107,7 +1092,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         border-width: 2px;
     }
     
-    /* Bring active point to front to prevent overlap with inactive points */
     .active-point {
         z-index: 100;
     }
@@ -1126,17 +1110,14 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         right: 15px;
     }
     
-    /* Fix modal buttons stacking */
     .modal-content .btn {
         margin: 5px 0;
     }
     
-    /* Improve lobby code display on small screens */
     #lobby-code {
         font-size: 36px !important;
     }
     
-    /* Better spacing for join section */
     #join-code {
         width: 100% !important;
         max-width: 100% !important;
@@ -1198,7 +1179,10 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     }
     
     .btn {
-        font-size: 20px;
+        font-size: 20px;    
+    }
+    .btnLead{
+        margin: 0 auto;
     }
 }
 
@@ -1212,14 +1196,13 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         transform: translateY(0);
     }
 }
-/* button-group animation delays defined above */
+
 .button-group .btn:nth-child(1) { animation-delay: 0.1s; }
 .button-group .btn:nth-child(2) { animation-delay: 0.2s; }
 .button-group .btn:nth-child(3) { animation-delay: 0.3s; }
 .button-group .btn:nth-child(4) { animation-delay: 0.4s; }
 .button-group .btn:nth-child(5) { animation-delay: 0.5s; }
 
-/* Flex utility classes for reusability */
 .flex-center {
     display: flex;
     justify-content: center;
@@ -1259,8 +1242,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
 .gap-md { gap: 15px; }
 .gap-lg { gap: 20px; }
 .gap-xl { gap: 30px; }
-
-/* --- MAP TOP BAR --- */
 
 .map-topbar {
     position: fixed;
@@ -1333,7 +1314,6 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     }
 }
 
-/* --- GLOWING GOLD BORDER ANIMATION --- */
 
 @keyframes goldGlowRotate {
     0% {
@@ -1389,7 +1369,6 @@ body[data-theme="blue"] .button-group .btn:hover {
     box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
 }
 
-/* Location info panel in game modal */
 .location-info {
     background: rgba(0,0,0,0.3);
     border: 1px solid #ffaa00;
@@ -1407,7 +1386,6 @@ body[data-theme="blue"] .button-group .btn:hover {
     font-size: 16px;
 }
 
-/* Boat race tap button (mobile-friendly) */
 .boat-tap-btn {
     display: block;
     width: 100%;
@@ -1434,9 +1412,7 @@ body[data-theme="blue"] .button-group .btn:hover {
     background: linear-gradient(135deg, #4a3333, #3a2525);
 }
 
-/* --- ACCESSIBILITY IMPROVEMENTS --- */
 
-/* Focus visible for keyboard navigation */
 .btn:focus-visible {
     outline: 3px solid #ffaa00;
     outline-offset: 2px;
@@ -1447,7 +1423,6 @@ input:focus-visible {
     outline-offset: 1px;
 }
 
-/* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
@@ -1456,7 +1431,6 @@ input:focus-visible {
     }
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: high) {
     .btn {
         border-width: 3px;
@@ -1471,7 +1445,6 @@ input:focus-visible {
     }
 }
 
-/* Theme System */
 :root,
 body[data-theme="default"] {
     --bg-primary: #332222;
@@ -1564,7 +1537,6 @@ body[data-theme="blue"] {
     border: 2px solid var(--border-color);
 }
 
-/* Update existing styles to use CSS variables */
 .btn {
     background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
     color: var(--text-secondary);
@@ -1605,7 +1577,6 @@ body[data-theme="blue"] .modal-content {
     border-left: 4px solid var(--accent-primary);
 }
 
-/* Dynamic animated background */
 @keyframes bgShift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -1647,7 +1618,6 @@ body::after {
     will-change: background-position;
 }
 
-/* History sequence mini-game styles */
 .history-item {
     transition: transform 0.2s ease, background 0.2s ease;
 }
@@ -1671,7 +1641,6 @@ body[data-theme="blue"] .history-item:hover {
     transform: scale(0.98);
 }
 
-/* Theme-aware leaderboard styles */
 .tabulaLead {
     background: linear-gradient(135deg, rgba(42, 26, 26, 0.9), rgba(30, 18, 18, 0.9));
 }
@@ -1712,7 +1681,6 @@ body[data-theme="blue"] #tabulaiTR {
     color: var(--text-secondary);
 }
 
-/* Theme-aware input fields */
 .input-field {
     background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
     color: var(--text-primary);
@@ -1742,7 +1710,6 @@ body[data-theme="blue"] #tabulaiTR {
     background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
 }
 
-/* Leaderboard sort info */
 .sort-info, .sort-info span {
     color: var(--accent-primary) !important;
 }

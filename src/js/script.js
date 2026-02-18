@@ -79,7 +79,7 @@ const TOTAL_TASKS = 10;
                 _ac.devToolsOpen = true;
                 _ac.addViolation();
                 if (typeof showNotification === 'function') {
-                    showNotification('⚠️ Izstrādātāja rīki atvērti — tas var ietekmēt spēli!', 'warning', 5000);
+                    showNotification('Izstrādātāja rīki atvērti — tas var ietekmēt spēli!', 'warning', 5000);
                 }
             }
         } else {
@@ -342,18 +342,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // Connection manager
 
 async function initSmartConnection() {
-    console.log("🔍 Initializing multiplayer connection...");
+    console.log("Initializing multiplayer connection...");
     updateConnectionStatus('reconnecting');
     
     const hostname = window.location.hostname;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     
     if (isLocalhost) {
-        console.log("🏠 Localhost detected, trying WebSocket first...");
+        console.log("Localhost detected, trying WebSocket first...");
         const wsAvailable = await tryWebSocketConnection();
         
         if (wsAvailable) {
-            console.log("✅ WebSocket detected");
+            console.log("WebSocket detected");
             connectionMode = CONNECTION_MODE_WS;
             updateConnectionStatus('connected');
             showNotification('WebSocket detected', 'success', 2000);
@@ -365,14 +365,14 @@ async function initSmartConnection() {
             }
             return;
         } else {
-            console.log("⚠️ WebSocket unavailable, using PHP polling");
+            console.log("WebSocket unavailable, using PHP polling");
         }
     }
     
-    console.log("✅ PHP fallback mode no websocket detected");
+    console.log("PHP fallback mode no websocket detected");
     connectionMode = CONNECTION_MODE_PHP;
     initPHPPolling();
-    showNotification('✨ Multiplayer gatavs!', 'success', 2000);
+    showNotification('Multiplayer gatavs!', 'success', 2000);
 }
 
 function tryWebSocketConnection() {
@@ -442,7 +442,7 @@ function handleWebSocketMessage(data) {
         myRole = 'host';
         const waitEl = document.getElementById('lobby-wait');
         if (waitEl) {
-            waitEl.innerHTML = '👥 Spēlētājs pievienojās!<br><button class="btn" id="btn-host-ready" style="margin-top:15px;" onclick="sendLobbyReady()">✅ Esmu gatavs!</button><p id="lobby-ready-status" style="color:#ccc;margin-top:10px;"></p>';
+            waitEl.innerHTML = 'Spēlētājs pievienojās!<br><button class="btn" id="btn-host-ready" style="margin-top:15px;" onclick="sendLobbyReady()">Esmu gatavs!</button><p id="lobby-ready-status" style="color:#ccc;margin-top:10px;"></p>';
         }
     }
     else if (data.type === 'joined_lobby') {
@@ -456,14 +456,14 @@ function handleWebSocketMessage(data) {
             if (lobbyCodeEl) lobbyCodeEl.innerText = myLobbyCode;
             const waitEl = document.getElementById('lobby-wait');
             if (waitEl) {
-                waitEl.innerHTML = '👥 Pievienojies istabai!<br><button class="btn" id="btn-guest-ready" style="margin-top:15px;" onclick="sendLobbyReady()">✅ Esmu gatavs!</button><p id="lobby-ready-status" style="color:#ccc;margin-top:10px;"></p>';
+                waitEl.innerHTML = 'Pievienojies istabai!<br><button class="btn" id="btn-guest-ready" style="margin-top:15px;" onclick="sendLobbyReady()">Esmu gatavs!</button><p id="lobby-ready-status" style="color:#ccc;margin-top:10px;"></p>';
             }
         }, 100);
     }
     else if (data.type === 'player_ready') {
         // Other player is ready
         const statusEl = document.getElementById('lobby-ready-status');
-        if (statusEl) statusEl.innerText = '✅ Otrs spēlētājs ir gatavs!';
+        if (statusEl) statusEl.innerText = 'Otrs spēlētājs ir gatavs!';
     }
     else if (data.type === 'start_game') {
         myRole = data.role;
@@ -583,7 +583,7 @@ let pollInterval = null;
 let phpPolling = false;
 
 function initPHPPolling() {
-    console.log("🔄 PHP fallback mode no websocket detected");
+    console.log("PHP fallback mode no websocket detected");
     phpPolling = true;
     updateConnectionStatus('connected');
 }
@@ -847,8 +847,6 @@ function initBoatRace() {
     
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const actionText = isTouchDevice ? 'SPIED POGU!' : 'SPIED SPACE!';
-    
-    // Remove any existing listener to prevent duplicates
     document.removeEventListener('keydown', handleBoatKeyPress);
     
     document.querySelector('.task-section').innerHTML = `
@@ -856,9 +854,8 @@ function initBoatRace() {
         <p style="color: #ffaa00; font-size: 24px; font-weight: bold;">${actionText}</p>
         <h3 id="boat-timer">0.00 s</h3>
         <p id="boat-progress" style="font-size: 20px;">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
-        <button id="boat-tap-btn" class="boat-tap-btn">🚣 SPIED! 🚣</button>`;
+        <button id="boat-tap-btn" class="boat-tap-btn">SPIED!</button>`;
     
-    // Update timer
     boatInterval = setInterval(() => {
         if (boatRaceActive) {
             const elapsed = ((Date.now() - boatStartTime) / 1000).toFixed(2);
@@ -866,11 +863,7 @@ function initBoatRace() {
             if (timerEl) timerEl.innerText = elapsed + ' s';
         }
     }, 50);
-    
-    // Listen for spacebar (desktop)
     document.addEventListener('keydown', handleBoatKeyPress);
-    
-    // Listen for tap/click on the button (mobile + desktop)
     const tapBtn = document.getElementById('boat-tap-btn');
     if (tapBtn) {
         tapBtn.addEventListener('touchstart', handleBoatTap, { passive: false });
@@ -899,8 +892,6 @@ function registerBoatPress() {
     
     const progressEl = document.getElementById('boat-progress');
     if (progressEl) progressEl.innerText = `Spiedienu skaits: ${boatSpaceCount}/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}`;
-    
-    // Visual feedback on tap button
     const tapBtn = document.getElementById('boat-tap-btn');
     if (tapBtn) {
         tapBtn.style.transform = 'scale(0.9)';
@@ -918,8 +909,6 @@ function finishBoatRace() {
     document.removeEventListener('keydown', handleBoatKeyPress);
     
     const finalTime = ((Date.now() - boatStartTime) / 1000).toFixed(2);
-    
-    // Award points based on speed using configuration
     let points = BOAT_RACE_CONFIG.NORMAL_POINTS;
     if (finalTime < BOAT_RACE_CONFIG.EXCELLENT_TIME) {
         points = BOAT_RACE_CONFIG.EXCELLENT_POINTS;
@@ -943,7 +932,7 @@ function finishBoatRace() {
 function closeBoatGame() { 
     if (!_ac.activeTask || _ac.taskType !== 'Osta') {
         _ac.addViolation();
-        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
     _ac.activeTask = false;
@@ -958,17 +947,15 @@ function closeBoatGame() {
     if(GameState.getCompleted() === TOTAL_TASKS) showEndGame(); 
 }
 
-// RTU Ant (Bug) Mini-Game
 let antGameActive = false;
 let antsCaught = 0;
 let antGameTimer = null;
 const ANTS_REQUIRED = 5;
-const ANT_GAME_TIME = 15; // seconds
-
+const ANT_GAME_TIME = 15; 
 function startAntGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐜 RTU Bioloģijas uzdevums</h2>
+        <h2>RTU Bioloģijas uzdevums</h2>
         <p>Studiju programmā "Bioloģijas" studenti mācās risināt problēmas ātri un precīzi.</p>
         <p>Noķer ${ANTS_REQUIRED} kukaiņus ${ANT_GAME_TIME} sekunžu laikā!</p>
         <button class="btn btn-full" onclick="initAntGame()">SĀKT</button>
@@ -1024,15 +1011,11 @@ function spawnAnt() {
     });
     
     field.appendChild(ant);
-    
-    // Move the ant around
     const moveAnt = setInterval(() => {
         if (!antGameActive || !ant.parentNode) { clearInterval(moveAnt); return; }
         ant.style.left = Math.random() * 85 + '%';
         ant.style.top = Math.random() * 85 + '%';
     }, 800);
-    
-    // Spawn additional ants for difficulty (only if game still active)
     if (antsCaught > 2 && antGameActive) setTimeout(() => { if (antGameActive) spawnAnt(); }, 2000);
 }
 
@@ -1047,7 +1030,7 @@ function finishAntGame(success) {
         GameState.addScore(10);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>✅ Lielisks darbs!</h2>
+            <h2>Lielisks darbs!</h2>
             <p>Noķerti kukaiņi: ${antsCaught}/${ANTS_REQUIRED}</p>
             <p style="color: #4CAF50;">+10 punkti</p>
             <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
@@ -1057,10 +1040,10 @@ function finishAntGame(success) {
         GameState.addScore(-5);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>❌ Laiks beidzies!</h2>
+            <h2>Laiks beidzies!</h2>
             <p>Noķerti kukaiņi: ${antsCaught}/${ANTS_REQUIRED}</p>
             <p style="color: #f44336;">-5 punkti. Mēģini vēlreiz!</p>
-            <button class="btn btn-full" onclick="initAntGame()">🔄 Mēģināt vēlreiz</button>
+            <button class="btn btn-full" onclick="initAntGame()">Mēģināt vēlreiz</button>
         `;
     }
 }
@@ -1068,7 +1051,7 @@ function finishAntGame(success) {
 function closeAntGame() {
     if (!_ac.activeTask || _ac.taskType !== 'RTU') {
         _ac.addViolation();
-        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
     _ac.activeTask = false;
@@ -1080,7 +1063,6 @@ function closeAntGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
-// Historical Sequence Mini-Game (Teatris location)
 const historyEvents = [
     { year: 1625, text: "Liepāja iegūst pilsētas tiesības" },
     { year: 1907, text: "Dibināts Liepājas Teātris" },
@@ -1093,7 +1075,7 @@ function startHistorySequence() {
     const shuffled = [...historyEvents].sort(() => Math.random() - 0.5);
     
     document.querySelector('.task-section').innerHTML = `
-        <h2>📜 Vēsturiskā secība</h2>
+        <h2>Vēsturiskā secība</h2>
         <p>Sakārto notikumus hronoloģiskā secībā (no senākā uz jaunāko)!</p>
         <div id="history-slots" style="display: flex; flex-direction: column; gap: 10px; margin: 15px 0;">
             ${shuffled.map((ev, i) => `
@@ -1104,11 +1086,9 @@ function startHistorySequence() {
                 </div>
             `).join('')}
         </div>
-        <p style="font-size: 12px; color: #aaa;">💡 Spied uz notikumiem lai pārvietotu augšup</p>
+        <p style="font-size: 12px; color: #aaa;">Spied uz notikumiem lai pārvietotu augšup</p>
         <button class="btn btn-full" onclick="checkHistorySequence()">Iesniegt secību</button>
     `;
-    
-    // Add click-to-reorder functionality
     document.querySelectorAll('.history-item').forEach(item => {
         item.addEventListener('click', function() {
             const container = document.getElementById('history-slots');
@@ -1116,7 +1096,6 @@ function startHistorySequence() {
             const idx = items.indexOf(this);
             if (idx > 0) {
                 container.insertBefore(this, items[idx - 1]);
-                // Update numbering
                 container.querySelectorAll('.history-item').forEach((el, i) => {
                     el.querySelector('span').textContent = (i + 1) + '.';
                 });
@@ -1138,7 +1117,7 @@ function checkHistorySequence() {
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         const correctOrder = [...historyEvents].sort((a, b) => a.year - b.year);
         document.querySelector('.task-section').innerHTML = `
-            <h2>✅ Pareizi!</h2>
+            <h2>Pareizi!</h2>
             <p>Pareizā secība:</p>
             <ol style="margin: 10px 0; padding-left: 20px;">
                 ${correctOrder.map(ev => `<li>${ev.year}. g. — ${ev.text}</li>`).join('')}
@@ -1151,9 +1130,9 @@ function checkHistorySequence() {
         GameState.addScore(-5);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>❌ Nepareizi!</h2>
+            <h2>Nepareizi!</h2>
             <p style="color: #f44336;">Secība nav pareiza. -5 punkti. Mēģini vēlreiz!</p>
-            <button class="btn btn-full" onclick="startHistorySequence()">🔄 Mēģināt vēlreiz</button>
+            <button class="btn btn-full" onclick="startHistorySequence()">Mēģināt vēlreiz</button>
         `;
     }
 }
@@ -1161,7 +1140,7 @@ function checkHistorySequence() {
 function closeHistoryGame() {
     if (!_ac.activeTask || _ac.taskType !== 'Teatris') {
         _ac.addViolation();
-        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
     _ac.activeTask = false;
@@ -1185,9 +1164,8 @@ function showMiniGame(type) {
                 <input id="mini-input" placeholder="Ievadi kodu...">
                 <button class="btn btn-full" onclick="checkMini()">OK</button>
             </div>`;
-    } else {
-        content.innerHTML = `<h2>Gatavs?</h2><button class="btn btn-full" onclick="sendReady()">JĀ</button><p id="partner-status" style="display:none">Gaidu...</p>`;
-    }
+    }else{sendReady()}
+     
 }
 
 const _miniCode = '785b5c41';
@@ -1200,14 +1178,13 @@ function sendLobbyReady() {
     if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'ready', code: myLobbyCode, role: myRole }));
         const statusEl = document.getElementById('lobby-ready-status');
-        if (statusEl) statusEl.innerText = '⏳ Gaidu otru spēlētāju...';
+        if (statusEl) statusEl.innerText = 'Gaidu otru spēlētāju...';
         const readyBtn = document.getElementById('btn-host-ready') || document.getElementById('btn-guest-ready');
         if (readyBtn) readyBtn.disabled = true;
     }
 }
 
 function sendReady() {
-    // Handle both WebSocket and PHP polling modes
     if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'update_task', code: myLobbyCode, role: myRole }));
         document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
@@ -1215,7 +1192,6 @@ function sendReady() {
         notifyPartnerPHP(myRole, myLobbyCode);
         document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
     } else {
-        // Connection not available
         showNotification("Savienojums nav pieejams!", 'error');
         console.error("sendReady failed: No valid connection mode available");
     }
@@ -1240,33 +1216,27 @@ function checkAns(type) {
     const val = document.getElementById('ans-in').value;
     const correct = _v(questions[type]._a);
     const isCorrect = val.toLowerCase().trim() === correct.toLowerCase();
-    
-    // Update guide bubble with dynamic comment
     const guideHint = document.getElementById('guide-hint');
     if (guideHint) guideHint.textContent = getRandomBubble(isCorrect);
     
     if(isCorrect) {
         GameState.addScore(10);
-        showNotification('✅ Pareiza atbilde! +10 punkti', 'success', 2000);
+        showNotification('Pareiza atbilde! +10 punkti', 'success', 2000);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-        
-        // Correct — show fact and allow continue
         document.querySelector('.task-section').innerHTML = `
             <h2>${type}</h2>
-            <p style="color: #4CAF50; font-size: 18px;">✅ Pareizi!</p>
+            <p style="color: #4CAF50; font-size: 18px;">Pareizi!</p>
             <p><strong>Atbilde:</strong> ${correct}</p>
             <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
             <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
         `;
     } else {
         GameState.addScore(-5);
-        showNotification('❌ Nepareiza atbilde! -5 punkti', 'error', 2000);
+        showNotification('Nepareiza atbilde! -5 punkti', 'error', 2000);
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
-        
-        // Wrong — must retry (V16 + V18)
         document.querySelector('.task-section').innerHTML = `
             <h2>${type}</h2>
-            <p style="color: #f44336; font-size: 18px;">❌ Nepareizi! Mēģini vēlreiz.</p>
+            <p style="color: #f44336; font-size: 18px;">Nepareizi! Mēģini vēlreiz.</p>
             <p style="color: #aaa; font-size: 14px;">(-5 punkti par nepareizu atbildi)</p>
             <div class="quiz-form">
                 <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
@@ -1277,10 +1247,9 @@ function checkAns(type) {
 }
 
 function closeQuizAndContinue() {
-    // Anti-cheat: verify a task was genuinely active
     if (!_ac.activeTask) {
         _ac.addViolation();
-        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
     _ac.activeTask = false;
@@ -1293,13 +1262,11 @@ function closeQuizAndContinue() {
 }
 
 function showEndGame() { 
-    // Anti-cheat: verify all 10 tasks completed legitimately
     if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
         _ac.addViolation();
-        showNotification('⚠️ Spēle nav pabeigta!', 'error', 3000);
+        showNotification('Spēle nav pabeigta!', 'error', 3000);
         return;
     }
-    // Calculate elapsed time
     const endTime = Date.now();
     const elapsedSeconds = Math.floor((endTime - startTime) / 1000);
     const minutes = Math.floor(elapsedSeconds / 60);
@@ -1307,18 +1274,15 @@ function showEndGame() {
     const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
     const finalScore = GameState.getScore();
-    
-    // Show end game screen instead of immediately redirecting
     showEndGameScreen(finalScore, formattedTime);
 }
 
-// End Game screen with congratulations, score, time and navigation
 let _endGameShown = false;
 function showEndGameScreen(finalScore, formattedTime) {
     // Anti-cheat: verify game legitimacy
     if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS || _endGameShown) {
         _ac.addViolation();
-        showNotification('⚠️ Aizdomīga darbība!', 'error', 3000);
+        showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
     _endGameShown = true;
@@ -1333,18 +1297,16 @@ function showEndGameScreen(finalScore, formattedTime) {
             <h2 style="color: #ffaa00; font-size: 28px;">${medal} Apsveicam! ${medal}</h2>
             <p style="font-size: 18px;">Tu esi pabeidzis ekskursiju pa Liepāju!</p>
             <div style="background: rgba(0,0,0,0.3); border: 2px solid #ffaa00; border-radius: 12px; padding: 20px; margin: 15px 0;">
-                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">🏆 Punkti: <strong>${finalScore}</strong>/100</p>
-                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">⏱ Laiks: <strong>${formattedTime}</strong></p>
+                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">Punkti: <strong>${finalScore}</strong>/100</p>
+                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">Laiks: <strong>${formattedTime}</strong></p>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-full" id="btn-save-score">🏆 Saglabāt un skatīt TOP 10</button>
-                <button class="btn btn-full" id="btn-back-menu">🔙 Atpakaļ uz menu</button>
-                <button class="btn btn-full" id="btn-play-again">🔄 Spēlēt vēlreiz</button>
+                <button class="btn btn-full" id="btn-save-score">Saglabāt un skatīt TOP 10</button>
+                <button class="btn btn-full" id="btn-back-menu">Atpakaļ uz menu</button>
+                <button class="btn btn-full" id="btn-play-again">Spēlēt vēlreiz</button>
             </div>
         </div>
     `;
-    
-    // Attach event listeners safely instead of inline onclick
     document.getElementById('btn-save-score').addEventListener('click', function() {
         finishGame(globalName, finalScore, formattedTime);
     });
@@ -1355,22 +1317,20 @@ function showEndGameScreen(finalScore, formattedTime) {
         location.href = 'map.html?name=' + encodeURIComponent(globalName);
     });
 }
-
-// Guide character dynamic text bubbles
 const guideBubbles = {
     correct: [
-        "Lielisks darbs! Tu esi īsts Liepājas eksperts! 🎉",
-        "Pareizi! Tu zini Liepāju kā savu kabatu! 🗺️",
-        "Bravo! Tā turpini! 💪",
-        "Izcili! Tu esi pelnījis aplausus! 👏",
-        "Super! Nākamais izaicinājums gaida! 🌟"
+        "Lielisks darbs! Tu esi īsts Liepājas eksperts! ",
+        "Pareizi! Tu zini Liepāju kā savu kabatu! ",
+        "Bravo! Tā turpini! ",
+        "Izcili! Tu esi pelnījis aplausus! ",
+        "Super! Nākamais izaicinājums gaida! "
     ],
     wrong: [
-        "Hmm, tā nav pareizā atbilde... Mēģini vēlreiz nākamreiz! 🤔",
-        "Nekas, arī kļūdīties ir cilvēcīgi! 😅",
-        "Ak, gandrīz! Bet nepadodies! 💭",
-        "Tā nebija... Bet galvenais ir mācīties! 📚",
-        "Ups! Nākamreiz noteikti sanāks! 🍀"
+        "Hmm, tā nav pareizā atbilde... Mēģini vēlreiz nākamreiz! ",
+        "Nekas, arī kļūdīties ir cilvēcīgi! ",
+        "Ak, gandrīz! Bet nepadodies! ",
+        "Tā nebija... Bet galvenais ir mācīties! ",
+        "Ups! Nākamreiz noteikti sanāks! "
     ]
 };
 
@@ -1380,16 +1340,12 @@ function getRandomBubble(isCorrect) {
 }
 
 function finishGame(name, finalScore, time) { 
-    // Anti-cheat: verify game was played legitimately
     if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
-        showNotification('⚠️ Nevar saglabāt — spēle nav pabeigta!', 'error', 3000);
+        showNotification('Nevar saglabāt — spēle nav pabeigta!', 'error', 3000);
         return;
     }
 
-    // Generate integrity token
     const token = _generateScoreToken(finalScore, time, _taskCompletionLog.length);
-    
-    // Save score to database
     const formData = new FormData();
     formData.append('name', name);
     formData.append('score', finalScore);
@@ -1533,8 +1489,6 @@ function initCursorTrail() {
 function setTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('theme', themeName);
-    
-    // Update active button
     document.querySelectorAll('.theme-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.getAttribute('data-theme') === themeName) {
@@ -1564,7 +1518,6 @@ function initTheme() {
 function updateActiveThemeButton(savedTheme) {
     const buttons = document.querySelectorAll('.theme-btn');
     if (buttons.length === 0) {
-        // Settings modal not yet loaded, try again when it opens
         return;
     }
     
@@ -1580,8 +1533,7 @@ function toggleModal(id) {
     const modal = document.getElementById(id);
     const isOpening = modal.style.display !== "block";
     modal.style.display = isOpening ? "block" : "none";
-    
-    // Update settings controls when settings modal opens
+
     if (isOpening && id === 'settings-modal') {
         const savedTheme = localStorage.getItem('theme') || 'default';
         updateActiveThemeButton(savedTheme);
@@ -1589,8 +1541,6 @@ function toggleModal(id) {
         if (checkbox) checkbox.checked = animationsEnabled;
     }
 }
-
-// Animation toggle
 
 let animationsEnabled = true;
 let cursorTrailAnimId = null;
@@ -1619,7 +1569,7 @@ function toggleAnimations(enabled) {
             canvas.style.display = 'none';
         }
     }
-    showNotification(enabled ? '✨ Animācijas ieslēgtas' : '✨ Animācijas izslēgtas', 'info', 2000);
+    showNotification(enabled ? 'Animācijas ieslēgtas' : 'Animācijas izslēgtas', 'info', 2000);
 }
 
 function initAnimationToggle() {
@@ -1634,10 +1584,7 @@ function initAnimationToggle() {
     if (checkbox) checkbox.checked = animationsEnabled;
 }
 
-// Notification system
-
 function showNotification(message, type = 'info', duration = 3000) {
-    // Create notification container if it doesn't exist
     let container = document.getElementById('notification-container');
     if (!container) {
         container = document.createElement('div');
@@ -1646,12 +1593,10 @@ function showNotification(message, type = 'info', duration = 3000) {
         document.body.appendChild(container);
     }
     
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
     
-    // Add icon based on type
     const icon = {
         'success': '✓',
         'error': '✗',
@@ -1661,13 +1606,10 @@ function showNotification(message, type = 'info', duration = 3000) {
     
     notification.innerHTML = `<span class="notification-icon">${icon}</span><span class="notification-text">${message}</span>`;
     
-    // Add to container
     container.appendChild(notification);
-    
-    // Trigger animation
+
     setTimeout(() => notification.classList.add('show'), 10);
-    
-    // Remove after duration
+
     setTimeout(() => {
         notification.classList.remove('show');
         notification.classList.add('hide');
@@ -1679,9 +1621,6 @@ function showNotification(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-// Expose only UI-triggered functions to window (for onclick handlers in HTML)
-// Anti-cheat: Game internals (GameState, _v, _k, questions, answers) remain private
-// Close/finish functions are guarded with _ac.activeTask checks
 window.toggleModal = toggleModal;
 window.startSingleGame = startSingleGame;
 window.openLobby = openLobby;
@@ -1704,7 +1643,4 @@ window.sendReady = sendReady;
 window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
 window.toggleAnimations = toggleAnimations;
-// Note: finishGame and showEndGameScreen are NOT exposed to window
-// They can only be called internally after legitimate game completion
-
-})(); // End IIFE
+})(); 

@@ -85,7 +85,7 @@
                 ?>
             </tbody>
         </table>
-        <button class="btn"  onclick="location.href='../../index.html'">Atpakaļ</button>
+        <button class="btn btnLead" onclick="location.href='../../index.html'">Atpakaļ</button>
     </div>
     <script>
         let currentSort = 'combo';
