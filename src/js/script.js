@@ -1223,9 +1223,9 @@ async function showQuiz(type) {
 function setupQuizEnterKey(type) {
     const input = document.getElementById('ans-in');
     if (input) {
-        input.addEventListener('keydown', function(e) {
+        input.onkeydown = function(e) {
             if (e.key === 'Enter') { e.preventDefault(); checkAns(type); }
-        });
+        };
         input.focus();
     }
 }
@@ -1313,6 +1313,7 @@ function closeQuizAndContinue() {
         showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
+    quizWrongCount = 0;
     _ac.activeTask = false;
     _ac.taskType = null;
     _taskCompletionLog.push({ task: currentTask, time: Date.now() });
