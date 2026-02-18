@@ -85,7 +85,6 @@
                 ?>
             </tbody>
         </table>
-        <!-- make the button centered -->
         <button class="btn"  onclick="location.href='../../index.html'">Atpakaļ</button>
     </div>
     <script>

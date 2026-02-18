@@ -22,11 +22,11 @@
         <h2 class="subtitle" id="subtitle">EKSKURSIJA</h2>
         
         <div class="button-group">
-            <button class="btn" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
-            <button class="btn" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button class="btn" id="btn-leaderboard" onclick="location.href='src/php/leaderboard.php'">Top 10</button>
-            <button class="btn" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
-            <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
+            <button class="btn btnMini" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
+            <button class="btn btnMini" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
+            <button class="btn btnMini" id="btn-leaderboard" onclick="location.href='src/php/leaderboard.php'">Top 10</button>
+            <button class="btn btnMini" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
+            <button class="btn btnMini" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
 
         <div class="authors-corner" id="authors-corner">
@@ -44,8 +44,8 @@
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
-                <button id="btn-single" class="btn" onclick="startSingleGame()">Spēlēt vienam</button>
-                <button id="btn-lobby" class="btn" onclick="openLobby()">Spēlēt ar draugu</button>
+                <button id="btn-single" class="btn btnMini" onclick="startSingleGame()">Spēlēt vienam</button>
+                <button id="btn-lobby" class="btn btnMini" onclick="openLobby()">Spēlēt ar draugu</button>
                 <div style="margin-top: 15px; border-top: 2px solid #4a2c2c; width: 100%; padding-top: 20px;">
                     <div class="input-wrapper">
                         <label class="input-label" for="join-code">Drauga Kods</label>
