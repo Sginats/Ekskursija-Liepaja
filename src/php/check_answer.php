@@ -1,4 +1,5 @@
 <?php
+session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -55,6 +56,23 @@ $alternatives = isset($entry['alt']) ? array_map(
 
 // Check exact match or alternative
 $isCorrect = ($userAnswer === $correct) || in_array($userAnswer, $alternatives, true);
+
+// Track answers server-side for score verification
+$gameToken = isset($data['gameToken']) ? $data['gameToken'] : '';
+if (!empty($gameToken) && isset($_SESSION['game_token']) && $_SESSION['game_token'] === $gameToken) {
+    if (!isset($_SESSION['game_answered'])) {
+        $_SESSION['game_answered'] = [];
+    }
+    $alreadyAnswered = in_array($questionId, $_SESSION['game_answered'], true);
+
+    if ($isCorrect && !$alreadyAnswered) {
+        $_SESSION['game_answered'][] = $questionId;
+        $isFinal = isset($data['final']) && $data['final'] === true;
+        $pts = $isFinal ? 5 : 10;
+        $_SESSION['game_score'] = ($_SESSION['game_score'] ?? 0) + $pts;
+        $_SESSION['game_tasks'] = ($_SESSION['game_tasks'] ?? 0) + 1;
+    }
+}
 
 // Return result — never expose the correct answer on a wrong attempt to prevent enumeration
 if ($isCorrect) {

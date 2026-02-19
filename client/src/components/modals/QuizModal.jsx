@@ -24,7 +24,7 @@ function randomBubble(correct) {
 }
 
 export default function QuizModal({ open, location, onComplete, onClose }) {
-  const { questionsRef, addScore, antiCheat, notify } = useGame();
+  const { questionsRef, addScore, antiCheat, notify, gameTokenRef } = useGame();
 
   const [phase, setPhase] = useState('question'); // 'question' | 'theory' | 'result'
   const [answer, setAnswer] = useState('');
@@ -72,10 +72,12 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
       const res = await fetch('../src/php/check_answer.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           questionId: question?.id,
           answer: answer.trim(),
           sessionId: antiCheat.sessionId,
+          gameToken: gameTokenRef?.current || '',
           final: wrongCount >= 1,
         }),
       });
@@ -110,7 +112,7 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
     } finally {
       setLoading(false);
     }
-  }, [answer, wrongCount, question, location, addScore, antiCheat, notify]);
+  }, [answer, wrongCount, question, location, addScore, antiCheat, notify, gameTokenRef]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') { e.preventDefault(); submit(); }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext.jsx';
+import { useAudio } from '../../context/AudioContext.jsx';
 import { useWebSocket } from '../../hooks/useWebSocket.js';
 import SettingsModal from '../modals/SettingsModal.jsx';
 import AboutModal from '../modals/AboutModal.jsx';
@@ -9,6 +10,7 @@ import styles from './MainMenu.module.css';
 
 export default function MainMenu() {
   const { startFreshGame, notify, dispatch } = useGame();
+  const { playHover } = useAudio();
   const navigate = useNavigate();
   const { tryConnect, send, wsRef, modeRef } = useWebSocket();
 
@@ -25,6 +27,7 @@ export default function MainMenu() {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const particlesRef = useRef([]);
+  const cleanupRef = useRef(null);
 
   useEffect(() => {
     // Try WebSocket on localhost
@@ -36,9 +39,10 @@ export default function MainMenu() {
       });
     }
 
-    initParticles();
+    cleanupRef.current = initParticles();
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (cleanupRef.current) cleanupRef.current();
     };
   }, []);
 
@@ -58,8 +62,7 @@ export default function MainMenu() {
           setLobbyStatus('Otrs speletajs ir gatavy!');
         } else if (data.type === 'start_game') {
           const role = data.role;
-          startFreshGame(name, 'multi', role, lobbyCode);
-          navigate('/play');
+          startFreshGame(name, 'multi', role, lobbyCode).then(() => navigate('/play'));
         } else if (data.type === 'error') {
           notify(data.msg, 'error');
         }
@@ -73,10 +76,10 @@ export default function MainMenu() {
     return n;
   }
 
-  function playSingle() {
+  async function playSingle() {
     const n = validate();
     if (!n) return;
-    startFreshGame(n, 'single', null, null);
+    await startFreshGame(n, 'single', null, null);
     navigate('/play');
   }
 
@@ -113,8 +116,7 @@ export default function MainMenu() {
         .then((r) => r.json())
         .then((d) => {
           if (d.status === 'success') {
-            startFreshGame(n, 'multi', 'guest', joinCode);
-            navigate('/play');
+            startFreshGame(n, 'multi', 'guest', joinCode).then(() => navigate('/play'));
           } else {
             notify('Istaba nav atrasta vai jau pilna.', 'error');
           }
@@ -165,8 +167,18 @@ export default function MainMenu() {
     draw();
 
     const resize = () => {
+      const oldW = canvas.width;
+      const oldH = canvas.height;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      if (oldW > 0 && oldH > 0) {
+        const sx = canvas.width / oldW;
+        const sy = canvas.height / oldH;
+        particlesRef.current.forEach((p) => {
+          p.x *= sx;
+          p.y *= sy;
+        });
+      }
     };
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
@@ -194,12 +206,12 @@ export default function MainMenu() {
                 onKeyDown={(e) => { if (e.key === 'Enter') playSingle(); }}
               />
             </div>
-            <button className={styles.btn} onClick={playSingle}>Spelet vienam</button>
-            <button className={styles.btn} onClick={() => setShowModePanel(true)}>Spelet ar draugu</button>
-            <button className={styles.btn} onClick={() => navigate('/leaderboard')}>Top 10</button>
-            <button className={styles.btn} onClick={() => setShowSettings(true)}>Iestatijumi</button>
-            <button className={styles.btn} onClick={() => setShowAbout(true)}>Par speli</button>
-            <button className={styles.btn} onClick={() => window.location.href = 'https://www.google.com'}>Iziet</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={playSingle}>Spelet vienam</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={() => setShowModePanel(true)}>Spelet ar draugu</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={() => navigate('/leaderboard')}>Top 10</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={() => setShowSettings(true)}>Iestatijumi</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={() => setShowAbout(true)}>Par speli</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={() => window.location.href = 'https://www.google.com'}>Iziet</button>
           </div>
         ) : lobbyCode ? (
           <div className={styles.lobby}>
@@ -207,9 +219,9 @@ export default function MainMenu() {
             <div className={styles.codeBox}>{lobbyCode}</div>
             <p className={styles.lobbyStatus}>{lobbyStatus}</p>
             {lobbyStatus.includes('pievienojās') && (
-              <button className={styles.btn} onClick={sendLobbyReady}>Esmu gatavy!</button>
+              <button className={styles.btn} onMouseEnter={playHover} onClick={sendLobbyReady}>Esmu gatavy!</button>
             )}
-            <button className={styles.btnSecondary} onClick={() => { setLobbyCode(null); setShowModePanel(false); }}>
+            <button className={styles.btnSecondary} onMouseEnter={playHover} onClick={() => { setLobbyCode(null); setShowModePanel(false); }}>
               Atcelt
             </button>
           </div>
@@ -226,7 +238,7 @@ export default function MainMenu() {
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
-            <button className={styles.btn} onClick={createLobby}>Izveidot istabu</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={createLobby}>Izveidot istabu</button>
             <div className={styles.divider} />
             <div className={styles.inputWrapper}>
               <label className={styles.inputLabel}>Drauga kods</label>
@@ -240,8 +252,8 @@ export default function MainMenu() {
                 onKeyDown={(e) => { if (e.key === 'Enter') joinLobby(); }}
               />
             </div>
-            <button className={styles.btn} onClick={joinLobby}>Pievienoties</button>
-            <button className={styles.btnSecondary} onClick={() => setShowModePanel(false)}>Atcelt</button>
+            <button className={styles.btn} onMouseEnter={playHover} onClick={joinLobby}>Pievienoties</button>
+            <button className={styles.btnSecondary} onMouseEnter={playHover} onClick={() => setShowModePanel(false)}>Atcelt</button>
           </div>
         )}
       </div>

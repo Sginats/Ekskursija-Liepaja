@@ -55,7 +55,7 @@ export default function AboutModal({ open, onClose }) {
       <h3 className={styles.section}>Izmantotie resursi</h3>
       <div className={styles.resources}>
         <p><strong>Atteli:</strong> OpenStreetMap, Freepik</p>
-        <p><strong>Audio:</strong> Brivās licences audio</p>
+        <p><strong>Audio:</strong> Programmatiski ģenerēts CC0 audio (hover skaņa un fona mūzika)</p>
         <p><strong>Informacija:</strong> liepaja.lv, rtu.lv, wikipedia.org</p>
         <p><strong>Bibliotēkas:</strong> Bootstrap 5, Node.js, Phaser 3</p>
       </div>

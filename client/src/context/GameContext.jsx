@@ -125,9 +125,20 @@ export function GameProvider({ children }) {
     return n;
   }, []);
 
-  const startFreshGame = useCallback((name, mode, role, lobbyCode) => {
+  const gameTokenRef = useRef(null);
+
+  const startFreshGame = useCallback(async (name, mode, role, lobbyCode) => {
     gameState.reset();
     antiCheat._recordAction && antiCheat._recordAction('game_start', { name, mode });
+
+    // Request a server-side game token
+    try {
+      const res = await fetch('../src/php/start_game.php', { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (data.token) {
+        gameTokenRef.current = data.token;
+      }
+    } catch (_) {}
 
     // Build new question set
     const q = {};
@@ -199,6 +210,7 @@ export function GameProvider({ children }) {
     questionsRef,
     antiCheat,
     gameState,
+    gameTokenRef,
     TOTAL_TASKS,
     taskSequence,
   };

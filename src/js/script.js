@@ -116,6 +116,7 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 let quizWrongCount = 0;
+let _serverGameToken = null;
 
 
 // Configuration
@@ -275,6 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
     startTime = Date.now();
     initTheme();
     initBackground();
+
+    // Request a server-side game token for anti-cheat
+    fetch('src/php/start_game.php', { method: 'POST', credentials: 'include' })
+        .then(r => r.json())
+        .then(d => { if (d.token) _serverGameToken = d.token; })
+        .catch(() => {});
     
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
@@ -312,6 +319,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
     }
+
+    // Background music setup
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) {
+        const savedMusicVolume = localStorage.getItem('musicVolume');
+        bgMusic.volume = savedMusicVolume ? savedMusicVolume / 100 : 0.3;
+        const startMusic = () => {
+            bgMusic.play().catch(() => {});
+            document.removeEventListener('click', startMusic);
+            document.removeEventListener('keydown', startMusic);
+        };
+        document.addEventListener('click', startMusic);
+        document.addEventListener('keydown', startMusic);
+    }
+
+    // Hover sound on buttons
+    document.querySelectorAll('.btn, .btnMini, .theme-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            if (sfx && sfx.volume > 0) {
+                sfx.currentTime = 0;
+                sfx.play().catch(() => {});
+            }
+        });
+    });
+
     const musicSlider = document.querySelector('input[oninput*="setMusicVolume"]');
     if (musicSlider) {
         const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -1386,9 +1418,11 @@ function finishGame(name, finalScore, time) {
     formData.append('token', token);
     formData.append('tasks', _taskCompletionLog.length);
     formData.append('violations', _ac.violations);
+    formData.append('gameToken', _serverGameToken || '');
     
     fetch('src/php/save_score.php', {
         method: 'POST',
+        credentials: 'include',
         body: formData
     })
     .then(response => response.text())
@@ -1403,6 +1437,10 @@ function finishGame(name, finalScore, time) {
 function exitGame() { window.location.href = 'https://www.google.com'; }
 function setMusicVolume(v) { 
     localStorage.setItem('musicVolume', v);
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) {
+        bgMusic.volume = v / 100;
+    }
 }
 function setSFXVolume(v) { 
     const sfx = document.getElementById('hover-sound');
@@ -1600,8 +1638,18 @@ function initBackground() {
     }
 
     function resize() {
+        const oldW = bgCanvas.width;
+        const oldH = bgCanvas.height;
         bgCanvas.width = window.innerWidth;
         bgCanvas.height = window.innerHeight;
+        if (oldW > 0 && oldH > 0) {
+            const sx = bgCanvas.width / oldW;
+            const sy = bgCanvas.height / oldH;
+            bgParticles.forEach(p => {
+                p.x *= sx;
+                p.y *= sy;
+            });
+        }
     }
     bgResizeHandler = resize;
     resize();
