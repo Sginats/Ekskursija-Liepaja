@@ -1786,3 +1786,75 @@ body[data-theme="blue"] #tabulaiTR {
         right: 15px;
     }
 }
+
+/* Simon Says game */
+.simon-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-width: 220px;
+    margin: 15px auto;
+}
+.simon-btn {
+    height: 75px;
+    border-radius: 10px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.simon-btn.simon-red    { background: #8b0000; border-color: #c0392b; }
+.simon-btn.simon-blue   { background: #00008b; border-color: #2980b9; }
+.simon-btn.simon-green  { background: #006400; border-color: #27ae60; }
+.simon-btn.simon-yellow { background: #7a5c00; border-color: #d4a017; }
+.simon-btn.simon-red.lit    { background: #ff4444; border-color: #ff0000; box-shadow: 0 0 20px rgba(255,0,0,0.7); }
+.simon-btn.simon-blue.lit   { background: #4488ff; border-color: #0055ff; box-shadow: 0 0 20px rgba(0,100,255,0.7); }
+.simon-btn.simon-green.lit  { background: #44cc55; border-color: #00aa22; box-shadow: 0 0 20px rgba(0,200,60,0.7); }
+.simon-btn.simon-yellow.lit { background: #ffdd44; border-color: #ddaa00; box-shadow: 0 0 20px rgba(255,200,0,0.7); }
+
+/* Memory card game */
+.mem-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 300px;
+    margin: 0 auto;
+    perspective: 600px;
+}
+.mem-card {
+    aspect-ratio: 1;
+    cursor: pointer;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.45s ease;
+    border-radius: 8px;
+}
+.mem-card.flipped,
+.mem-card.matched { transform: rotateY(180deg); }
+.mem-back,
+.mem-front {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+.mem-back {
+    background: rgba(255,170,0,0.12);
+    border: 2px solid rgba(255,170,0,0.4);
+    font-size: 20px;
+    font-weight: bold;
+    color: rgba(255,170,0,0.7);
+}
+.mem-front {
+    background: rgba(20,10,10,0.9);
+    border: 2px solid rgba(255,170,0,0.6);
+    font-size: 26px;
+    transform: rotateY(180deg);
+}
+.mem-card.matched .mem-front {
+    border-color: rgba(100,220,100,0.6);
+    background: rgba(0,50,0,0.5);
+}
