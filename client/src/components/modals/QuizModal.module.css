@@ -156,3 +156,50 @@
   .guideImg   { width: 60px; }
   .bubble     { flex: 1; margin: 0; font-size: 11px; }
 }
+
+/* ---- Timer & Combo ---- */
+.questionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.timer {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.timerCritical {
+  font-size: 13px;
+  font-weight: bold;
+  color: #f44336;
+  white-space: nowrap;
+  flex-shrink: 0;
+  animation: timerPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes timerPulse {
+  from { opacity: 1; }
+  to   { opacity: 0.45; }
+}
+
+.combo {
+  font-size: 13px;
+  font-weight: bold;
+  color: #ff9800;
+  text-align: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 152, 0, 0.12);
+  border: 1px solid rgba(255, 152, 0, 0.35);
+  animation: comboBounce 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes comboBounce {
+  from { transform: scale(1); }
+  to   { transform: scale(1.04); }
+}

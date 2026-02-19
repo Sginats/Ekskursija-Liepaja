@@ -11,9 +11,6 @@ import EndGameModal from '../modals/EndGameModal.jsx';
 import { NotificationContainer } from '../common/Notification.jsx';
 import styles from './GameMap.module.css';
 
-const MINI_GAME_LOCATIONS = new Set(['RTU', 'Osta', 'Mols']);
-const HISTORY_LOCATIONS = new Set(['Teatris']);
-
 const MAP_POINTS = [
   { id: 'Mols',      color: 'yellow', top: '12%', left: '11%', label: 'Ziemelu mols' },
   { id: 'Cietums',   color: 'green',  top: '24%', left: '44%', label: 'Karostas cietums' },
@@ -28,7 +25,7 @@ const MAP_POINTS = [
 ];
 
 export default function GameMap() {
-  const { state, dispatch, completeTask, notify, TOTAL_TASKS, taskSequence, antiCheat } = useGame();
+  const { state, dispatch, completeTask, notify, TOTAL_TASKS, taskSequence, antiCheat, taskTypeRef } = useGame();
   const navigate = useNavigate();
 
   const [activeModal, setActiveModal] = useState(null);
@@ -37,14 +34,25 @@ export default function GameMap() {
   const [showEnd, setShowEnd] = useState(false);
   const [tooltip, setTooltip] = useState({ visible: false, text: '', x: 0, y: 0 });
 
-  const { completedTasks, score, startTime, playerName } = state;
+  const { completedTasks, score, startTime, playerName, lives, maxLives, difficulty } = state;
 
-  // Show end game if all tasks are done (e.g. restored session)
+  // Show end game if all tasks are done (e.g. restored session) OR lives ran out (Hard)
   useEffect(() => {
-    if (completedTasks >= TOTAL_TASKS && !showEnd) {
+    if (!showEnd && (completedTasks >= TOTAL_TASKS || (difficulty === 'hard' && lives <= 0))) {
       setShowEnd(true);
     }
-  }, [completedTasks, TOTAL_TASKS, showEnd]);
+  }, [completedTasks, lives, difficulty, TOTAL_TASKS, showEnd]);
+
+  // Notify player when they switch tabs during a game
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        notify('Brīdinājums: cilnes maiņa tiek reģistrēta!', 'warning', 3000);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [notify]);
 
   const getPointState = useCallback(
     (id) => {
@@ -60,20 +68,21 @@ export default function GameMap() {
     (id) => {
       const idx = taskSequence.indexOf(id);
       if (idx !== completedTasks) {
-        notify('Veic uzdevumus pec kartas!', 'warning');
+        notify('Veic uzdevumus pēc kārtas!', 'warning');
         return;
       }
       dispatch({ type: 'SET_LOCATION', location: id });
 
-      if (MINI_GAME_LOCATIONS.has(id)) {
+      const taskType = taskTypeRef.current?.[id] || 'quiz';
+      if (taskType === 'minigame') {
         setActiveModal('minigame');
-      } else if (HISTORY_LOCATIONS.has(id)) {
+      } else if (id === 'Teatris') {
         setActiveModal('history');
       } else {
         setActiveModal('quiz');
       }
     },
-    [completedTasks, taskSequence, dispatch, notify]
+    [completedTasks, taskSequence, dispatch, notify, taskTypeRef]
   );
 
   const handleTaskComplete = useCallback(
@@ -97,17 +106,26 @@ export default function GameMap() {
       {/* Top bar */}
       <nav className={styles.topbar}>
         <button className={styles.topBtn} onClick={() => navigate('/')}>
-          Atpakal
-        </button>
-        <span className={styles.scoreDisplay}>Punkti: {score}</span>
-        <div className={styles.topRight}>
-          <button className={styles.topBtn} onClick={() => setShowSettings(true)}>
-            Iestatijumi
+            Atpakaļ
           </button>
-          <button className={styles.topBtn} onClick={() => setShowAbout(true)}>
-            Par speli
-          </button>
-        </div>
+          <div className={styles.topCenter}>
+            <span className={styles.scoreDisplay}>Punkti: {score}</span>
+            {difficulty === 'hard' && maxLives !== null && (
+              <div className={styles.livesDisplay}>
+                {Array.from({ length: maxLives }, (_, i) => (
+                  <span key={i} className={i < lives ? styles.heartAlive : styles.heartDead}>♥</span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className={styles.topRight}>
+            <button className={styles.topBtn} onClick={() => setShowSettings(true)}>
+              Iestatījumi
+            </button>
+            <button className={styles.topBtn} onClick={() => setShowAbout(true)}>
+              Par spēli
+            </button>
+          </div>
       </nav>
 
       {/* Map area */}
@@ -129,7 +147,7 @@ export default function GameMap() {
                 }
                 onMouseLeave={() => setTooltip((t) => ({ ...t, visible: false }))}
                 aria-label={pt.label}
-                disabled={st !== 'active'}
+                aria-disabled={st !== 'active'}
                 data-game
               />
             );
@@ -141,15 +159,15 @@ export default function GameMap() {
           <p className={styles.legendTitle}>Apskates vietas</p>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-green']}`} />
-            Daba un atputa
+            Daba un atpūta
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-blue']}`} />
-            Kultura un vesture
+            Kultūra un vēsture
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-yellow']}`} />
-            RTU akademija
+            RTU akadēmija
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-red']}`} />
@@ -190,6 +208,7 @@ export default function GameMap() {
         score={score}
         startTime={startTime}
         playerName={playerName}
+        isGameOver={difficulty === 'hard' && lives <= 0 && completedTasks < TOTAL_TASKS}
         onClose={() => navigate('/')}
       />
 

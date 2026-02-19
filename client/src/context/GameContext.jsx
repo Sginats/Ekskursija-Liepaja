@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 import { gameState } from '../game/GameState.js';
+import { MAX_LIVES, LIVES_BY_DIFFICULTY } from '../game/GameState.js';
 import { antiCheat } from '../game/AntiCheat.js';
 import { taskSequence, TOTAL_TASKS } from '../game/taskSequence.js';
 import { pickQuestion } from '../game/questions.js';
@@ -24,6 +25,10 @@ const initialState = {
   startTime: null,
   score: 0,
   completedTasks: 0,
+  lives: null,              // null = Normal (no lives system), number = Hard
+  maxLives: null,
+  combo: 0,
+  difficulty: 'normal',
   currentLocation: null,
   selectedQuestions: {},    // { locationKey: { id, q, fact } }
   notifications: [],
@@ -48,6 +53,10 @@ function reducer(state, action) {
         startTime: action.startTime,
         score: action.score || 0,
         completedTasks: action.completedTasks || 0,
+        lives: action.lives !== undefined ? action.lives : MAX_LIVES,
+        maxLives: action.maxLives !== undefined ? action.maxLives : MAX_LIVES,
+        difficulty: action.difficulty || 'normal',
+        combo: action.combo || 0,
         selectedQuestions: action.questions || {},
       };
     case 'SET_LOCATION':
@@ -56,6 +65,10 @@ function reducer(state, action) {
       return { ...state, score: action.score };
     case 'COMPLETE_TASK':
       return { ...state, completedTasks: action.completedTasks };
+    case 'SET_LIVES':
+      return { ...state, lives: action.lives };
+    case 'SET_COMBO':
+      return { ...state, combo: action.combo };
     case 'END_GAME':
       return { ...state, gamePhase: 'ended' };
     case 'RESET_GAME':
@@ -95,6 +108,7 @@ export function GameProvider({ children }) {
 
   // Pre-select one random question per location at session start.
   const questionsRef = useRef({});
+  const taskTypeRef  = useRef({});   // { locationKey: 'quiz' | 'minigame' }
   useEffect(() => {
     const q = {};
     taskSequence.forEach((loc) => {
@@ -125,10 +139,62 @@ export function GameProvider({ children }) {
     return n;
   }, []);
 
+  const loseLife = useCallback(() => {
+    const remaining = gameState.loseLife();
+    dispatch({ type: 'SET_LIVES', lives: remaining });
+    return remaining;
+  }, []);
+
+  const incrementCombo = useCallback(() => {
+    const c = gameState.incrementCombo();
+    dispatch({ type: 'SET_COMBO', combo: c });
+    return c;
+  }, []);
+
+  const resetCombo = useCallback(() => {
+    gameState.resetCombo();
+    dispatch({ type: 'SET_COMBO', combo: 0 });
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Admin-only helpers (bypass anti-cheat, for testing only)
+  // ---------------------------------------------------------------------------
+  const adminAddScore = useCallback((pts) => {
+    const newScore = gameState.addScore(pts);
+    dispatch({ type: 'ADD_SCORE', score: newScore });
+    return newScore;
+  }, []);
+
+  const adminJumpToTask = useCallback((targetIdx) => {
+    const idx = Math.max(0, Math.min(TOTAL_TASKS, targetIdx));
+    // Directly patch the in-memory manager and re-seal the checksum via restore
+    gameState.restore(
+      gameState.getScore(),
+      idx,
+      gameState.getLives(),
+      gameState.getCombo(),
+      gameState.getMaxLives(),
+    );
+    gameState._persist();
+    dispatch({ type: 'COMPLETE_TASK', completedTasks: idx });
+  }, []);
+
+  const adminSetTimer = useCallback((seconds) => {
+    window.dispatchEvent(new CustomEvent('admin:setTimer', { detail: { seconds } }));
+  }, []);
+
+  const adminSkipTask = useCallback(() => {
+    const n = gameState.completeTask();
+    dispatch({ type: 'COMPLETE_TASK', completedTasks: n });
+    // Close any active modal by firing a skip event
+    window.dispatchEvent(new CustomEvent('admin:skipTask'));
+    return n;
+  }, []);
+
   const gameTokenRef = useRef(null);
 
-  const startFreshGame = useCallback(async (name, mode, role, lobbyCode) => {
-    gameState.reset();
+  const startFreshGame = useCallback(async (name, mode, role, lobbyCode, difficulty = 'normal') => {
+    gameState.reset(difficulty);
     antiCheat._recordAction && antiCheat._recordAction('game_start', { name, mode });
 
     // Request a server-side game token
@@ -140,12 +206,16 @@ export function GameProvider({ children }) {
       }
     } catch (_) {}
 
-    // Build new question set
+    // Build new question set and randomise task type (50 % quiz / 50 % mini-game) per location
     const q = {};
+    const types = {};
     taskSequence.forEach((loc) => {
       q[loc] = pickQuestion(loc);
+      types[loc] = Math.random() < 0.5 ? 'minigame' : 'quiz';
     });
     questionsRef.current = q;
+    taskTypeRef.current  = types;
+    gameState.saveTaskTypes(types);
 
     const startTime = Date.now();
     gameState.saveStartTime(startTime);
@@ -165,6 +235,10 @@ export function GameProvider({ children }) {
       startTime,
       score: 0,
       completedTasks: 0,
+      lives: gameState.getLives(),      // null for Normal, 3 for Hard
+      maxLives: gameState.getMaxLives(), // null for Normal, 3 for Hard
+      difficulty,
+      combo: 0,
       questions: q,
     });
   }, []);
@@ -173,11 +247,18 @@ export function GameProvider({ children }) {
     const restored = gameState.loadFromSession();
     const savedStart = gameState.getStartTime();
 
+    // Build new question set (restore task types from session or re-randomise)
     const q = {};
-    taskSequence.forEach((loc) => {
-      q[loc] = pickQuestion(loc);
-    });
+    taskSequence.forEach((loc) => { q[loc] = pickQuestion(loc); });
     questionsRef.current = q;
+
+    const savedTypes = gameState.loadTaskTypes();
+    const types = savedTypes || {};
+    if (!savedTypes) {
+      taskSequence.forEach((loc) => { types[loc] = Math.random() < 0.5 ? 'minigame' : 'quiz'; });
+      gameState.saveTaskTypes(types);
+    }
+    taskTypeRef.current = types;
 
     const startTime = savedStart || Date.now();
     if (!savedStart) gameState.saveStartTime(startTime);
@@ -189,6 +270,10 @@ export function GameProvider({ children }) {
       startTime,
       score: restored ? gameState.getScore() : 0,
       completedTasks: restored ? gameState.getCompleted() : 0,
+      lives: restored ? gameState.getLives() : null,
+      maxLives: restored ? gameState.getMaxLives() : null,
+      difficulty: restored ? (gameState.getMaxLives() === null ? 'normal' : 'hard') : 'normal',
+      combo: restored ? gameState.getCombo() : 0,
       questions: q,
     });
 
@@ -205,13 +290,22 @@ export function GameProvider({ children }) {
     dismissNotification,
     addScore,
     completeTask,
+    loseLife,
+    incrementCombo,
+    resetCombo,
     startFreshGame,
     restoreSession,
     questionsRef,
     antiCheat,
     gameState,
     gameTokenRef,
+    taskTypeRef,
+    adminAddScore,
+    adminJumpToTask,
+    adminSetTimer,
+    adminSkipTask,
     TOTAL_TASKS,
+    MAX_LIVES,
     taskSequence,
   };
 

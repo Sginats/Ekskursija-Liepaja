@@ -7,7 +7,7 @@ import styles from './EndGameModal.module.css';
 
 const SCORE_SAVED_KEY = '_scoreSaved';
 
-export default function EndGameModal({ open, score, startTime, playerName, onClose }) {
+export default function EndGameModal({ open, score, startTime, playerName, onClose, isGameOver = false }) {
   const { antiCheat, notify, gameState, state, gameTokenRef } = useGame();
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
@@ -44,18 +44,18 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
       formData.append('gameToken', gameTokenRef?.current || '');
 
       const res = await fetch('../src/php/save_score.php', { method: 'POST', credentials: 'include', body: formData });
-      const text = await res.text();
+      const data = await res.json().catch(() => ({ success: false, message: res.statusText }));
 
-      if (text.startsWith('Success') || text.trim() === 'Success') {
+      if (data.success) {
         sessionStorage.setItem(SCORE_SAVED_KEY, antiCheat.sessionId);
         gameState.clearSession();
         setSaved(true);
-        notify('Rezultats saglabats!', 'success', 2000);
+        notify('Rezultāts saglabāts!', 'success', 2000);
       } else {
-        notify(`Kludda: ${text.substring(0, 60)}`, 'error');
+        notify(`Kļūda: ${String(data.message || '').substring(0, 80)}`, 'error');
       }
     } catch (_) {
-      notify('Savienojuma kludda.', 'error');
+      notify('Savienojuma kļūda.', 'error');
     } finally {
       setSaving(false);
     }
@@ -75,8 +75,10 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
   return (
     <Modal open={open}>
       <div className={styles.root} data-game>
-        <h2 className={styles.title}>Apsveicam!</h2>
-        <p className={styles.medalLine}>{medal} rezultats</p>
+        <h2 className={styles.title}>{isGameOver ? 'Spēle beigusies!' : 'Apsveicam!'}</h2>
+        <p className={styles.medalLine}>
+          {isGameOver ? '💔 Dzīvības beidzās' : medal + ' rezultāts'}
+        </p>
 
         <div className={styles.scoreBox}>
           <div className={styles.scoreRow}>
@@ -89,23 +91,27 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
           </div>
         </div>
 
-        <p className={styles.finishedMsg}>Tu esi pabeidzis ekskursiju pa Liepajas pilsetu!</p>
+        <p className={styles.finishedMsg}>
+          {isGameOver
+            ? 'Dzīvības beidzās pirms ekskursijas beigām. Mēģini vēlreiz!'
+            : 'Tu esi pabeidzis ekskursiju pa Liepājas pilsētu!'}
+        </p>
 
         <div className={styles.btnGroup}>
-          {!saved ? (
+          {!isGameOver && !saved ? (
             <button className={styles.btn} onClick={handleSave} disabled={saving}>
-              {saving ? 'Saglabajas...' : 'Saglabat rezultatu'}
+              {saving ? 'Saglabājas…' : 'Saglabāt rezultātu'}
             </button>
           ) : (
             <button className={`${styles.btn} ${styles.btnSaved}`} onClick={handleViewLeaderboard}>
-              Skatit Top 10
+              Skatīt Top 10
             </button>
           )}
           <button className={styles.btnSecondary} onClick={handleNewGame}>
-            Jauna spele
+            Jauna spēle
           </button>
           <button className={styles.btnSecondary} onClick={() => { gameState.clearSession(); onClose(); }}>
-            Atpakal uz menu
+            Atpakaļ uz izvēlni
           </button>
         </div>
       </div>

@@ -97,13 +97,11 @@
   border-color: #777;
   transform: translate(-50%, -50%) scale(0.85);
   cursor: default;
-  pointer-events: none;
 }
 .locked {
   opacity: 0.4;
   filter: grayscale(0.8);
   cursor: default;
-  pointer-events: none;
 }
 
 @keyframes radarPulse {
@@ -166,6 +164,33 @@
   z-index: 1000;
   white-space: nowrap;
   box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+}
+
+.topCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.livesDisplay {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.heartAlive {
+  color: #e53935;
+  font-size: 18px;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(229, 57, 53, 0.7);
+  transition: transform 0.2s;
+}
+
+.heartDead {
+  color: #444;
+  font-size: 18px;
+  line-height: 1;
 }
 
 /* ---- Responsive ---- */

@@ -42,14 +42,17 @@ function LeaderboardTable({ data, sortMode, onSortTime, onSortScore }) {
         <tbody>
           {top10.length === 0 ? (
             <tr><td colSpan={4} className={styles.empty}>Nav rezultātu</td></tr>
-          ) : top10.map((row, i) => (
-            <tr key={i}>
-              <td>{i + 1}</td>
-              <td>{row.name}</td>
-              <td>{row.time}</td>
-              <td>{row.score}</td>
-            </tr>
-          ))}
+          ) : top10.map((row, i) => {
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+            return (
+              <tr key={i} className={i < 3 ? styles[`rank${i + 1}`] : ''}>
+                <td>{medal ? <span>{medal}</span> : i + 1}</td>
+                <td>{row.name}</td>
+                <td>{row.time}</td>
+                <td>{row.score}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </>
@@ -185,7 +188,7 @@ export default function Leaderboard() {
         </div>
 
         <button className={styles.btn} onClick={() => navigate('/')}>
-          Atpakaļ uz menu
+          Atpakaļ uz izvēlni
         </button>
       </div>
     </div>

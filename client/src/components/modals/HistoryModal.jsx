@@ -19,7 +19,7 @@ function shuffle(arr) {
 }
 
 export default function HistoryModal({ open, onComplete, onClose }) {
-  const { addScore, antiCheat, notify } = useGame();
+  const { addScore, antiCheat, notify, gameTokenRef } = useGame();
   const [items, setItems] = useState(() => shuffle(EVENTS));
   const [phase, setPhase] = useState('play');
   const [wrong, setWrong] = useState(false);
@@ -39,6 +39,23 @@ export default function HistoryModal({ open, onComplete, onClose }) {
     const correct = items.every((it, i) => i === 0 || it.year >= items[i - 1].year);
     if (correct) {
       addScore(10);
+      // Record score server-side so save_score.php uses the correct total
+      if (gameTokenRef?.current) {
+        fetch('../src/php/record_task_score.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            gameToken: gameTokenRef.current,
+            taskId: 'Teatris',
+            points: 10,
+          }),
+        }).catch(() => {
+          // Fire-and-forget: a network failure here is not fatal for UX.
+          // If the session is broken, save_score.php will also fail and
+          // the user will see an error at that point.
+        });
+      }
       antiCheat.recordTaskEnd('Teatris', 10);
       setPhase('success');
       notify('+10 punkti!', 'success', 2000);

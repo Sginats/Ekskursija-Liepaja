@@ -54,8 +54,42 @@ $alternatives = isset($entry['alt']) ? array_map(
     $entry['alt']
 ) : [];
 
-// Check exact match or alternative
-$isCorrect = ($userAnswer === $correct) || in_array($userAnswer, $alternatives, true);
+// ---------------------------------------------------------------------------
+// Grammar-tolerant answer comparison
+// Accepts answers with missing Latvian diacritics (e.g. "liepajas" for
+// "liepājas") and allows a single-character typo for answers of 6+ characters.
+// Note: both $userAnswer and $correct are already mb_strtolower-ed above,
+// so only lowercase diacritic mappings are needed here.
+// ---------------------------------------------------------------------------
+function normalizeDiacritics(string $s): string {
+    return str_replace(
+        ['ā','č','ē','ģ','ī','ķ','ļ','ņ','š','ū','ž'],
+        ['a','c','e','g','i','k','l','n','s','u','z'],
+        $s
+    );
+}
+
+function fuzzyMatchAnswer(string $user, string $correct): bool {
+    if ($user === $correct) return true;
+    // Diacritic-insensitive comparison
+    $nu = normalizeDiacritics($user);
+    $nc = normalizeDiacritics($correct);
+    if ($nu === $nc) return true;
+    // Allow one-character typo for answers of six or more characters
+    if (strlen($nc) >= 6 && levenshtein($nu, $nc) === 1) return true;
+    return false;
+}
+
+// Check against correct answer and all alternatives
+$isCorrect = fuzzyMatchAnswer($userAnswer, $correct);
+if (!$isCorrect) {
+    foreach ($alternatives as $alt) {
+        if (fuzzyMatchAnswer($userAnswer, $alt)) {
+            $isCorrect = true;
+            break;
+        }
+    }
+}
 
 // Track answers server-side for score verification
 $gameToken = isset($data['gameToken']) ? $data['gameToken'] : '';
@@ -68,7 +102,9 @@ if (!empty($gameToken) && isset($_SESSION['game_token']) && $_SESSION['game_toke
     if ($isCorrect && !$alreadyAnswered) {
         $_SESSION['game_answered'][] = $questionId;
         $isFinal = isset($data['final']) && $data['final'] === true;
-        $pts = $isFinal ? 5 : 10;
+        $multiplier = isset($data['multiplier']) ? intval($data['multiplier']) : 1;
+        $multiplier = max(1, min(4, $multiplier)); // cap at x4 server-side
+        $pts = ($isFinal ? 5 : 10) * $multiplier;
         $_SESSION['game_score'] = ($_SESSION['game_score'] ?? 0) + $pts;
         $_SESSION['game_tasks'] = ($_SESSION['game_tasks'] ?? 0) + 1;
     }
