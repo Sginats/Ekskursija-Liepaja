@@ -1,0 +1,99 @@
+/* ============================================================
+   Global styles — variables set by ThemeContext via JS
+   ============================================================ */
+
+:root {
+  --bg-primary:    #332222;
+  --bg-secondary:  #2a1a1a;
+  --bg-tertiary:   #1a1010;
+  --accent-primary:   #ffaa00;
+  --accent-secondary: #ff8800;
+  --border-color:  #553333;
+  --text-primary:  #ffffff;
+  --text-secondary: #cccccc;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  height: 100%;
+}
+
+body {
+  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+/* Wave background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(
+    135deg,
+    var(--bg-tertiary),
+    var(--bg-secondary),
+    var(--bg-primary),
+    var(--bg-secondary),
+    var(--bg-tertiary)
+  );
+  background-size: 400% 400%;
+  animation: bgWave 14s ease infinite;
+  pointer-events: none;
+}
+
+/* Pulsing vignette overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
+  animation: vignetteWave 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bgWave {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes vignetteWave {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+/* Disable animations when requested */
+body.no-animations *,
+body.no-animations {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+}
+body.no-animations::before,
+body.no-animations::after {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--bg-tertiary); }
+
+/* Focus */
+:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+
+/* Typography */
+h1, h2, h3 { margin: 0; }
+p { margin: 0; }

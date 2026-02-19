@@ -1,0 +1,81 @@
+.canvas {
+  width: 100%;
+  min-height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+.infoName {
+  color: var(--accent-primary);
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
+.infoDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 16px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+  color: var(--accent-primary);
+  border: 2px solid var(--accent-primary);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 1px;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn:hover  { transform: translateY(-1px); }
+.btn:active { transform: none; }
+
+.closeBtn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.closeBtn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+
+.retry {
+  margin-top: 10px;
+}
+
+.success {
+  color: #4caf50;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  padding: 16px;
+}
+
+.failText {
+  color: #f44336;
+  font-size: 15px;
+  text-align: center;
+  margin: 10px 0;
+}
