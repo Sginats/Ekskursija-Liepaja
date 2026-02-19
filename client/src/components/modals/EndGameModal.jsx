@@ -1,13 +1,15 @@
 import React, { useCallback, useState } from 'react';
 import Modal from '../common/Modal.jsx';
 import { useGame } from '../../context/GameContext.jsx';
+import { useNavigate } from 'react-router-dom';
 import { TOTAL_TASKS } from '../../game/taskSequence.js';
 import styles from './EndGameModal.module.css';
 
 const SCORE_SAVED_KEY = '_scoreSaved';
 
 export default function EndGameModal({ open, score, startTime, playerName, onClose }) {
-  const { antiCheat, notify, gameState } = useGame();
+  const { antiCheat, notify, gameState, state } = useGame();
+  const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -38,6 +40,7 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
       formData.append('token', payload.token);
       formData.append('tasks', TOTAL_TASKS);
       formData.append('violations', payload.violations);
+      formData.append('mode', state.mode || 'single');
 
       const res = await fetch('../src/php/save_score.php', { method: 'POST', body: formData });
       const text = await res.text();
@@ -55,10 +58,11 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
     } finally {
       setSaving(false);
     }
-  }, [saved, saving, score, formattedTime, playerName, antiCheat, elapsed, notify, gameState]);
+  }, [saved, saving, score, formattedTime, playerName, antiCheat, elapsed, notify, gameState, state.mode]);
 
   const handleViewLeaderboard = () => {
-    window.location.href = '../src/php/leaderboard.php';
+    gameState.clearSession();
+    navigate('/leaderboard');
   };
 
   const handleNewGame = () => {

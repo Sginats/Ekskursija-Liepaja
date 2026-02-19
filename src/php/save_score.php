@@ -9,6 +9,7 @@ $time = isset($_REQUEST['time']) ? $_REQUEST['time'] : null;
 $token = isset($_REQUEST['token']) ? $_REQUEST['token'] : null;
 $tasks = isset($_REQUEST['tasks']) ? intval($_REQUEST['tasks']) : 0;
 $violations = isset($_REQUEST['violations']) ? intval($_REQUEST['violations']) : 0;
+$mode = isset($_REQUEST['mode']) ? $_REQUEST['mode'] : 'single';
 
 if ($name === null) {
     $json = file_get_contents('php://input');
@@ -20,6 +21,7 @@ if ($name === null) {
         $token = isset($data['token']) ? $data['token'] : null;
         $tasks = isset($data['tasks']) ? intval($data['tasks']) : 0;
         $violations = isset($data['violations']) ? intval($data['violations']) : 0;
+        $mode = isset($data['mode']) ? $data['mode'] : 'single';
     }
 }
 
@@ -61,7 +63,9 @@ if ($name !== null && $score !== null) {
     }
 
     $line = $name . "|" . $score . "|" . $time . "\n";
-    $file = __DIR__ . "/../data/leaderboard.txt";
+    $file = ($mode === 'multi')
+        ? __DIR__ . "/../data/teams_leaderboard.txt"
+        : __DIR__ . "/../data/leaderboard.txt";
 
     if (file_put_contents($file, $line, FILE_APPEND | LOCK_EX) !== false) {
         echo "Success";
