@@ -55,7 +55,7 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
 
   const submit = useCallback(async () => {
     if (!antiCheat.validateAnswerSubmission()) {
-      notify('Atbilde iesniegta parsāk atri!', 'warning');
+      notify('Atbilde iesniegta pārāk ātri!', 'warning');
       return;
     }
     if (!answer.trim()) {

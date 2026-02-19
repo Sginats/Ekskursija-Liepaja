@@ -88,7 +88,7 @@ export class FishingScene extends Phaser.Scene {
       .setOrigin(0.5, 1);
 
     this.distLabel = this.add
-      .text(width / 2, height - 14, 'Attālums lidz zivij', {
+      .text(width / 2, height - 14, 'Attālums līdz zivij', {
         fontFamily: 'Poppins, Arial',
         fontSize: '11px',
         color: 'rgba(255,255,255,0.5)',

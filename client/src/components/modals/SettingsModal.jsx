@@ -24,7 +24,7 @@ export default function SettingsModal({ open, onClose }) {
         onChange={(e) => setMusicVolume(Number(e.target.value))}
         className={styles.slider}
       />
-      <label className={styles.label}>Skanas efekti</label>
+      <label className={styles.label}>Skaņas efekti</label>
       <input
         type="range" min="0" max="100"
         value={sfxVolume}

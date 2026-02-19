@@ -33,7 +33,7 @@ export default function HistoryModal({ open, onComplete, onClose }) {
 
   const check = () => {
     if (!antiCheat.validateAnswerSubmission()) {
-      notify('Atbilde iesniegta pārstak atri!', 'warning');
+      notify('Atbilde iesniegta pārāk ātri!', 'warning');
       return;
     }
     const correct = items.every((it, i) => i === 0 || it.year >= items[i - 1].year);
