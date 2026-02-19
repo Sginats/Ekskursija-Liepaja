@@ -8,7 +8,7 @@ import styles from './EndGameModal.module.css';
 const SCORE_SAVED_KEY = '_scoreSaved';
 
 export default function EndGameModal({ open, score, startTime, playerName, onClose }) {
-  const { antiCheat, notify, gameState, state } = useGame();
+  const { antiCheat, notify, gameState, state, gameTokenRef } = useGame();
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -41,8 +41,9 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
       formData.append('tasks', TOTAL_TASKS);
       formData.append('violations', payload.violations);
       formData.append('mode', state.mode || 'single');
+      formData.append('gameToken', gameTokenRef?.current || '');
 
-      const res = await fetch('../src/php/save_score.php', { method: 'POST', body: formData });
+      const res = await fetch('../src/php/save_score.php', { method: 'POST', credentials: 'include', body: formData });
       const text = await res.text();
 
       if (text.startsWith('Success') || text.trim() === 'Success') {
@@ -58,7 +59,7 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
     } finally {
       setSaving(false);
     }
-  }, [saved, saving, score, formattedTime, playerName, antiCheat, elapsed, notify, gameState, state.mode]);
+  }, [saved, saving, score, formattedTime, playerName, antiCheat, elapsed, notify, gameState, state.mode, gameTokenRef]);
 
   const handleViewLeaderboard = () => {
     gameState.clearSession();

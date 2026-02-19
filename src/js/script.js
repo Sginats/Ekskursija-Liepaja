@@ -116,6 +116,7 @@ let myLobbyCode = '';
 let globalName = "Anonīms";
 let ws = null;
 let quizWrongCount = 0;
+let _serverGameToken = null;
 
 
 // Configuration
@@ -275,6 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
     startTime = Date.now();
     initTheme();
     initBackground();
+
+    // Request a server-side game token for anti-cheat
+    fetch('src/php/start_game.php', { method: 'POST', credentials: 'include' })
+        .then(r => r.json())
+        .then(d => { if (d.token) _serverGameToken = d.token; })
+        .catch(() => {});
     
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
@@ -1386,9 +1393,11 @@ function finishGame(name, finalScore, time) {
     formData.append('token', token);
     formData.append('tasks', _taskCompletionLog.length);
     formData.append('violations', _ac.violations);
+    formData.append('gameToken', _serverGameToken || '');
     
     fetch('src/php/save_score.php', {
         method: 'POST',
+        credentials: 'include',
         body: formData
     })
     .then(response => response.text())
