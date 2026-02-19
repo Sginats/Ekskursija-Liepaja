@@ -1,219 +1,107 @@
 # 🗺️ Mācību ekskursija Liepājā
 
-Interaktīva tīmekļa spēle, kuras mērķis ir iepazīstināt lietotājus ar Liepājas kultūrvēsturiskajām vietām, uzņēmumiem un izglītības iespējām, pildot dažādus uzdevumus un sacenšoties par labākajiem rezultātiem.
+Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izpēti 10 apmeklējuma punktus kartē, atbildi uz jautājumiem un sacenšoties par vietu Top 10!
+
+**Autori:** Niks Šenvalds, Dans Bitenieks (Grupa 2PT)
 
 ---
 
-## 📝 Par projektu
+## 🎮 Spēles noteikumi
 
-Šis projekts tika izstrādāts kā mācību darbs. Spēle piedāvā virtuālu ekskursiju pa Liepāju, kurā spēlētājam jāatrod objekti kartē, jāatbild uz jautājumiem un jāsacenšas par labāko rezultātu. Spēlē ir iespējams spēlēt vienam vai ar draugu reālajā laikā.
-
-**Autori:**
-* **Niks Šenvalds** (Grupa 2PT)
-* **Dans Bitenieks** (Grupa 2PT)
-
----
-
-## 📸 Ekrānuzņēmumi
-
-| Galvenā izvēlne | Spēles režīmu izvēle |
-|---|---|
-| ![Galvenā izvēlne](atteli/screenshots/menu.png) | ![Spēles režīmu izvēle](atteli/screenshots/mode.png) |
-
-| Iestatījumi | Spēles karte |
-|---|---|
-| ![Iestatījumi](atteli/screenshots/settings.png) | ![Spēles karte](atteli/screenshots/map.png) |
+1. Apmeklē **10 vietas** Liepājā noteiktā secībā.
+2. Katrā vietā saņem informāciju par vietu un **uzdevumu** (jautājums, mini-spēle vai secības uzdevums).
+3. Punktu sistēma:
+   - ✅ Pareiza atbilde 1. mēģinājumā → **+10 punkti**
+   - ⚠️ Pareiza atbilde pēc 1 kļūdas → **+5 punkti**
+   - ❌ 2 kļūdas → **0 punkti**, atbilde parādās automātiski
+4. Pēdējā vieta vienmēr ir **atpūtas vieta**.
+5. Spēles beigās saglabā rezultātu un iekļūsti **Top 10**!
 
 ---
 
-## 🚀 Galvenā funkcionalitāte
+## 🗺️ Kartes leģenda
 
-### 🎮 Spēles režīmi
-* **Viena spēlētāja režīms:** Izpēti Liepāju savā tempā
-* **Multiplayer režīms:** Spēlē ar draugu reālajā laikā, izmantojot WebSocket savienojumu
+| Krāsa | Kategorija |
+|-------|-----------|
+| 🟢 Zaļš | Daba un atpūta |
+| 🔵 Zils | Kultūra un vēsture |
+| 🟡 Dzeltens | RTU Liepājas akadēmija |
+| 🔴 Sarkans | Industrija un osta |
 
-### 🗺️ Interaktīvā karte
-* Liepājas karte ar 10 aktīviem apmeklējuma punktiem
-* Dinamiska punktu aktivizācija (spīdošs efekts aktīvajiem punktiem)
-* Tooltip ar vietas nosaukumu, uzvedot peli
-* Punkti ir sagrupēti pēc kategorijām:
-    * 🟢 **Zaļš:** Daba un atpūta
-    * 🔵 **Zils:** Kultūra un vēsture
-    * 🟡 **Dzeltens:** RTU Liepājas akadēmija
-    * 🔴 **Sarkans:** Industrija un osta
+---
 
-### 🎯 Uzdevumu sistēma
-* Katrai vietai ir unikāls interaktīvs uzdevums (viktorīnas, mini-spēles, secības uzdevumi)
-* Punktu skaitīšana:
-    * ✅ Pareiza atbilde pirmajā mēģinājumā: **+10 punkti**
-    * ⚠️ Pareiza atbilde pēc 1 nepareizas: **+5 punkti**
-    * ❌ 2 nepareizas atbildes: **0 punkti**, atbilde tiek parādīta
-* Teorija par vietu tiek parādīta pirms uzdevuma — atbildes jāatrod pašam
-* Secīga vietu izpilde (jāievēro noteikta kārta)
+## ✨ Galvenās funkcijas
 
-### 📊 Rezultātu sistēma
-* **Top 10 rezultātu tabula** ar labākajiem spēlētājiem
-* Kombinēts vērtējums: punkti + laiks
-* Laika uzskaite spēles laikā
-* Rezultātu saglabāšana servera pusē (PHP + leaderboard.txt)
-
-### 🎨 Lietotāja saskarne
-* Animēts trīsstūru fona efekts ar 3D perspektīvu
-* 4 krāsu tēmas (Noklusējuma, Violeta, Tumši sarkana, Zila)
-* Virsraksts un akcenti mainās atbilstoši izvēlētajai tēmai
-* Poppins fonts visam tekstam
-* Animētas modālās lodziņi un pogas
-* Custom paziņojumu sistēma
-* Responsive dizains visiem ekrāna izmēriem
-
-### ⚙️ Iestatījumi
-* Mūzikas skaļuma kontrole
-* Skaņas efektu skaļuma kontrole
-* 4 krāsu tēmas
-* Animāciju ieslēgšana/izslēgšana
-* Iestatījumi pieejami gan galvenajā izvēlnē, gan spēles laikā
-
-### 🔌 Real-time funkcionalitāte
-* WebSocket savienojums multiplayer režīmam
-* PHP polling kā fallback hostinga vidēm
-* Connection status indikators
-* Lobby sistēma ar unikāliem kodiem
-* Reāllaika spēlētāju sinhronizācija
+- **Viena spēlētāja** un **multiplayer** režīms (spēlē ar draugu reālajā laikā)
+- **Mini-spēles:** laivas sacīkstes, kukaiņu ķeršana, vēstures secības kārtošana
+- **4 krāsu tēmas:** Noklusējuma (zelts), Violeta, Tumši sarkana, Zila
+- **Animēts fons:** daļiņu sistēma, kas pielāgojas izvēlētajai tēmai
+- **Iestatījumi:** mūzikas/SFX skaļums, tēma, animācijas on/off
+- **Top 10 tabula** ar kombinēto punktu + laika vērtējumu
 
 ---
 
 ## 🛠️ Tehnoloģijas
 
-* **Frontend:**
-  * HTML5 - Semantiska lapas struktūra
-  * CSS3 - Moderns dizains ar gradientiem, animācijām un pārejām
-  * JavaScript (ES6+) - Spēles loģika, WebSocket komunikācija, DOM manipulācija
-  * Google Fonts (Poppins) - Tipografija
-
-* **Backend:**
-  * PHP - Rezultātu saglabāšana un leaderboard API
-  * Node.js - WebSocket servera implementācija multiplayer režīmam
-
-* **Papildus:**
-  * WebSocket - Reāllaika divvirzienu komunikācija
-  * LocalStorage - Lietotāja preferenču saglabāšana (tēma, skaļums, animācijas)
-  * Bootstrap 5.3.2 - UI komponentu bāze
+| Slānis | Rīki |
+|--------|------|
+| Frontend | HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.3.2 |
+| Backend | PHP (leaderboard, multiplayer lobby) |
+| Real-time | WebSocket (Node.js) + PHP polling fallback |
+| Cits | Google Fonts (Poppins), LocalStorage, AI: Gemini, Claude, Copilot |
 
 ---
 
-## 📁 Projekta struktūra
+## 📁 Struktūra
 
 ```
 Ekskursija-Liepaja/
-├── index.html              # Galvenā izvēlne
-├── map.html                # Spēles karte
-├── style.css               # Visi stili
-├── atteli/                 # Attēli (karte, gids)
-├── skana/                  # Audio faili (mūzika, skaņas)
+├── index.html          # Galvenā izvēlne
+├── map.html            # Spēles karte
+├── style.css           # Visi stili
+├── atteli/             # Attēli
+├── skana/              # Audio
 └── src/
     ├── js/
-    │   ├── script.js       # Galvenā spēles loģika
-    │   └── server.js       # WebSocket serveris
-    ├── php/
-    │   ├── leaderboard.php # Rezultātu tabula
-    │   ├── save_score.php  # Rezultātu saglabāšana
-    │   ├── lobby.php       # Multiplayer lobby backend
-    │   └── mini_backend.php # Mini-spēļu backend
-    └── data/
-        ├── leaderboard.txt # Rezultātu fails
-        └── lobbies.json    # Aktīvo lobby stāvoklis
+    │   ├── script.js   # Spēles loģika
+    │   └── server.js   # WebSocket serveris
+    ├── php/            # Backend (leaderboard, lobby, mini-spēles)
+    └── data/           # leaderboard.txt, lobbies.json
 ```
 
 ---
 
-## 🎯 Pabeigtas funkcijas
+## 🚀 Palaišana
 
-### ✅ Pilnībā implementēts
-* [x] Interaktīva karte ar tooltip sistēmu
-* [x] 10 apmeklējuma vietas ar unikāliem uzdevumiem
-* [x] Punktu skaitīšana (+10/+5/0 sistēma)
-* [x] Mini-spēles: laivas sacīkstes, kukaiņu ķeršana, vēstures secība
-* [x] "Par spēli" logs ar pilnu informāciju
-* [x] Iestatījumu logs (audio, tēma, animācijas)
-* [x] Top 10 rezultātu tabula ar kombinēto vērtējumu
-* [x] Rezultātu saglabāšana serverī ar anti-cheat validāciju
-* [x] Multiplayer režīms ar WebSocket + PHP polling fallback
-* [x] Custom paziņojumu sistēma (bez browser alerts)
-* [x] 4 krāsu tēmas ar dinamisku virsrakstu
-* [x] Animēts 3D trīsstūru fona efekts
-* [x] Poppins fonts visam tekstam
-* [x] Animētas pārejas un efekti
-* [x] Connection status indikators
-* [x] Sākuma ekrāns ar autoriem
-* [x] Secīga vietu izpilde
+> Vajadzīgs tikai **PHP**. Node.js ir neobligāts.
 
----
-
-## 🚀 Instalācija un palaišana
-
-⚠️ **SVARĪGI: Tev vajag tikai PHP! Node.js nav obligāts.**
-
-### Ātrā palaišana (Ieteicams):
-
-Palaid vienu komandu:
 ```bash
+# Ieteicamā metode
+php -S localhost:8000
+# Atvērt: http://localhost:8000/index.html
+```
+
+**Papildus — ātrāks WebSocket lokāli** *(tikai localhost, uz hostinga nedarbojas)*:
+
+```bash
+# 1. terminālis
+npm install && node src/js/server.js
+
+# 2. terminālis
 php -S localhost:8000
 ```
 
-Atvēr pārlūkprogrammā:
-```
-http://localhost:8000/index.html
-```
-
-✅ **Viss darbojas!** Multiplayer, leaderboard, viss!
-
-### Papildus opcija: WebSocket (tikai localhost):
-
-**⚠️ WebSocket darbojas TIKAI lokāli, NEVAR izmantot uz hostinga!**
-
-Ja vēlies ātrāku multiplayer lokāli:
-
-1. **1. terminālis - WebSocket:**
-   ```bash
-   npm install
-   node src/js/server.js
-   ```
-
-2. **2. terminālis - PHP:**
-   ```bash
-   php -S localhost:8000
-   ```
-
-3. **Atvērt pārlūkprogrammā:**
-   ```
-   http://localhost:8000/index.html
-   ```
+Sistēma automātiski izvēlas labāko pieejamo savienojumu (WebSocket → PHP polling).
 
 ---
 
-## 📊 Multiplayer sistēma
+## 📚 Resursi
 
-Projekts izmanto **hibrīdu pieeju**:
-- **PHP polling** (noklusējums) - Darbojas uz jebkura hostinga
-- **WebSocket** (localhost) - Ātrāks, bet tikai lokālai izstrādei
-
-Sistēma automātiski izvēlas labāko pieejamo variantu.
-
----
-
-## 📚 Izmantotie resursi
-
-* **Karte:** OpenStreetMap (© OpenStreetMap contributors)
-* **Attēli:**
-  * Kaija (Gids): Autoru oriģinālzīmējums
-* **Informācija:** liepaja.lv, rtu.lv, Liepājas muzejs, wikipedia.org
-* **Fonts:** Google Fonts (Poppins)
-* **Tehnoloģijas:** Bootstrap 5.3.2, Node.js, WebSocket
+- **Karte:** OpenStreetMap (© OpenStreetMap contributors)
+- **Gida attēls (Kaija):** Autoru oriģinālzīmējums
+- **Informācija:** liepaja.lv, rtu.lv, Liepājas muzejs, wikipedia.org
+- **Audio:** Brīvās licences mūzika, autoru SFX ieraksti
 
 ---
 
-## 📄 Licences
-
-© 2026 Niks Šenvalds, Dans Bitenieks.
-
-Šis projekts ir izstrādāts izglītības nolūkos.
+© 2026 Niks Šenvalds, Dans Bitenieks — izglītības projekts.
