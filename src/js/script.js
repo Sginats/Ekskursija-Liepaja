@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
     startTime = Date.now();
     initTheme();
-    initTriangleBackground();
+    initBackground();
     
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
@@ -1564,49 +1564,121 @@ function updateActiveThemeButton(savedTheme) {
     });
 }
 
-function initTriangleBackground() {
+let bgCanvas = null;
+let bgCtx = null;
+let bgAnimId = null;
+let bgParticles = [];
+let bgResizeHandler = null;
+
+function getBgThemeColor() {
+    const theme = document.body.getAttribute('data-theme') || 'default';
+    const colors = {
+        'default': { r: 255, g: 170, b: 0   },
+        'dark':    { r: 187, g: 134, b: 252  },
+        'light':   { r: 255, g: 68,  b: 68   },
+        'blue':    { r: 255, g: 215, b: 0    },
+    };
+    return colors[theme] || colors['default'];
+}
+
+function initBackground() {
     const wrap = document.getElementById('bg-wrap');
     if (!wrap) return;
-    
-    const total = 200;
-    const time = 10;
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `
-        @keyframes triAnim {
-            0% {
-                opacity: 1;
-                transform: rotate(var(--tri-end-rotate)) translate3d(var(--tri-end-x), var(--tri-end-y), 1000px) scale(1);
+
+    wrap.innerHTML = '';
+
+    bgCanvas = document.createElement('canvas');
+    bgCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+    wrap.appendChild(bgCanvas);
+
+    if (bgAnimId) {
+        cancelAnimationFrame(bgAnimId);
+        bgAnimId = null;
+    }
+    if (bgResizeHandler) {
+        window.removeEventListener('resize', bgResizeHandler);
+    }
+
+    function resize() {
+        bgCanvas.width = window.innerWidth;
+        bgCanvas.height = window.innerHeight;
+    }
+    bgResizeHandler = resize;
+    resize();
+    window.addEventListener('resize', bgResizeHandler);
+
+    bgCtx = bgCanvas.getContext('2d');
+
+    const count = 70;
+    bgParticles = [];
+    for (let i = 0; i < count; i++) {
+        bgParticles.push({
+            x: Math.random() * bgCanvas.width,
+            y: Math.random() * bgCanvas.height,
+            radius: Math.random() * 2.5 + 0.5,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            phase: Math.random() * Math.PI * 2,
+            phaseSpeed: Math.random() * 0.015 + 0.005,
+            baseOpacity: Math.random() * 0.4 + 0.1,
+        });
+    }
+
+    function drawBg() {
+        bgAnimId = requestAnimationFrame(drawBg);
+
+        const c = getBgThemeColor();
+        const w = bgCanvas.width;
+        const h = bgCanvas.height;
+
+        bgCtx.clearRect(0, 0, w, h);
+
+        bgParticles.forEach(p => {
+            if (animationsEnabled) {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.phase += p.phaseSpeed;
+                if (p.x < 0) p.x = w;
+                if (p.x > w) p.x = 0;
+                if (p.y < 0) p.y = h;
+                if (p.y > h) p.y = 0;
+            }
+
+            const opacity = p.baseOpacity * (0.7 + 0.3 * Math.sin(p.phase));
+            const r = p.radius * (0.9 + 0.2 * Math.sin(p.phase));
+
+            const grd = bgCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 8);
+            grd.addColorStop(0, `rgba(${c.r},${c.g},${c.b},${opacity * 0.8})`);
+            grd.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0)`);
+            bgCtx.fillStyle = grd;
+            bgCtx.beginPath();
+            bgCtx.arc(p.x, p.y, r * 8, 0, Math.PI * 2);
+            bgCtx.fill();
+
+            bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${Math.min(opacity * 3, 1)})`;
+            bgCtx.beginPath();
+            bgCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            bgCtx.fill();
+        });
+
+        for (let i = 0; i < bgParticles.length; i++) {
+            for (let j = i + 1; j < bgParticles.length; j++) {
+                const dx = bgParticles[i].x - bgParticles[j].x;
+                const dy = bgParticles[i].y - bgParticles[j].y;
+                const d = Math.sqrt(dx * dx + dy * dy);
+                if (d < 150) {
+                    bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${0.06 * (1 - d / 150)})`;
+                    bgCtx.lineWidth = 0.5;
+                    bgCtx.beginPath();
+                    bgCtx.moveTo(bgParticles[i].x, bgParticles[i].y);
+                    bgCtx.lineTo(bgParticles[j].x, bgParticles[j].y);
+                    bgCtx.stroke();
+                }
             }
         }
-    `;
-    document.head.appendChild(styleEl);
-    
-    for (let i = 0; i < total; i++) {
-        const size = Math.floor(Math.random() * 50) + 1;
-        const rotate = Math.floor(Math.random() * 360);
-        const hue = Math.floor(Math.random() * 360);
-        const endX = Math.floor(Math.random() * 1000);
-        const endY = Math.floor(Math.random() * 1000);
-        const delay = -(i * (time / total));
-        
-        const tri = document.createElement('div');
-        tri.className = 'tri';
-        tri.style.cssText = `
-            border-top: ${size}px solid hsla(${hue}, 100%, 50%, 1);
-            border-right: ${size}px solid transparent;
-            border-left: ${size}px solid transparent;
-            margin-left: -${size / 2}px;
-            margin-top: -${size / 2}px;
-            --tri-end-rotate: ${rotate * 1.5}deg;
-            --tri-end-x: ${endX}px;
-            --tri-end-y: ${endY}px;
-            transform: rotate(${rotate}deg) translate3d(0,0,-1500px) scale(0);
-            animation: triAnim ${time}s infinite linear;
-            animation-delay: ${delay}s;
-            opacity: 0;
-        `;
-        wrap.appendChild(tri);
     }
+
+    drawBg();
 }
 
 function toggleModal(id) {
