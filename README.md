@@ -6,6 +6,18 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ---
 
+## 📸 Ekrānuzņēmumi
+
+| Galvenā izvēlne | Karte |
+|---|---|
+| ![Galvenā izvēlne](https://github.com/user-attachments/assets/2c789e74-9af4-4ac9-b5b8-a9ad561d3fb2) | ![Karte](https://github.com/user-attachments/assets/760394d0-f15d-4934-ab0f-836fe24204ce) |
+
+| Spēles režīms | Iestatījumi |
+|---|---|
+| ![Spēles režīms](https://github.com/user-attachments/assets/a781828b-e696-47cf-8716-8363b8c1eaf2) | ![Iestatījumi](https://github.com/user-attachments/assets/5565a59e-b661-4354-96c9-d15137f8de0c) |
+
+---
+
 ## 🎮 Spēles noteikumi
 
 1. Apmeklē **10 vietas** Liepājā noteiktā secībā.
