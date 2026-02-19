@@ -319,6 +319,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
         sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
     }
+
+    // Background music setup
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) {
+        const savedMusicVolume = localStorage.getItem('musicVolume');
+        bgMusic.volume = savedMusicVolume ? savedMusicVolume / 100 : 0.3;
+        const startMusic = () => {
+            bgMusic.play().catch(() => {});
+            document.removeEventListener('click', startMusic);
+            document.removeEventListener('keydown', startMusic);
+        };
+        document.addEventListener('click', startMusic);
+        document.addEventListener('keydown', startMusic);
+    }
+
+    // Hover sound on buttons
+    document.querySelectorAll('.btn, .btnMini, .theme-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            if (sfx && sfx.volume > 0) {
+                sfx.currentTime = 0;
+                sfx.play().catch(() => {});
+            }
+        });
+    });
+
     const musicSlider = document.querySelector('input[oninput*="setMusicVolume"]');
     if (musicSlider) {
         const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -1412,6 +1437,10 @@ function finishGame(name, finalScore, time) {
 function exitGame() { window.location.href = 'https://www.google.com'; }
 function setMusicVolume(v) { 
     localStorage.setItem('musicVolume', v);
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) {
+        bgMusic.volume = v / 100;
+    }
 }
 function setSFXVolume(v) { 
     const sfx = document.getElementById('hover-sound');

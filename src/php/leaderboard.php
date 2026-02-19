@@ -59,6 +59,7 @@
     <div class="wrap" id="bg-wrap"></div>
     <canvas id="cursor-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;"></canvas>
     <audio id="hover-sound" src="../../assets/skana/hover.mp3" preload="auto"></audio>
+    <audio id="bg-music" src="../../skana/music.mp3" loop preload="auto"></audio>
     <div id="connection-status" class="connection-status" style="display: none;"></div>
 
     <div class="container" style="position:relative;z-index:1;max-height:100vh;overflow-y:auto;padding:30px 20px;">
