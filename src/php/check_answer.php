@@ -102,7 +102,9 @@ if (!empty($gameToken) && isset($_SESSION['game_token']) && $_SESSION['game_toke
     if ($isCorrect && !$alreadyAnswered) {
         $_SESSION['game_answered'][] = $questionId;
         $isFinal = isset($data['final']) && $data['final'] === true;
-        $pts = $isFinal ? 5 : 10;
+        $multiplier = isset($data['multiplier']) ? intval($data['multiplier']) : 1;
+        $multiplier = max(1, min(4, $multiplier)); // cap at x4 server-side
+        $pts = ($isFinal ? 5 : 10) * $multiplier;
         $_SESSION['game_score'] = ($_SESSION['game_score'] ?? 0) + $pts;
         $_SESSION['game_tasks'] = ($_SESSION['game_tasks'] ?? 0) + 1;
     }

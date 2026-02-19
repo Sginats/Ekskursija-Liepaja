@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 import { gameState } from '../game/GameState.js';
+import { MAX_LIVES } from '../game/GameState.js';
 import { antiCheat } from '../game/AntiCheat.js';
 import { taskSequence, TOTAL_TASKS } from '../game/taskSequence.js';
 import { pickQuestion } from '../game/questions.js';
@@ -24,6 +25,8 @@ const initialState = {
   startTime: null,
   score: 0,
   completedTasks: 0,
+  lives: MAX_LIVES,
+  combo: 0,
   currentLocation: null,
   selectedQuestions: {},    // { locationKey: { id, q, fact } }
   notifications: [],
@@ -48,6 +51,8 @@ function reducer(state, action) {
         startTime: action.startTime,
         score: action.score || 0,
         completedTasks: action.completedTasks || 0,
+        lives: action.lives !== undefined ? action.lives : MAX_LIVES,
+        combo: action.combo || 0,
         selectedQuestions: action.questions || {},
       };
     case 'SET_LOCATION':
@@ -56,6 +61,10 @@ function reducer(state, action) {
       return { ...state, score: action.score };
     case 'COMPLETE_TASK':
       return { ...state, completedTasks: action.completedTasks };
+    case 'SET_LIVES':
+      return { ...state, lives: action.lives };
+    case 'SET_COMBO':
+      return { ...state, combo: action.combo };
     case 'END_GAME':
       return { ...state, gamePhase: 'ended' };
     case 'RESET_GAME':
@@ -125,6 +134,23 @@ export function GameProvider({ children }) {
     return n;
   }, []);
 
+  const loseLife = useCallback(() => {
+    const remaining = gameState.loseLife();
+    dispatch({ type: 'SET_LIVES', lives: remaining });
+    return remaining;
+  }, []);
+
+  const incrementCombo = useCallback(() => {
+    const c = gameState.incrementCombo();
+    dispatch({ type: 'SET_COMBO', combo: c });
+    return c;
+  }, []);
+
+  const resetCombo = useCallback(() => {
+    gameState.resetCombo();
+    dispatch({ type: 'SET_COMBO', combo: 0 });
+  }, []);
+
   const gameTokenRef = useRef(null);
 
   const startFreshGame = useCallback(async (name, mode, role, lobbyCode) => {
@@ -165,6 +191,8 @@ export function GameProvider({ children }) {
       startTime,
       score: 0,
       completedTasks: 0,
+      lives: MAX_LIVES,
+      combo: 0,
       questions: q,
     });
   }, []);
@@ -189,6 +217,8 @@ export function GameProvider({ children }) {
       startTime,
       score: restored ? gameState.getScore() : 0,
       completedTasks: restored ? gameState.getCompleted() : 0,
+      lives: restored ? gameState.getLives() : MAX_LIVES,
+      combo: restored ? gameState.getCombo() : 0,
       questions: q,
     });
 
@@ -205,6 +235,9 @@ export function GameProvider({ children }) {
     dismissNotification,
     addScore,
     completeTask,
+    loseLife,
+    incrementCombo,
+    resetCombo,
     startFreshGame,
     restoreSession,
     questionsRef,
@@ -212,6 +245,7 @@ export function GameProvider({ children }) {
     gameState,
     gameTokenRef,
     TOTAL_TASKS,
+    MAX_LIVES,
     taskSequence,
   };
 

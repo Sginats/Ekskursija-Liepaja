@@ -48,6 +48,10 @@ class AntiCheat {
     this._lastSubmitTime = 0;
     this._submitCount = 0;
 
+    // Focus loss tracking
+    this._focusLost = false;
+    this._focusLostAt = null;
+
     // Honeypot: set up a hidden input that legitimate users never touch
     this._honeyValue = null;
     this._setupHoneypot();
@@ -55,6 +59,9 @@ class AntiCheat {
     // DevTools detection
     this._devToolsOpen = false;
     this._setupDevToolsDetection();
+
+    // Focus loss detection
+    this._setupFocusLossDetection();
 
     // Behavioral tracking
     this._setupBehaviorTracking();
@@ -132,6 +139,12 @@ class AntiCheat {
       return false;
     }
 
+    // Focus loss check — submitting while tab was hidden is suspicious
+    if (document.hidden || this._focusLost) {
+      this._addViolation('answer_while_hidden', 'Answer submitted while tab was hidden', 'critical');
+      return false;
+    }
+
     this._recordAction('answer_submit', { submitCount: this._submitCount });
     return true;
   }
@@ -177,6 +190,10 @@ class AntiCheat {
 
   get sessionId() {
     return this._sessionId;
+  }
+
+  get focusLost() {
+    return this._focusLost;
   }
 
   // -------------------------------------------------------------------------
@@ -271,6 +288,22 @@ class AntiCheat {
     };
     setInterval(check, 2000);
     window.addEventListener('resize', check);
+  }
+
+  _setupFocusLossDetection() {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this._focusLost = true;
+        this._focusLostAt = Date.now();
+      } else {
+        this._focusLost = false;
+        if (this._focusLostAt !== null) {
+          const duration = Date.now() - this._focusLostAt;
+          this._addViolation('focus_loss', `Tab hidden for ${duration}ms`, 'medium');
+          this._focusLostAt = null;
+        }
+      }
+    });
   }
 
   _setupHoneypot() {

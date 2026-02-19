@@ -72,8 +72,14 @@ export function AudioProvider({ children }) {
     }
   }, [sfxVolume]);
 
+  const setMusicRate = useCallback((rate) => {
+    if (musicRef.current) {
+      musicRef.current.playbackRate = Math.max(0.5, Math.min(4, rate));
+    }
+  }, []);
+
   return (
-    <AudioContext.Provider value={{ playHover }}>
+    <AudioContext.Provider value={{ playHover, setMusicRate }}>
       {children}
     </AudioContext.Provider>
   );
