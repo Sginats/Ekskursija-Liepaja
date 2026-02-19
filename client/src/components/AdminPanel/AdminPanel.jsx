@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useAdmin } from '../../context/AdminContext.jsx';
 import { useGame } from '../../context/GameContext.jsx';
 import { taskSequence } from '../../game/taskSequence.js';
+import answers from '@data/answers.json';
 import styles from './AdminPanel.module.css';
 
 export default function AdminPanel() {
@@ -19,6 +20,7 @@ export default function AdminPanel() {
   const [ptInput,   setPtInput]   = useState('10');
   const [tmInput,   setTmInput]   = useState('30');
   const [taskInput, setTaskInput] = useState('0');
+  const [showAns,   setShowAns]   = useState(false);
 
   const onAddPts = useCallback(() => {
     const pts = parseInt(ptInput, 10);
@@ -36,6 +38,14 @@ export default function AdminPanel() {
   }, [taskInput, adminJumpToTask]);
 
   if (!isAdmin) return null;
+
+  // Derive current question answer from state
+  const currentLoc = state.currentLocation;
+  const currentQ   = currentLoc ? state.selectedQuestions?.[currentLoc] : null;
+  const answerEntry = currentQ ? answers[currentQ.id] : null;
+  const correctAnswer = answerEntry
+    ? [answerEntry.answer, ...(answerEntry.alt || [])].join(' / ')
+    : null;
 
   return (
     <div className={`${styles.panel} ${collapsed ? styles.panelCollapsed : ''}`}>
@@ -58,6 +68,29 @@ export default function AdminPanel() {
             <span>Punkti: <b>{state.score}</b></span>
             <span>Uzd.: <b>{state.completedTasks}/{TOTAL_TASKS}</b></span>
           </div>
+
+          <div className={styles.divider} />
+
+          {/* ── Show Answer ───────────────────────────────── */}
+          <label className={styles.label}>Pareizā atbilde</label>
+          {currentQ ? (
+            <div className={styles.answerBlock}>
+              <p className={styles.answerQuestion}>{currentQ.q}</p>
+              <button
+                className={`${styles.btn} ${styles.btnWide} ${styles.btnAnswer}`}
+                onClick={() => setShowAns(v => !v)}
+              >
+                {showAns ? '🙈 Paslēpt' : '👁 Rādīt atbildi'}
+              </button>
+              {showAns && (
+                <div className={styles.answerReveal}>
+                  {correctAnswer ?? '—'}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className={styles.answerNone}>Nav aktīva jautājuma</p>
+          )}
 
           <div className={styles.divider} />
 
