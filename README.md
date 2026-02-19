@@ -14,6 +14,18 @@ Interaktīva tīmekļa spēle, kuras mērķis ir iepazīstināt lietotājus ar L
 
 ---
 
+## 📸 Ekrānuzņēmumi
+
+| Galvenā izvēlne | Spēles režīmu izvēle |
+|---|---|
+| ![Galvenā izvēlne](atteli/screenshots/menu.png) | ![Spēles režīmu izvēle](atteli/screenshots/mode.png) |
+
+| Iestatījumi | Spēles karte |
+|---|---|
+| ![Iestatījumi](atteli/screenshots/settings.png) | ![Spēles karte](atteli/screenshots/map.png) |
+
+---
+
 ## 🚀 Galvenā funkcionalitāte
 
 ### 🎮 Spēles režīmi
