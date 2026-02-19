@@ -97,13 +97,11 @@
   border-color: #777;
   transform: translate(-50%, -50%) scale(0.85);
   cursor: default;
-  pointer-events: none;
 }
 .locked {
   opacity: 0.4;
   filter: grayscale(0.8);
   cursor: default;
-  pointer-events: none;
 }
 
 @keyframes radarPulse {

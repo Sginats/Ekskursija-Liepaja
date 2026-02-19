@@ -149,7 +149,7 @@ export default function GameMap() {
                 }
                 onMouseLeave={() => setTooltip((t) => ({ ...t, visible: false }))}
                 aria-label={pt.label}
-                disabled={st !== 'active'}
+                aria-disabled={st !== 'active'}
                 data-game
               />
             );
