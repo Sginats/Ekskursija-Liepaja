@@ -1,0 +1,53 @@
+.root { text-align: center; }
+.title { color: var(--accent-primary); font-size: 26px; margin: 0 0 6px; text-transform: uppercase; }
+.medalLine { color: var(--text-secondary); font-size: 16px; margin: 0 0 18px; }
+
+.scoreBox {
+  background: rgba(0,0,0,0.3);
+  border: 2px solid var(--accent-primary);
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scoreRow { display: flex; justify-content: space-between; align-items: center; }
+.scoreLabel { font-size: 14px; color: var(--text-secondary); }
+.scoreValue { font-size: 22px; font-weight: bold; color: var(--accent-primary); }
+
+.finishedMsg { font-size: 14px; color: var(--text-secondary); margin: 0 0 20px; line-height: 1.5; }
+
+.btnGroup { display: flex; flex-direction: column; gap: 10px; }
+
+.btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+  color: var(--accent-primary);
+  border: 2px solid var(--accent-primary);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s;
+}
+.btn:hover   { transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btnSaved    { border-color: #4caf50; color: #4caf50; }
+
+.btnSecondary {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btnSecondary:hover { border-color: var(--accent-primary); color: var(--accent-primary); }

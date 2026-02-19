@@ -1,5 +1,9 @@
 # Dependencies
 node_modules/
+client/node_modules/
+
+# Build output
+dist/
 
 # Logs
 *.log

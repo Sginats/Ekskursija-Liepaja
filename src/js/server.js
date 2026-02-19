@@ -13,25 +13,20 @@ const RECONNECT_GRACE_PERIOD = 30000;
 const heartbeatInterval = setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
         if (ws.isAlive === false) {
-            console.log('Terminating inactive client');
             return ws.terminate();
         }
         ws.isAlive = false;
         ws.ping();
     });
 }, HEARTBEAT_INTERVAL);
+
 wss.on('close', function close() {
     clearInterval(heartbeatInterval);
-    console.log('WebSocket server closed, cleanup completed');
 });
 
-console.log("WebSocket server started on port 8080");
-
-wss.on('connection', (ws, req) => {
+wss.on('connection', (ws) => {
     ws.isAlive = true;
     ws.on('pong', () => { ws.isAlive = true; });
-    
-    console.log(`New client connected from ${req.socket.remoteAddress}`);
 
     ws.on('message', (message) => {
         try {
@@ -49,26 +44,17 @@ wss.on('connection', (ws, req) => {
                     created: Date.now()
                 };
                 ws.send(JSON.stringify({ type: 'created', code: newCode }));
-                console.log(`[CREATE] Lobby ${newCode} created. Total lobbies: ${Object.keys(lobbies).length}`);
             }
 
             else if (action === 'join') {
                 if (!lobbies[code]) {
-                    ws.send(JSON.stringify({ 
-                        type: 'error', 
-                        msg: 'Istaba nav atrasta. Pārbaudi kodu.' 
-                    }));
+                    ws.send(JSON.stringify({ type: 'error', msg: 'Istaba nav atrasta. Pārbaudi kodu.' }));
                     return;
                 }
-                
                 if (lobbies[code].guest) {
-                    ws.send(JSON.stringify({ 
-                        type: 'error', 
-                        msg: 'Istaba jau ir pilna.' 
-                    }));
+                    ws.send(JSON.stringify({ type: 'error', msg: 'Istaba jau ir pilna.' }));
                     return;
                 }
-                
                 lobbies[code].guest = ws;
                 lobbies[code].lastActive = Date.now();
                 lobbies[code].hostReady = false;
@@ -77,18 +63,13 @@ wss.on('connection', (ws, req) => {
                     lobbies[code].host.send(JSON.stringify({ type: 'guest_joined' }));
                 }
                 ws.send(JSON.stringify({ type: 'joined_lobby', code: code }));
-                console.log(`[JOIN] Guest joined lobby ${code}. Waiting for ready confirmation.`);
             }
 
             else if (action === 'ready') {
                 if (!lobbies[code]) {
-                    ws.send(JSON.stringify({ 
-                        type: 'error', 
-                        msg: 'Istaba nav atrasta.' 
-                    }));
+                    ws.send(JSON.stringify({ type: 'error', msg: 'Istaba nav atrasta.' }));
                     return;
                 }
-
                 if (role === 'host') lobbies[code].hostReady = true;
                 if (role === 'guest') lobbies[code].guestReady = true;
                 lobbies[code].lastActive = Date.now();
@@ -100,25 +81,19 @@ wss.on('connection', (ws, req) => {
                     if (lobbies[code].guest && lobbies[code].guest.readyState === WebSocket.OPEN) {
                         lobbies[code].guest.send(JSON.stringify({ type: 'start_game', role: 'guest' }));
                     }
-                    console.log(`[READY] Both players ready in lobby ${code}. Starting game.`);
                 } else {
                     const otherPlayer = role === 'host' ? lobbies[code].guest : lobbies[code].host;
                     if (otherPlayer && otherPlayer.readyState === WebSocket.OPEN) {
                         otherPlayer.send(JSON.stringify({ type: 'player_ready', readyRole: role }));
                     }
-                    console.log(`[READY] ${role} is ready in lobby ${code}. Waiting for other player.`);
                 }
             }
 
             else if (action === 'rejoin') {
                 if (!lobbies[code]) {
-                    ws.send(JSON.stringify({ 
-                        type: 'error', 
-                        msg: 'Istaba nav atrasta.' 
-                    }));
+                    ws.send(JSON.stringify({ type: 'error', msg: 'Istaba nav atrasta.' }));
                     return;
                 }
-
                 if (role === 'host') {
                     lobbies[code].host = ws;
                     if (lobbies[code].hostReconnectTimeout) {
@@ -132,28 +107,21 @@ wss.on('connection', (ws, req) => {
                         lobbies[code].guestReconnectTimeout = null;
                     }
                 }
-
                 lobbies[code].lastActive = Date.now();
                 ws.send(JSON.stringify({ type: 'rejoined', role: role }));
-                console.log(`[REJOIN] ${role} rejoined lobby ${code}`);
             }
 
             else if (action === 'update_task') {
                 if (!lobbies[code]) {
-                    ws.send(JSON.stringify({ 
-                        type: 'error', 
-                        msg: 'Istaba vairs nav aktīva.' 
-                    }));
+                    ws.send(JSON.stringify({ type: 'error', msg: 'Istaba vairs nav aktīva.' }));
                     return;
                 }
-                
                 if (role === 'host') lobbies[code].hostDone = true;
                 if (role === 'guest') lobbies[code].guestDone = true;
                 lobbies[code].lastActive = Date.now();
 
                 if (lobbies[code].hostDone && lobbies[code].guestDone) {
                     const msg = JSON.stringify({ type: 'sync_complete' });
-                    
                     if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
                         lobbies[code].host.send(msg);
                     }
@@ -162,7 +130,6 @@ wss.on('connection', (ws, req) => {
                     }
                     lobbies[code].hostDone = false;
                     lobbies[code].guestDone = false;
-                    console.log(`[SYNC] Task synchronized in lobby ${code}`);
                 }
             }
 
@@ -171,16 +138,14 @@ wss.on('connection', (ws, req) => {
             }
 
         } catch (e) { 
-            console.error("WebSocket message error:", e);
-            ws.send(JSON.stringify({ 
-                type: 'error', 
-                msg: 'Servera kļūda. Lūdzu, mēģini vēlreiz.' 
-            }));
+            console.error('WebSocket message error:', e.message);
+            try {
+                ws.send(JSON.stringify({ type: 'error', msg: 'Servera kļūda. Lūdzu, mēģini vēlreiz.' }));
+            } catch (_) {}
         }
     });
 
-    ws.on('close', (code, reason) => {
-        console.log(`Client disconnected. Code: ${code}, Reason: ${reason}`);
+    ws.on('close', () => {
         for (const lobbyCode in lobbies) {
             const lobby = lobbies[lobbyCode];
             if (lobby.host === ws) {
@@ -188,48 +153,32 @@ wss.on('connection', (ws, req) => {
                 lobby.hostReconnectTimeout = setTimeout(() => {
                     if (!lobby.host) {
                         if (lobby.guest && lobby.guest.readyState === WebSocket.OPEN) {
-                            lobby.guest.send(JSON.stringify({
-                                type: 'player_disconnected',
-                                msg: 'Otrs spēlētājs atvienojās.'
-                            }));
+                            lobby.guest.send(JSON.stringify({ type: 'player_disconnected', msg: 'Otrs spēlētājs atvienojās.' }));
                         }
-                        if (!lobby.guest) {
-                            delete lobbies[lobbyCode];
-                            console.log(`[CLOSE] Lobby ${lobbyCode} closed (both disconnected). Total lobbies: ${Object.keys(lobbies).length}`);
-                        }
+                        if (!lobby.guest) delete lobbies[lobbyCode];
                     }
                 }, RECONNECT_GRACE_PERIOD);
-                console.log(`[DISCONNECT] Host disconnected from lobby ${lobbyCode}. Grace period started.`);
             } else if (lobby.guest === ws) {
                 lobby.guest = null;
                 lobby.guestReconnectTimeout = setTimeout(() => {
                     if (!lobby.guest) {
                         if (lobby.host && lobby.host.readyState === WebSocket.OPEN) {
-                            lobby.host.send(JSON.stringify({
-                                type: 'player_disconnected',
-                                msg: 'Otrs spēlētājs atvienojās.'
-                            }));
+                            lobby.host.send(JSON.stringify({ type: 'player_disconnected', msg: 'Otrs spēlētājs atvienojās.' }));
                         }
-                        if (!lobby.host) {
-                            delete lobbies[lobbyCode];
-                            console.log(`[CLOSE] Lobby ${lobbyCode} closed (both disconnected). Total lobbies: ${Object.keys(lobbies).length}`);
-                        }
+                        if (!lobby.host) delete lobbies[lobbyCode];
                     }
                 }, RECONNECT_GRACE_PERIOD);
-                console.log(`[DISCONNECT] Guest disconnected from lobby ${lobbyCode}. Grace period started.`);
             }
         }
     });
 
     ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
+        console.error('WebSocket error:', error.message);
     });
 });
 
 setInterval(() => {
     const now = Date.now();
-    let cleaned = 0;
-    
     for (const code in lobbies) {
         if (now - lobbies[code].lastActive > LOBBY_TIMEOUT) {
             if (lobbies[code].host && lobbies[code].host.readyState === WebSocket.OPEN) {
@@ -238,21 +187,11 @@ setInterval(() => {
             if (lobbies[code].guest && lobbies[code].guest.readyState === WebSocket.OPEN) {
                 lobbies[code].guest.close(1000, 'Lobby timeout');
             }
-            
             delete lobbies[code];
-            cleaned++;
         }
-    }
-    
-    if (cleaned > 0) {
-        console.log(`Cleaned ${cleaned} stale lobbies`);
     }
 }, CLEANUP_INTERVAL);
 
 process.on('SIGTERM', () => {
-    console.log('SIGTERM received, closing server...');
-    wss.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-    });
+    wss.close(() => process.exit(0));
 });
