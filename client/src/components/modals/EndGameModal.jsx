@@ -7,7 +7,7 @@ import styles from './EndGameModal.module.css';
 
 const SCORE_SAVED_KEY = '_scoreSaved';
 
-export default function EndGameModal({ open, score, startTime, playerName, onClose }) {
+export default function EndGameModal({ open, score, startTime, playerName, onClose, isGameOver = false }) {
   const { antiCheat, notify, gameState, state, gameTokenRef } = useGame();
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
@@ -75,8 +75,10 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
   return (
     <Modal open={open}>
       <div className={styles.root} data-game>
-        <h2 className={styles.title}>Apsveicam!</h2>
-        <p className={styles.medalLine}>{medal} rezultats</p>
+        <h2 className={styles.title}>{isGameOver ? 'Spēle beigusies!' : 'Apsveicam!'}</h2>
+        <p className={styles.medalLine}>
+          {isGameOver ? '💔 Dzīvības beidzās' : medal + ' rezultats'}
+        </p>
 
         <div className={styles.scoreBox}>
           <div className={styles.scoreRow}>
@@ -89,10 +91,14 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
           </div>
         </div>
 
-        <p className={styles.finishedMsg}>Tu esi pabeidzis ekskursiju pa Liepajas pilsetu!</p>
+        <p className={styles.finishedMsg}>
+          {isGameOver
+            ? 'Dzīvības beidzās pirms ekskursijas beigām. Mēģini vēlreiz!'
+            : 'Tu esi pabeidzis ekskursiju pa Liepajas pilsetu!'}
+        </p>
 
         <div className={styles.btnGroup}>
-          {!saved ? (
+          {!isGameOver && !saved ? (
             <button className={styles.btn} onClick={handleSave} disabled={saving}>
               {saving ? 'Saglabajas...' : 'Saglabat rezultatu'}
             </button>

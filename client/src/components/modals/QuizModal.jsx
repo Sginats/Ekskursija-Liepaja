@@ -57,10 +57,14 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
       antiCheat.recordTaskStart(location);
       setTimeout(() => inputRef.current?.focus(), 80);
 
-      // Start countdown timer — limit shrinks as more tasks are completed
+      // Start countdown timer — limit shrinks as more tasks are completed;
+      // Hard mode uses tighter limits
       if (timerRef.current) clearInterval(timerRef.current);
       const done = state.completedTasks;
-      const limit = done < 3 ? 60 : done < 7 ? 45 : 30;
+      const isHard = state.difficulty === 'hard';
+      const limit = isHard
+        ? (done < 3 ? 45 : done < 7 ? 30 : 20)
+        : (done < 3 ? 60 : done < 7 ? 45 : 30);
       setTimeLeft(limit);
       timerRef.current = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000);
     } else {
@@ -93,16 +97,15 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
       // Time's up — treat as final wrong answer
       resetCombo();
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      const remaining = loseLife();
+      let lifeMsg = '';
+      if (state.difficulty === 'hard') {
+        const remaining = loseLife();
+        lifeMsg = remaining > 0 ? ` Palicis ${remaining} ❤` : ' Dzīvības beidzās! 💔';
+      }
       setResultMsg('Laiks beidzās! 0 punkti.');
       setPhase('result');
       setEarnedPoints(0);
-      notify(
-        remaining > 0
-          ? `Laiks beidzās! Palicis ${remaining} ❤`
-          : 'Laiks beidzās! Dzīvības beidzās! 💔',
-        'error', 3000
-      );
+      notify(`Laiks beidzās! 0 punkti.${lifeMsg}`, 'error', 3000);
     }
   }, [timeLeft, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -164,16 +167,16 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
         if (navigator.vibrate) navigator.vibrate(150);
         if (newWrong >= 2) {
           resetCombo();
-          const remaining = loseLife();
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+          let lifeMsg = '';
+          if (state.difficulty === 'hard') {
+            const remaining = loseLife();
+            lifeMsg = remaining > 0 ? ` Palicis ${remaining} ❤` : ' Dzīvības beidzās! 💔';
+          }
           setResultMsg(`Nepareizi. Pareizā atbilde: ${data.correctAnswer || '—'}`);
           setPhase('result');
           setEarnedPoints(0);
-          notify(
-            remaining > 0
-              ? `2 nepareizas atbildes. 0 punkti. Palicis ${remaining} ❤`
-              : '2 nepareizas atbildes. 0 punkti. Dzīvības beidzās! 💔',
-            'error', 3000
-          );
+          notify(`2 nepareizas atbildes. 0 punkti.${lifeMsg}`, 'error', 3000);
         } else {
           setAnswer('');
           notify('Nepareiza atbilde! Vel 1 meginjums.', 'error', 2000);
@@ -223,7 +226,21 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
             </>
           ) : phase === 'question' ? (
             <>
-              <h2 className={styles.locTitle}>{location}</h2>
+              <div className={styles.questionHeader}>
+                <h2 className={styles.locTitle}>{location}</h2>
+                {timeLeft !== null && (
+                  <span className={timeLeft <= 10 ? styles.timerCritical : styles.timer}>
+                    ⏱ {timeLeft}s
+                  </span>
+                )}
+              </div>
+              {state.combo >= 2 && (
+                <div className={styles.combo}>
+                  🔥 {state.combo >= 3
+                    ? `x${getComboMultiplier(state.combo + 1)} COMBO!`
+                    : 'Vel 1 pareiza atbilde → x2!'}
+                </div>
+              )}
               <p className={styles.questionText}>{question.q}</p>
               {wrongCount === 1 && (
                 <p className={styles.hint}>

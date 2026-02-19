@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 import { gameState } from '../game/GameState.js';
-import { MAX_LIVES } from '../game/GameState.js';
+import { MAX_LIVES, LIVES_BY_DIFFICULTY } from '../game/GameState.js';
 import { antiCheat } from '../game/AntiCheat.js';
 import { taskSequence, TOTAL_TASKS } from '../game/taskSequence.js';
 import { pickQuestion } from '../game/questions.js';
@@ -25,8 +25,10 @@ const initialState = {
   startTime: null,
   score: 0,
   completedTasks: 0,
-  lives: MAX_LIVES,
+  lives: null,              // null = Normal (no lives system), number = Hard
+  maxLives: null,
   combo: 0,
+  difficulty: 'normal',
   currentLocation: null,
   selectedQuestions: {},    // { locationKey: { id, q, fact } }
   notifications: [],
@@ -52,6 +54,8 @@ function reducer(state, action) {
         score: action.score || 0,
         completedTasks: action.completedTasks || 0,
         lives: action.lives !== undefined ? action.lives : MAX_LIVES,
+        maxLives: action.maxLives !== undefined ? action.maxLives : MAX_LIVES,
+        difficulty: action.difficulty || 'normal',
         combo: action.combo || 0,
         selectedQuestions: action.questions || {},
       };
@@ -153,8 +157,8 @@ export function GameProvider({ children }) {
 
   const gameTokenRef = useRef(null);
 
-  const startFreshGame = useCallback(async (name, mode, role, lobbyCode) => {
-    gameState.reset();
+  const startFreshGame = useCallback(async (name, mode, role, lobbyCode, difficulty = 'normal') => {
+    gameState.reset(difficulty);
     antiCheat._recordAction && antiCheat._recordAction('game_start', { name, mode });
 
     // Request a server-side game token
@@ -191,7 +195,9 @@ export function GameProvider({ children }) {
       startTime,
       score: 0,
       completedTasks: 0,
-      lives: MAX_LIVES,
+      lives: gameState.getLives(),      // null for Normal, 3 for Hard
+      maxLives: gameState.getMaxLives(), // null for Normal, 3 for Hard
+      difficulty,
       combo: 0,
       questions: q,
     });
@@ -217,7 +223,9 @@ export function GameProvider({ children }) {
       startTime,
       score: restored ? gameState.getScore() : 0,
       completedTasks: restored ? gameState.getCompleted() : 0,
-      lives: restored ? gameState.getLives() : MAX_LIVES,
+      lives: restored ? gameState.getLives() : null,
+      maxLives: restored ? gameState.getMaxLives() : null,
+      difficulty: restored ? (gameState.getMaxLives() === null ? 'normal' : 'hard') : 'normal',
       combo: restored ? gameState.getCombo() : 0,
       questions: q,
     });

@@ -5,6 +5,7 @@ import { useAudio } from '../../context/AudioContext.jsx';
 import { useWebSocket } from '../../hooks/useWebSocket.js';
 import SettingsModal from '../modals/SettingsModal.jsx';
 import AboutModal from '../modals/AboutModal.jsx';
+import DifficultyModal from '../modals/DifficultyModal.jsx';
 import { NotificationContainer } from '../common/Notification.jsx';
 import styles from './MainMenu.module.css';
 
@@ -22,6 +23,8 @@ export default function MainMenu() {
   const [lobbyStatus, setLobbyStatus] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showDifficulty, setShowDifficulty] = useState(false);
+  const pendingGameRef = useRef(null); // { name, mode, role, lobbyCode } set before difficulty modal
 
   // Particle canvas
   const canvasRef = useRef(null);
@@ -62,7 +65,7 @@ export default function MainMenu() {
           setLobbyStatus('Otrs speletajs ir gatavy!');
         } else if (data.type === 'start_game') {
           const role = data.role;
-          startFreshGame(name, 'multi', role, lobbyCode).then(() => navigate('/play'));
+          startFreshGame(name, 'multi', role, lobbyCode, 'normal').then(() => navigate('/play'));
         } else if (data.type === 'error') {
           notify(data.msg, 'error');
         }
@@ -79,8 +82,22 @@ export default function MainMenu() {
   async function playSingle() {
     const n = validate();
     if (!n) return;
-    await startFreshGame(n, 'single', null, null);
+    pendingGameRef.current = { name: n, mode: 'single', role: null, lobbyCode: null };
+    setShowDifficulty(true);
+  }
+
+  async function handleDifficultySelect(difficulty) {
+    setShowDifficulty(false);
+    if (!pendingGameRef.current) return;
+    const { name: n, mode, role, lobbyCode } = pendingGameRef.current;
+    pendingGameRef.current = null;
+    await startFreshGame(n, mode, role, lobbyCode, difficulty);
     navigate('/play');
+  }
+
+  function handleDifficultyCancel() {
+    setShowDifficulty(false);
+    pendingGameRef.current = null;
   }
 
   function createLobby() {
@@ -116,7 +133,7 @@ export default function MainMenu() {
         .then((r) => r.json())
         .then((d) => {
           if (d.status === 'success') {
-            startFreshGame(n, 'multi', 'guest', joinCode).then(() => navigate('/play'));
+            startFreshGame(n, 'multi', 'guest', joinCode, 'normal').then(() => navigate('/play'));
           } else {
             notify('Istaba nav atrasta vai jau pilna.', 'error');
           }
@@ -262,6 +279,7 @@ export default function MainMenu() {
 
       <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
       <AboutModal open={showAbout} onClose={() => setShowAbout(false)} />
+      <DifficultyModal open={showDifficulty} onSelect={handleDifficultySelect} onCancel={handleDifficultyCancel} />
       <NotificationContainer />
     </div>
   );
