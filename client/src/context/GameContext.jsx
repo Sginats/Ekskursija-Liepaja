@@ -108,6 +108,7 @@ export function GameProvider({ children }) {
 
   // Pre-select one random question per location at session start.
   const questionsRef = useRef({});
+  const taskTypeRef  = useRef({});   // { locationKey: 'quiz' | 'minigame' }
   useEffect(() => {
     const q = {};
     taskSequence.forEach((loc) => {
@@ -170,12 +171,16 @@ export function GameProvider({ children }) {
       }
     } catch (_) {}
 
-    // Build new question set
+    // Build new question set and randomise task type (50 % quiz / 50 % mini-game) per location
     const q = {};
+    const types = {};
     taskSequence.forEach((loc) => {
       q[loc] = pickQuestion(loc);
+      types[loc] = Math.random() < 0.5 ? 'minigame' : 'quiz';
     });
     questionsRef.current = q;
+    taskTypeRef.current  = types;
+    gameState.saveTaskTypes(types);
 
     const startTime = Date.now();
     gameState.saveStartTime(startTime);
@@ -207,11 +212,18 @@ export function GameProvider({ children }) {
     const restored = gameState.loadFromSession();
     const savedStart = gameState.getStartTime();
 
+    // Build new question set (restore task types from session or re-randomise)
     const q = {};
-    taskSequence.forEach((loc) => {
-      q[loc] = pickQuestion(loc);
-    });
+    taskSequence.forEach((loc) => { q[loc] = pickQuestion(loc); });
     questionsRef.current = q;
+
+    const savedTypes = gameState.loadTaskTypes();
+    const types = savedTypes || {};
+    if (!savedTypes) {
+      taskSequence.forEach((loc) => { types[loc] = Math.random() < 0.5 ? 'minigame' : 'quiz'; });
+      gameState.saveTaskTypes(types);
+    }
+    taskTypeRef.current = types;
 
     const startTime = savedStart || Date.now();
     if (!savedStart) gameState.saveStartTime(startTime);
@@ -252,6 +264,7 @@ export function GameProvider({ children }) {
     antiCheat,
     gameState,
     gameTokenRef,
+    taskTypeRef,
     TOTAL_TASKS,
     MAX_LIVES,
     taskSequence,

@@ -1,7 +1,8 @@
 import { TOTAL_TASKS } from './taskSequence.js';
 
-const SESSION_KEY = '_gs';
-const START_KEY = '_gameStart';
+const SESSION_KEY  = '_gs';
+const START_KEY    = '_gameStart';
+const TYPES_KEY    = '_gtypes';
 export const MAX_LIVES = 3;
 // null = no lives system (Normal); number = lives count (Hard)
 export const LIVES_BY_DIFFICULTY = { normal: null, hard: 3 };
@@ -100,7 +101,20 @@ class GameStateManager {
     try {
       sessionStorage.removeItem(SESSION_KEY);
       sessionStorage.removeItem(START_KEY);
+      sessionStorage.removeItem(TYPES_KEY);
     } catch (_) {}
+  }
+
+  saveTaskTypes(types) {
+    try { sessionStorage.setItem(TYPES_KEY, JSON.stringify(types)); } catch (_) {}
+  }
+
+  loadTaskTypes() {
+    try {
+      const raw = sessionStorage.getItem(TYPES_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return null;
   }
 
   restore(score, tasks, lives, combo, maxLives) {

@@ -39,10 +39,16 @@ $taskId = preg_replace('/[^a-zA-Z0-9]/', '', $taskId);
 
 // Allowed non-quiz tasks and their maximum points
 $allowedTasks = [
-    'RTU'     => 10,
-    'Osta'    => 15,
-    'Mols'    => 15,
-    'Teatris' => 10,
+    'RTU'        => 10,
+    'Osta'       => 10,
+    'Mols'       => 10,
+    'Teatris'    => 10,
+    'Dzintars'   => 10,
+    'Kanals'     => 10,
+    'LSEZ'       => 10,
+    'Cietums'    => 10,
+    'Parks'      => 10,
+    'Ezerkrasts' => 10,
 ];
 
 if (!array_key_exists($taskId, $allowedTasks)) {

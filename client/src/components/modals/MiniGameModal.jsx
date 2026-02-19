@@ -2,16 +2,30 @@ import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import Modal from '../common/Modal.jsx';
 import { useGame } from '../../context/GameContext.jsx';
-import { AntScene } from '../../phaser/scenes/AntScene.js';
-import { BoatScene } from '../../phaser/scenes/BoatScene.js';
-import { FishingScene } from '../../phaser/scenes/FishingScene.js';
+import { AntScene        } from '../../phaser/scenes/AntScene.js';
+import { BoatScene       } from '../../phaser/scenes/BoatScene.js';
+import { FishingScene    } from '../../phaser/scenes/FishingScene.js';
+import { DzintarsScene   } from '../../phaser/scenes/DzintarsScene.js';
+import { TeatrisScene    } from '../../phaser/scenes/TeatrisScene.js';
+import { KanalsScene     } from '../../phaser/scenes/KanalsScene.js';
+import { LSEZScene       } from '../../phaser/scenes/LSEZScene.js';
+import { CietumScene     } from '../../phaser/scenes/CietumScene.js';
+import { ParksScene      } from '../../phaser/scenes/ParksScene.js';
+import { EzerkrastsScene } from '../../phaser/scenes/EzerkrastsScene.js';
 import { locationInfo } from '../../game/locationInfo.js';
 import styles from './MiniGameModal.module.css';
 
 const SCENE_MAP = {
-  RTU: AntScene,
-  Osta: BoatScene,
-  Mols: FishingScene,
+  RTU:        AntScene,
+  Osta:       BoatScene,
+  Mols:       FishingScene,
+  Dzintars:   DzintarsScene,
+  Teatris:    TeatrisScene,
+  Kanals:     KanalsScene,
+  LSEZ:       LSEZScene,
+  Cietums:    CietumScene,
+  Parks:      ParksScene,
+  Ezerkrasts: EzerkrastsScene,
 };
 
 export default function MiniGameModal({ open, location, onComplete, onClose }) {
@@ -151,18 +165,32 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
 // ---------------------------------------------------------------------------
 function buildSuccessText(location, pts, extra) {
   switch (location) {
-    case 'RTU':   return `Visi kukaiņi nokerti! +${pts} punkti`;
-    case 'Osta':  return `Finiseja laika ${extra}s. +${pts} punkti`;
-    case 'Mols':  return `Zivs noķerta ${extra}s laika! +${pts} punkti`;
-    default:      return `Pabeigts! +${pts} punkti`;
+    case 'RTU':        return `Visi kukaiņi noķerti! +${pts} punkti`;
+    case 'Osta':       return `Finiēja laikā ${extra}s. +${pts} punkti`;
+    case 'Mols':       return `Zivs noķerta ${extra}s laikā! +${pts} punkti`;
+    case 'Dzintars':   return `Visi dzintari savākti! +${pts} punkti`;
+    case 'Teatris':    return `Visi prožektori noķerti! +${pts} punkti`;
+    case 'Kanals':     return `Visi kuģi pārgājuši! +${pts} punkti`;
+    case 'LSEZ':       return `Investīciju mērķis sasniegts! +${pts} punkti`;
+    case 'Cietums':    return `Pareizā atslēga atrasta! +${pts} punkti`;
+    case 'Parks':      return `Visi ziedi savākti! +${pts} punkti`;
+    case 'Ezerkrasts': return `Gulbis atrasts! +${pts} punkti`;
+    default:           return `Pabeigts! +${pts} punkti`;
   }
 }
 
 function buildFailText(location) {
   switch (location) {
-    case 'RTU':  return 'Laiks beidzas! Megini velreiz.';
-    case 'Osta': return 'Diemzel neizdevās. Megini velreiz.';
-    case 'Mols': return 'Aukla partruka! Megini velreiz.';
-    default:     return 'Neizdevās. Megini velreiz.';
+    case 'RTU':        return 'Laiks beidzās! Mēģini velreiz.';
+    case 'Osta':       return 'Diemžēl neizdevās. Mēģini velreiz.';
+    case 'Mols':       return 'Aukla pārtrūka! Mēģini velreiz.';
+    case 'Dzintars':   return 'Laiks beidzās! Mēģini vēlreiz.';
+    case 'Teatris':    return 'Pārāk daudz garām! Mēģini vēlreiz.';
+    case 'Kanals':     return 'Kuģis uzskrēja uz tilta! Mēģini vēlreiz.';
+    case 'LSEZ':       return 'Laiks beidzās! Mēģini vēlreiz.';
+    case 'Cietums':    return 'Nepareizā atslēga! Mēģini vēlreiz.';
+    case 'Parks':      return 'Pārāk daudz puķu novīst! Mēģini vēlreiz.';
+    case 'Ezerkrasts': return 'Laiks beidzās! Mēģini vēlreiz.';
+    default:           return 'Neizdevās. Mēģini velreiz.';
   }
 }

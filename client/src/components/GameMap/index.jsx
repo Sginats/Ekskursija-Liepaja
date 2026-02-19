@@ -11,9 +11,6 @@ import EndGameModal from '../modals/EndGameModal.jsx';
 import { NotificationContainer } from '../common/Notification.jsx';
 import styles from './GameMap.module.css';
 
-const MINI_GAME_LOCATIONS = new Set(['RTU', 'Osta', 'Mols']);
-const HISTORY_LOCATIONS = new Set(['Teatris']);
-
 const MAP_POINTS = [
   { id: 'Mols',      color: 'yellow', top: '12%', left: '11%', label: 'Ziemelu mols' },
   { id: 'Cietums',   color: 'green',  top: '24%', left: '44%', label: 'Karostas cietums' },
@@ -28,7 +25,7 @@ const MAP_POINTS = [
 ];
 
 export default function GameMap() {
-  const { state, dispatch, completeTask, notify, TOTAL_TASKS, taskSequence, antiCheat } = useGame();
+  const { state, dispatch, completeTask, notify, TOTAL_TASKS, taskSequence, antiCheat, taskTypeRef } = useGame();
   const navigate = useNavigate();
 
   const [activeModal, setActiveModal] = useState(null);
@@ -76,15 +73,16 @@ export default function GameMap() {
       }
       dispatch({ type: 'SET_LOCATION', location: id });
 
-      if (MINI_GAME_LOCATIONS.has(id)) {
+      const taskType = taskTypeRef.current?.[id] || 'quiz';
+      if (taskType === 'minigame') {
         setActiveModal('minigame');
-      } else if (HISTORY_LOCATIONS.has(id)) {
+      } else if (id === 'Teatris') {
         setActiveModal('history');
       } else {
         setActiveModal('quiz');
       }
     },
-    [completedTasks, taskSequence, dispatch, notify]
+    [completedTasks, taskSequence, dispatch, notify, taskTypeRef]
   );
 
   const handleTaskComplete = useCallback(
