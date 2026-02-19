@@ -60,8 +60,7 @@ export default function MainMenu() {
           setLobbyStatus('Otrs speletajs ir gatavy!');
         } else if (data.type === 'start_game') {
           const role = data.role;
-          startFreshGame(name, 'multi', role, lobbyCode);
-          navigate('/play');
+          startFreshGame(name, 'multi', role, lobbyCode).then(() => navigate('/play'));
         } else if (data.type === 'error') {
           notify(data.msg, 'error');
         }
@@ -75,10 +74,10 @@ export default function MainMenu() {
     return n;
   }
 
-  function playSingle() {
+  async function playSingle() {
     const n = validate();
     if (!n) return;
-    startFreshGame(n, 'single', null, null);
+    await startFreshGame(n, 'single', null, null);
     navigate('/play');
   }
 
@@ -115,8 +114,7 @@ export default function MainMenu() {
         .then((r) => r.json())
         .then((d) => {
           if (d.status === 'success') {
-            startFreshGame(n, 'multi', 'guest', joinCode);
-            navigate('/play');
+            startFreshGame(n, 'multi', 'guest', joinCode).then(() => navigate('/play'));
           } else {
             notify('Istaba nav atrasta vai jau pilna.', 'error');
           }
