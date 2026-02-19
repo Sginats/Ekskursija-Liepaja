@@ -15,7 +15,7 @@ const SCENE_MAP = {
 };
 
 export default function MiniGameModal({ open, location, onComplete, onClose }) {
-  const { addScore, antiCheat, notify } = useGame();
+  const { addScore, antiCheat, notify, gameTokenRef } = useGame();
   const mountRef = useRef(null);
   const gameRef = useRef(null);
 
@@ -48,6 +48,23 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
         onComplete: (pts, extra) => {
           destroyGame();
           const newScore = addScore(pts);
+          // Record score server-side so save_score.php uses the correct total
+          if (gameTokenRef?.current) {
+            fetch('../src/php/record_task_score.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                gameToken: gameTokenRef.current,
+                taskId: location,
+                points: pts,
+              }),
+            }).catch(() => {
+              // Fire-and-forget: a network failure here is not fatal for UX.
+              // If the session is broken, save_score.php will also fail and
+              // the user will see an error at that point.
+            });
+          }
           setEarnedPoints(pts);
           setResultText(buildSuccessText(location, pts, extra));
           setPhase('result');
