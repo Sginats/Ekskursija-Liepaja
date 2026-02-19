@@ -1609,8 +1609,18 @@ function initBackground() {
     }
 
     function resize() {
+        const oldW = bgCanvas.width;
+        const oldH = bgCanvas.height;
         bgCanvas.width = window.innerWidth;
         bgCanvas.height = window.innerHeight;
+        if (oldW > 0 && oldH > 0) {
+            const sx = bgCanvas.width / oldW;
+            const sy = bgCanvas.height / oldH;
+            bgParticles.forEach(p => {
+                p.x *= sx;
+                p.y *= sy;
+            });
+        }
     }
     bgResizeHandler = resize;
     resize();

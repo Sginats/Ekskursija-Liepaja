@@ -117,8 +117,18 @@ export default function Leaderboard() {
     draw();
 
     const resize = () => {
+      const oldW = canvas.width;
+      const oldH = canvas.height;
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
+      if (oldW > 0 && oldH > 0) {
+        const sx = canvas.width / oldW;
+        const sy = canvas.height / oldH;
+        particlesRef.current.forEach((p) => {
+          p.x *= sx;
+          p.y *= sy;
+        });
+      }
     };
     window.addEventListener('resize', resize);
     return () => {

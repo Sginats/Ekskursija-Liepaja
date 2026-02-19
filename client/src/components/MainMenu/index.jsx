@@ -25,6 +25,7 @@ export default function MainMenu() {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const particlesRef = useRef([]);
+  const cleanupRef = useRef(null);
 
   useEffect(() => {
     // Try WebSocket on localhost
@@ -36,9 +37,10 @@ export default function MainMenu() {
       });
     }
 
-    initParticles();
+    cleanupRef.current = initParticles();
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (cleanupRef.current) cleanupRef.current();
     };
   }, []);
 
@@ -165,8 +167,18 @@ export default function MainMenu() {
     draw();
 
     const resize = () => {
+      const oldW = canvas.width;
+      const oldH = canvas.height;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      if (oldW > 0 && oldH > 0) {
+        const sx = canvas.width / oldW;
+        const sy = canvas.height / oldH;
+        particlesRef.current.forEach((p) => {
+          p.x *= sx;
+          p.y *= sy;
+        });
+      }
     };
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
