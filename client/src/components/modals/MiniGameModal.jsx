@@ -132,7 +132,7 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
           <>
             <h3 className={styles.infoName}>{info?.name}</h3>
             <p className={styles.infoDesc}>{info?.desc}</p>
-            <button className={styles.btn} onClick={launchGame}>Sakt uzdevumu</button>
+            <button className={styles.btn} onClick={launchGame}>Sākt uzdevumu</button>
             <button className={styles.closeBtn} onClick={onClose}>Atcelt</button>
           </>
         )}
@@ -143,7 +143,7 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
             {phase === 'retry' && (
               <div className={styles.retry}>
                 <p className={styles.failText}>{resultText}</p>
-                <button className={styles.btn} onClick={launchGame}>Meginat velreiz</button>
+                <button className={styles.btn} onClick={launchGame}>Mēģināt vēlreiz</button>
               </div>
             )}
           </>
@@ -152,7 +152,7 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
         {phase === 'result' && (
           <>
             <p className={styles.success}>{resultText}</p>
-            <button className={styles.btn} onClick={handleContinue}>Turpinat</button>
+            <button className={styles.btn} onClick={handleContinue}>Turpināt</button>
           </>
         )}
       </div>

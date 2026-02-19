@@ -138,6 +138,14 @@
 
 .table tbody tr:hover { background: color-mix(in srgb, var(--accent-primary) 6%, transparent); }
 
+/* Top 3 row highlights */
+.rank1 td { color: #ffd700; font-weight: 700; }
+.rank2 td { color: #c0c0c0; font-weight: 600; }
+.rank3 td { color: #cd7f32; font-weight: 600; }
+.rank1 { background: color-mix(in srgb, #ffd700 8%, transparent); }
+.rank2 { background: color-mix(in srgb, #c0c0c0 6%, transparent); }
+.rank3 { background: color-mix(in srgb, #cd7f32 6%, transparent); }
+
 .sortable {
   cursor: pointer;
   user-select: none;

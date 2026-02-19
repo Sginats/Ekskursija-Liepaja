@@ -68,7 +68,7 @@ export default function GameMap() {
     (id) => {
       const idx = taskSequence.indexOf(id);
       if (idx !== completedTasks) {
-        notify('Veic uzdevumus pec kartas!', 'warning');
+        notify('Veic uzdevumus pēc kārtas!', 'warning');
         return;
       }
       dispatch({ type: 'SET_LOCATION', location: id });
@@ -106,26 +106,26 @@ export default function GameMap() {
       {/* Top bar */}
       <nav className={styles.topbar}>
         <button className={styles.topBtn} onClick={() => navigate('/')}>
-          Atpakal
-        </button>
-        <div className={styles.topCenter}>
-          <span className={styles.scoreDisplay}>Punkti: {score}</span>
-          {difficulty === 'hard' && maxLives !== null && (
-            <div className={styles.livesDisplay}>
-              {Array.from({ length: maxLives }, (_, i) => (
-                <span key={i} className={i < lives ? styles.heartAlive : styles.heartDead}>♥</span>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className={styles.topRight}>
-          <button className={styles.topBtn} onClick={() => setShowSettings(true)}>
-            Iestatijumi
+            Atpakaļ
           </button>
-          <button className={styles.topBtn} onClick={() => setShowAbout(true)}>
-            Par speli
-          </button>
-        </div>
+          <div className={styles.topCenter}>
+            <span className={styles.scoreDisplay}>Punkti: {score}</span>
+            {difficulty === 'hard' && maxLives !== null && (
+              <div className={styles.livesDisplay}>
+                {Array.from({ length: maxLives }, (_, i) => (
+                  <span key={i} className={i < lives ? styles.heartAlive : styles.heartDead}>♥</span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className={styles.topRight}>
+            <button className={styles.topBtn} onClick={() => setShowSettings(true)}>
+              Iestatījumi
+            </button>
+            <button className={styles.topBtn} onClick={() => setShowAbout(true)}>
+              Par spēli
+            </button>
+          </div>
       </nav>
 
       {/* Map area */}
@@ -159,15 +159,15 @@ export default function GameMap() {
           <p className={styles.legendTitle}>Apskates vietas</p>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-green']}`} />
-            Daba un atputa
+            Daba un atpūta
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-blue']}`} />
-            Kultura un vesture
+            Kultūra un vēsture
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-yellow']}`} />
-            RTU akademija
+            RTU akadēmija
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-red']}`} />

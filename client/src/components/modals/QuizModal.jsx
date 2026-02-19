@@ -6,17 +6,17 @@ import { locationInfo } from '../../game/locationInfo.js';
 import styles from './QuizModal.module.css';
 
 const GUIDE_BUBBLES_CORRECT = [
-  'Lielisks darbs! Tu zini Liepajas vesturi!',
-  'Pareizi! Tu esi istenais eksperts!',
-  'Bravo! Ta turpini!',
-  'Izcili! Nakamais izaicinajums gaida!',
+  'Lielisks darbs! Tu zini Liepājas vēsturi!',
+  'Pareizi! Tu esi īstais eksperts!',
+  'Bravo! Tā turpini!',
+  'Izcili! Nākamais izaicinājums gaida!',
 ];
 
 const GUIDE_BUBBLES_WRONG = [
-  'Ta nav pareiza atbilde. Megini velreiz!',
-  'Nekas, ari kludities ir cilveciski!',
+  'Tā nav pareiza atbilde. Mēģini vēlreiz!',
+  'Nekas, arī kļūdīties ir cilvēciski!',
   'Gandrīz! Bet nepadodies!',
-  'Ups! Nakamreiz noteikti sanaks!',
+  'Ups! Nākamreiz noteikti sanāks!',
 ];
 
 function randomBubble(correct) {
@@ -179,13 +179,13 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
           notify(`2 nepareizas atbildes. 0 punkti.${lifeMsg}`, 'error', 3000);
         } else {
           setAnswer('');
-          notify('Nepareiza atbilde! Vel 1 meginjums.', 'error', 2000);
+          notify('Nepareiza atbilde! Vēl 1 mēģinājums.', 'error', 2000);
           antiCheat.recordTaskStart(location); // reset timer for retry
           setTimeout(() => inputRef.current?.focus(), 80);
         }
       }
     } catch (_) {
-      notify('Savienojuma kludda. Parbaudiet internetu.', 'error');
+      notify('Savienojuma kļūda. Pārbaudiet internetu.', 'error');
     } finally {
       setLoading(false);
     }
@@ -221,7 +221,7 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
                 className={styles.btn}
                 onClick={() => { setPhase('question'); antiCheat.recordTaskStart(location); setTimeout(() => inputRef.current?.focus(), 80); }}
               >
-                Atpakal uz jautajumu
+                Atpakaļ uz jautājumu
               </button>
             </>
           ) : phase === 'question' ? (
@@ -238,7 +238,7 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
                 <div className={styles.combo}>
                   🔥 {state.combo >= 3
                     ? `x${getComboMultiplier(state.combo + 1)} COMBO!`
-                    : 'Vel 1 pareiza atbilde → x2!'}
+                    : 'Vēl 1 pareiza atbilde → x2!'}
                 </div>
               )}
               <p className={styles.questionText}>{question.q}</p>
@@ -264,13 +264,13 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
                 onClick={submit}
                 disabled={loading}
               >
-                {loading ? 'Parbauda...' : wrongCount === 1 ? 'Iesniegt atkartoti' : 'Iesniegt'}
+                {loading ? 'Pārbauda…' : wrongCount === 1 ? 'Iesniegt atkārtoti' : 'Iesniegt'}
               </button>
               <button
                 className={styles.helpBtn}
                 onClick={() => setPhase('theory')}
               >
-                ? Palidziba
+                ? Palīdzība
               </button>
             </>
           ) : (
