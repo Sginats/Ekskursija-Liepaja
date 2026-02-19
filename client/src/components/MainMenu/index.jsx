@@ -3,13 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext.jsx';
 import { useAudio } from '../../context/AudioContext.jsx';
 import { useWebSocket } from '../../hooks/useWebSocket.js';
+import { useAdmin } from '../../context/AdminContext.jsx';
 import SettingsModal from '../modals/SettingsModal.jsx';
 import AboutModal from '../modals/AboutModal.jsx';
 import DifficultyModal from '../modals/DifficultyModal.jsx';
+import AdminLoginModal from './AdminLoginModal.jsx';
 import { NotificationContainer } from '../common/Notification.jsx';
 import styles from './MainMenu.module.css';
 
 export default function MainMenu() {
+  const { isAdmin, logout } = useAdmin();
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const { startFreshGame, notify, dispatch } = useGame();
   const { playHover } = useAudio();
   const navigate = useNavigate();
@@ -277,9 +281,19 @@ export default function MainMenu() {
 
       <div className={styles.authors}>Autori: Niks Senvalds, Dans Bitenieks</div>
 
+      {/* Subtle admin button bottom-right */}
+      <button
+        className={styles.adminBtn}
+        title={isAdmin ? 'Admin: izrakstīties' : 'Administratora pieslēgšanās'}
+        onClick={() => isAdmin ? logout() : setShowAdminLogin(true)}
+      >
+        {isAdmin ? '🔓 Admin' : '🔒'}
+      </button>
+
       <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
       <AboutModal open={showAbout} onClose={() => setShowAbout(false)} />
       <DifficultyModal open={showDifficulty} onSelect={handleDifficultySelect} onCancel={handleDifficultyCancel} />
+      <AdminLoginModal open={showAdminLogin} onClose={() => setShowAdminLogin(false)} />
       <NotificationContainer />
     </div>
   );

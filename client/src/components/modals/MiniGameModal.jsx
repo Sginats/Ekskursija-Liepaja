@@ -115,6 +115,13 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
     }
   }, [open]);
 
+  // Admin: skip mini-game task
+  useEffect(() => {
+    const onSkip = () => { if (open) { destroyGame(); onComplete(0); } };
+    window.addEventListener('admin:skipTask', onSkip);
+    return () => window.removeEventListener('admin:skipTask', onSkip);
+  }, [open, onComplete]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Clean up on unmount
   useEffect(() => () => destroyGame(), []);
 

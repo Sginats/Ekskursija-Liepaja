@@ -191,16 +191,26 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
     }
   }, [answer, wrongCount, question, location, addScore, antiCheat, notify, gameTokenRef, state, loseLife, incrementCombo, resetCombo]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); submit(); }
-  };
+  // Admin: override timer or skip task
+  useEffect(() => {
+    const onSetTimer = (e) => { if (timerRef.current) setTimeLeft(e.detail.seconds); };
+    const onSkip = () => { if (open) { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } onComplete(0); } };
+    window.addEventListener('admin:setTimer', onSetTimer);
+    window.addEventListener('admin:skipTask', onSkip);
+    return () => {
+      window.removeEventListener('admin:setTimer', onSetTimer);
+      window.removeEventListener('admin:skipTask', onSkip);
+    };
+  }, [open, onComplete]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleContinue = () => {
     antiCheat.recordTaskEnd(location, earnedPoints);
     onComplete(earnedPoints);
   };
 
-  if (!open || !location || !question) return null;
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  };
 
   return (
     <Modal open={open} onClose={phase === 'result' ? onClose : undefined}>

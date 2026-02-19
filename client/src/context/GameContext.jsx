@@ -156,6 +156,41 @@ export function GameProvider({ children }) {
     dispatch({ type: 'SET_COMBO', combo: 0 });
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Admin-only helpers (bypass anti-cheat, for testing only)
+  // ---------------------------------------------------------------------------
+  const adminAddScore = useCallback((pts) => {
+    const newScore = gameState.addScore(pts);
+    dispatch({ type: 'ADD_SCORE', score: newScore });
+    return newScore;
+  }, []);
+
+  const adminJumpToTask = useCallback((targetIdx) => {
+    const idx = Math.max(0, Math.min(TOTAL_TASKS, targetIdx));
+    // Directly patch the in-memory manager and re-seal the checksum via restore
+    gameState.restore(
+      gameState.getScore(),
+      idx,
+      gameState.getLives(),
+      gameState.getCombo(),
+      gameState.getMaxLives(),
+    );
+    gameState._persist();
+    dispatch({ type: 'COMPLETE_TASK', completedTasks: idx });
+  }, []);
+
+  const adminSetTimer = useCallback((seconds) => {
+    window.dispatchEvent(new CustomEvent('admin:setTimer', { detail: { seconds } }));
+  }, []);
+
+  const adminSkipTask = useCallback(() => {
+    const n = gameState.completeTask();
+    dispatch({ type: 'COMPLETE_TASK', completedTasks: n });
+    // Close any active modal by firing a skip event
+    window.dispatchEvent(new CustomEvent('admin:skipTask'));
+    return n;
+  }, []);
+
   const gameTokenRef = useRef(null);
 
   const startFreshGame = useCallback(async (name, mode, role, lobbyCode, difficulty = 'normal') => {
@@ -265,6 +300,10 @@ export function GameProvider({ children }) {
     gameState,
     gameTokenRef,
     taskTypeRef,
+    adminAddScore,
+    adminJumpToTask,
+    adminSetTimer,
+    adminSkipTask,
     TOTAL_TASKS,
     MAX_LIVES,
     taskSequence,

@@ -206,3 +206,25 @@
   .btn      { font-size: 14px; padding: 12px 20px; max-width: 100%; }
   .codeBox  { font-size: 38px; letter-spacing: 6px; }
 }
+
+/* Admin login button — subtle, bottom-right corner */
+.adminBtn {
+  position: fixed;
+  bottom: 12px;
+  right: 14px;
+  z-index: 50;
+  background: rgba(255,136,0,0.08);
+  border: 1px solid rgba(255,136,0,0.25);
+  border-radius: 8px;
+  color: rgba(255,170,0,0.55);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.adminBtn:hover {
+  color: #ffaa00;
+  border-color: #ffaa00;
+  background: rgba(255,136,0,0.15);
+}
