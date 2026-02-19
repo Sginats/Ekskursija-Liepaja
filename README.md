@@ -214,6 +214,6 @@ Sistēma automātiski izvēlas labāko pieejamo variantu.
 
 ## 📄 Licences
 
-© 2026 Niks Šenvalds, Dans Bitenieks. Visi tiesības aizsargātas.
+© 2026 Niks Šenvalds, Dans Bitenieks.
 
 Šis projekts ir izstrādāts izglītības nolūkos.
