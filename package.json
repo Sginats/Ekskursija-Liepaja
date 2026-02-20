@@ -1,5 +1,14 @@
 {
+  "name": "ekskursija-liepaja-server",
+  "version": "1.0.0",
+  "description": "Ekskursija Liepāja — Socket.io game server",
+  "main": "src/js/server.js",
+  "scripts": {
+    "start": "node src/js/server.js",
+    "dev": "node --watch src/js/server.js"
+  },
   "dependencies": {
+    "socket.io": "^4.8.3",
     "ws": "^8.19.0"
   }
 }

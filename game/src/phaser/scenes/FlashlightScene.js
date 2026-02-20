@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import EventBridge from '../../utils/EventBridge.js';
+import SpeedController from '../../utils/SpeedController.js';
 import { getDayNightState, getSkyColors, getCityLights } from '../../utils/DayNight.js';
 
 export default class FlashlightScene extends Phaser.Scene {
@@ -48,10 +49,10 @@ export default class FlashlightScene extends Phaser.Scene {
       .setDepth(20);
 
     this._countdownTimer = this.time.addEvent({
-      delay: 1000,
-      callback: this._tick,
+      delay:         SpeedController.scale(1000),
+      callback:      this._tick,
       callbackScope: this,
-      loop: true,
+      loop:          true,
     });
 
     this.input.on('pointermove', this._onPointerMove, this);
@@ -205,7 +206,7 @@ export default class FlashlightScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(31);
 
-    this.time.delayedCall(1400, () => {
+    this.time.delayedCall(SpeedController.scale(1400), () => {
       EventBridge.emit('MINIGAME_COMPLETE', { success, bonusPoints: pts });
     });
   }
