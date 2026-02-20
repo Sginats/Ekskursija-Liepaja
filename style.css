@@ -1061,13 +1061,17 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         font-size: 14px;
         padding: 12px 20px;
         white-space: nowrap;
+    }
 
-    }.btnMini{
-        width: 100%;
+    .btnMini {
         width: 280px;
         font-size: 14px;
         padding: 12px 20px;
         white-space: nowrap;
+    }
+
+    .difficulty-legend {
+        display: none;
     }
     
     .modal {
@@ -1174,11 +1178,9 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         width: 100%;
         font-size: 18px;
     }
-    }.btnMini{
-        width: 100%;
+    .btnMini {
         width: 280px;
     }
-    
 }
 
 /* Large screens */

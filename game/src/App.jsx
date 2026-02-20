@@ -8,6 +8,8 @@ import CardCollection from './components/CardCollection.jsx';
 import LeaderboardView from './components/LeaderboardView.jsx';
 import AboutModal from './components/AboutModal.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
+import IntroModal from './components/IntroModal.jsx';
+import PreFinalModal from './components/PreFinalModal.jsx';
 import CoopProvider, { useCoopContext } from './components/CoopManager.jsx';
 import Confetti from './components/Confetti.jsx';
 import { LOCATIONS } from './data/LocationData.js';
@@ -41,6 +43,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
+  const [showPreFinal, setShowPreFinal] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [emptyTravelPenalties, setEmptyTravelPenalties] = useState(0);
   const [unlockedCards, setUnlockedCards] = useState(getUnlockedCards());
@@ -150,6 +154,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setEmptyTravelPenalties(0);
     setRoute([]);
     setFinaleRank(null);
+    setShowPreFinal(false);
     clearState();
     clearSession();
     SocketManager.joinGame(name);
@@ -157,6 +162,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setMapElapsedMs(0);
     onPlayerNameChange?.(name);
     onScoreChange?.(0);
+    setShowIntro(true);
     setPhase(PHASE.MAP);
   }, [clearState]);
 
@@ -210,7 +216,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setCompletedLocations(prev => {
       const next = [...prev, locId];
       if (next.length === LOCATIONS.length) {
-        setPhase(PHASE.END);
+        setShowPreFinal(true);
       }
       return next;
     });
@@ -221,19 +227,23 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     if (isNew) {
       setNewCardId(locId);
       setPhase(PHASE.CARD);
-    } else if (completedLocations.length + 1 < LOCATIONS.length) {
+    } else {
       setPhase(PHASE.MAP);
     }
   }, [currentLocation, currentConfig, completedLocations, score, coopMultiplier]);
 
   const handleCardDismiss = useCallback(() => {
     setNewCardId(null);
+    setPhase(PHASE.MAP);
     if (completedLocations.length >= LOCATIONS.length) {
-      setPhase(PHASE.END);
-    } else {
-      setPhase(PHASE.MAP);
+      setShowPreFinal(true);
     }
   }, [completedLocations]);
+
+  const handlePreFinalReady = useCallback(() => {
+    setShowPreFinal(false);
+    setPhase(PHASE.END);
+  }, []);
 
   const handleSaveScore = useCallback(async () => {
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
@@ -290,6 +300,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
             windEnergy={windEnergy}
             ghostLocationId={GhostRun.getGhostLocation(mapElapsedMs)}
             ghostBestTime={GhostRun.getBestTimeLabel()}
+            startTime={startTime}
           />
         </>
       )}
@@ -367,6 +378,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       {showLeaderboard && <LeaderboardView onClose={() => setShowLeaderboard(false)} />}
       {showAbout       && <AboutModal onClose={() => setShowAbout(false)} />}
       {showAdmin       && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      {showIntro       && <IntroModal onDismiss={() => setShowIntro(false)} />}
+      {showPreFinal    && <PreFinalModal onReady={handlePreFinalReady} />}
     </div>
   );
 }

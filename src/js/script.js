@@ -750,7 +750,15 @@ function checkBothPlayersDonePHP(code) {
             .catch(error => console.error('Error checking state:', error));
     }, 1000);
     
-    setTimeout(() => clearInterval(checkInterval), 30000);
+    setTimeout(() => {
+        clearInterval(checkInterval);
+        const taskEl = document.querySelector('.task-section');
+        if (taskEl && taskEl.innerHTML.includes('Gaidam')) {
+            taskEl.innerHTML = '<h2>Laiks beidzās</h2><p>Partneris neatbildēja laikā.</p><button class="btn btn-full" id="btn-timeout-continue">Turpināt →</button>';
+            const btn = document.getElementById('btn-timeout-continue');
+            if (btn) btn.addEventListener('click', function() { showQuiz(currentTask); });
+        }
+    }, 30000);
 }
 
 // Menu functions
@@ -862,7 +870,7 @@ function showLocationThenStart(type, callback) {
             <h3>${info.name}</h3>
             <p>${info.desc}</p>
         </div>
-        <button class="btn" id="btn-start-task">Turpināt uz uzdevumu →</button>
+        <button class="btn btn-full" id="btn-start-task">Turpināt uz uzdevumu →</button>
     `;
     document.getElementById('btn-start-task').addEventListener('click', function() {
         document.getElementById('game-modal').style.display = 'none';
@@ -900,7 +908,7 @@ function startBoatGame() {
         <p>${instruction}</p>
         <h3 id="boat-timer">0.00 s</h3>
         <p id="boat-progress">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
-        <button class="btn" onclick="initBoatRace()">SĀKT</button>`;
+        <button class="btn btn-full" onclick="initBoatRace()">SĀKT</button>`;
 }
 
 function initBoatRace() {
@@ -989,7 +997,8 @@ function finishBoatRace() {
         <h2>Pabeigts!</h2>
         <p>Tavs laiks: ${finalTime} sekundes</p>
         <p style="color: #ffaa00;">+${points} punkti!</p>
-        <button class="btn" onclick="closeBoatGame()">Turpināt</button>`;
+        <p style="color:#ffaa00;font-style:italic;">${questions['Osta'].fact}</p>
+        <button class="btn btn-full" onclick="closeBoatGame()">Turpināt →</button>`;
 }
 
 function closeBoatGame() { 
@@ -1035,7 +1044,7 @@ function initAntGame() {
         <h2>Ķer kukaiņus!</h2>
         <p id="ant-timer" style="color: #ffaa00; font-size: 20px;">Laiks: ${timeLeft}s</p>
         <p id="ant-count" style="font-size: 18px;">Noķerti: 0/${ANTS_REQUIRED}</p>
-        <div id="ant-field" style="position: relative; width: 100%; height: 250px; background: rgba(0,100,0,0.2); border: 2px solid #4CAF50; border-radius: 10px; overflow: hidden; cursor: crosshair;"></div>
+        <div id="ant-field" style="position: relative; width: 100%; height: 250px; background: rgba(255,170,0,0.08); border: 2px solid rgba(255,170,0,0.4); border-radius: 10px; overflow: hidden; cursor: crosshair;"></div>
     `;
     
     antGameTimer = setInterval(() => {
@@ -1100,7 +1109,7 @@ function finishAntGame(success) {
         document.querySelector('.task-section').innerHTML = `
             <h2>Lielisks darbs!</h2>
             <p>Noķerti kukaiņi: ${antsCaught}/${ANTS_REQUIRED}</p>
-            <p style="color: #4CAF50;">+10 punkti</p>
+            <p style="color: #ffaa00;">+10 punkti</p>
             <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
             <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
         `;
@@ -1110,7 +1119,7 @@ function finishAntGame(success) {
         document.querySelector('.task-section').innerHTML = `
             <h2>Laiks beidzies!</h2>
             <p>Noķerti kukaiņi: ${antsCaught}/${ANTS_REQUIRED}</p>
-            <p style="color: #f44336;">-5 punkti. Mēģini vēlreiz!</p>
+            <p style="color: #ff7777;">-5 punkti. Mēģini vēlreiz!</p>
             <button class="btn btn-full" onclick="initAntGame()">Mēģināt vēlreiz</button>
         `;
     }
@@ -1191,7 +1200,7 @@ function checkHistorySequence() {
             <ol style="margin: 10px 0; padding-left: 20px;">
                 ${correctOrder.map(ev => `<li>${ev.year}. g. — ${ev.text}</li>`).join('')}
             </ol>
-            <p style="color: #4CAF50;">+10 punkti</p>
+            <p style="color: #ffaa00;">+10 punkti</p>
             <p style="color: #ffaa00; font-style: italic;">${questions['Teatris'].fact}</p>
             <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt →</button>
         `;
@@ -1200,7 +1209,7 @@ function checkHistorySequence() {
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>Nepareizi!</h2>
-            <p style="color: #f44336;">Secība nav pareiza. -5 punkti. Mēģini vēlreiz!</p>
+            <p style="color: #ff7777;">Secība nav pareiza. -5 punkti. Mēģini vēlreiz!</p>
             <button class="btn btn-full" onclick="startHistorySequence()">Mēģināt vēlreiz</button>
         `;
     }
@@ -1334,7 +1343,7 @@ function checkAns(type) {
         document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>${type}</h2>
-            <p style="color: #4CAF50; font-size: 18px;">Pareizi!</p>
+            <p style="color: #ffaa00; font-size: 18px;">Pareizi!</p>
             <p><strong>Atbilde:</strong> ${correct}</p>
             <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
             <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
@@ -1346,7 +1355,7 @@ function checkAns(type) {
             document.getElementById('score-display').innerText = "Punkti: " + GameState.getScore();
             document.querySelector('.task-section').innerHTML = `
                 <h2>${type}</h2>
-                <p style="color: #f44336; font-size: 18px;">Nepareizi!</p>
+                <p style="color: #ff7777; font-size: 18px;">Nepareizi!</p>
                 <p style="color: #aaa; font-size: 14px;">2 nepareizas atbildes — 0 punkti</p>
                 <p><strong>Pareizā atbilde:</strong> ${correct}</p>
                 <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
@@ -1356,7 +1365,7 @@ function checkAns(type) {
             showNotification('Nepareiza atbilde! Vēl 1 mēģinājums.', 'error', 2000);
             document.querySelector('.task-section').innerHTML = `
                 <h2>${type}</h2>
-                <p style="color: #f44336; font-size: 18px;">Nepareizi! Vēl 1 mēģinājums.</p>
+                <p style="color: #ff7777; font-size: 18px;">Nepareizi! Vēl 1 mēģinājums.</p>
                 <p style="color: #aaa; font-size: 14px;">(Pareiza atbilde tagad dos +5 punktus)</p>
                 <div class="quiz-form">
                     <input id="ans-in" placeholder="Mēģini vēlreiz..." maxlength="50">
@@ -2379,15 +2388,16 @@ function finishFishing(success) {
 
         container.innerHTML = `
             <div style="text-align:center;">
-                <h2 style="color:#44ff88;">Zivs noķerta!</h2>
+                <h2 style="color: #ffaa00;">Zivs noķerta!</h2>
                 <p>Laiks: ${elapsed} s</p>
                 <p style="color:#ffaa00; font-size:20px; font-weight:bold;">+${points} punkti!</p>
-                <button class="btn btn-full" onclick="closeFishingGame()">Turpināt</button>
+                <p style="color:#ffaa00;font-style:italic;">${questions['Mols'].fact}</p>
+                <button class="btn btn-full" onclick="closeFishingGame()">Turpināt →</button>
             </div>`;
     } else {
         container.innerHTML = `
             <div style="text-align:center;">
-                <h2 style="color:#ff6666;">Aukla pārtrūka!</h2>
+                <h2 style="color: #ff7777;">Aukla pārtrūka!</h2>
                 <p style="opacity:0.7;">Centies kontrolēt spriegumu — netur pogu pārāk ilgi!</p>
                 <button class="btn btn-full" onclick="startFishingGame()">Mēģināt vēlreiz</button>
             </div>`;
@@ -2490,7 +2500,7 @@ function simonClick(color) {
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>Nepareizi!</h2>
-            <p style="color:#f44336;">Nepareizā krāsa! -5 punkti.</p>
+            <p style="color: #ff7777;">Nepareizā krāsa! -5 punkti.</p>
             <button class="btn btn-full" onclick="initSimonRounds()">Mēģināt vēlreiz</button>`;
         return;
     }
@@ -2503,7 +2513,7 @@ function simonClick(color) {
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>Lieliski!</h2>
-            <p style="color:#4CAF50;">Visas kārtas pareizi! +10 punkti!</p>
+            <p style="color: #ffaa00;">Visas kārtas pareizi! +10 punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Dzintars'].fact}</p>
             <button class="btn btn-full" onclick="closeSimonGame()">Turpināt →</button>`;
     } else {
@@ -2915,13 +2925,13 @@ function finishEscapeGame(success) {
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
             <h2>Aizbēgi!</h2>
-            <p style="color:#4CAF50;">Tu veiksmīgi izvairījies no sardzēm! +10 punkti!</p>
+            <p style="color: #ffaa00;">Tu veiksmīgi izvairījies no sardzēm! +10 punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Cietums'].fact}</p>
             <button class="btn btn-full" onclick="closeEscapeGame()">Turpināt →</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
             <h2>Noķerts!</h2>
-            <p style="color:#f44336;">Sardze tevi pamanīja!</p>
+            <p style="color: #ff7777;">Sardze tevi pamanīja!</p>
             <button class="btn btn-full" onclick="initEscapeGame()">Mēģināt vēlreiz</button>`;
     }
 }
@@ -3186,4 +3196,5 @@ window.sendReady = sendReady;
 window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
 window.toggleAnimations = toggleAnimations;
+window.submitFinalTest = submitFinalTest;
 })(); 

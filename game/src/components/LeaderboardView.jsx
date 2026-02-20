@@ -8,13 +8,20 @@ export default function LeaderboardView({ mode = 'single', onClose }) {
 
   useEffect(() => {
     setLoading(true);
-    getTopTen(activeMode).then(data => {
-      setRows(data || []);
-      setLoading(false);
-    });
+    getTopTen(activeMode)
+      .then(data => {
+        setRows(data || []);
+      })
+      .catch(() => {
+        setRows([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [activeMode]);
 
   function fmtTime(s) {
+    if (s == null || isNaN(s)) return '--:--';
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
@@ -53,7 +60,7 @@ export default function LeaderboardView({ mode = 'single', onClose }) {
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={4} style={{ textAlign: 'center', color: '#aaa' }}>Nav rezultātu</td></tr>
+                <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-dim)' }}>Nav rezultātu</td></tr>
               )}
               {rows.map((row, i) => (
                 <tr key={i} className={i < 3 ? `top-${i + 1}` : ''}>

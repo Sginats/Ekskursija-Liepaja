@@ -6,7 +6,7 @@
  * slightly different animation delay and duration for a natural look.
  */
 
-const COLORS  = ['#ffd700', '#ff6b6b', '#4caf50', '#2196f3', '#bb86fc', '#ff9800', '#26c6da'];
+const COLORS  = ['#ffaa00', '#cc8800', '#4caf50', '#2c6fa8', '#1e3a5f', '#f44336', '#f0f0f0'];
 const PIECES  = 60;
 
 function randomBetween(a, b) {

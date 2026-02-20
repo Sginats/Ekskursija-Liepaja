@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 client/node_modules/
+game/node_modules/
 
 # Build output
 dist/

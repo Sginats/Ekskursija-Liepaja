@@ -117,6 +117,11 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
         CoopState.set({ inboundRequest: req });
       }),
 
+      // Coop request expired (requester left the location)
+      SocketManager.on('coop:request_expired', () => {
+        CoopState.set({ inboundRequest: null });
+      }),
+
       // Partner left mid-session
       SocketManager.on('coop:partner_left', () => {
         CoopState.set({ coopSession: null, coopMultiplier: 1.0 });
@@ -327,6 +332,17 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
               <span key={i} className="asym-code-digit">{digit}</span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Operator panel: instructions to listen for the code from navigator */}
+      {state.coopSession?.role === 'operator' && (
+        <div className="coop-clue-panel">
+          <div className="coop-clue-header">
+            <span>🎮 Operators</span>
+            <span className="coop-partner-badge">Navigator: {state.coopSession.partnerName}</span>
+          </div>
+          <p className="coop-clue-hint">Klausies navigatoru un ievadi dzirdēto kodu uz tastatūras!</p>
         </div>
       )}
 
