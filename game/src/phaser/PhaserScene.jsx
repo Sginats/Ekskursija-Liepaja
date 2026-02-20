@@ -3,11 +3,13 @@ import Phaser from 'phaser';
 import CatcherScene from './scenes/CatcherScene.js';
 import FlashlightScene from './scenes/FlashlightScene.js';
 import SequenceScene from './scenes/SequenceScene.js';
+import KeypadScene from './scenes/KeypadScene.js';
 
 const SCENE_MAP = {
   catcher:    CatcherScene,
   flashlight: FlashlightScene,
   sequence:   SequenceScene,
+  keypad:     KeypadScene,
 };
 
 /** Fixed logical aspect ratio: 4:3 */
@@ -41,9 +43,10 @@ export default function PhaserScene({ miniGame, locationId }) {
       width,
       height,
       backgroundColor: '#0a0a1a',
+      roundPixels:     true,
       scale: {
-        mode:           Phaser.Scale.FIT,
-        autoCenter:     Phaser.Scale.CENTER_BOTH,
+        mode:            Phaser.Scale.FIT,
+        autoCenter:      Phaser.Scale.CENTER_BOTH,
         width,
         height,
       },

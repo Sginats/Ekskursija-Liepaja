@@ -25,14 +25,28 @@ export const DUAL_KEY_LOCATIONS = {
       'Konkrēti — 1954. gads.',
     ],
   },
+};
+
+// ── Asymmetric (Navigator / Operator) locations ───────────────────────────────
+// Navigator receives a server-generated code and communicates it verbally.
+// Operator inputs the code using the Phaser KeypadScene.
+// Sessions are created automatically when two players are at the same location.
+
+/**
+ * @typedef {Object} AsymLocation
+ * @property {string} label  – display name for the UI
+ * @property {number} digits – code length (always 4)
+ */
+
+/** @type {Record<string, AsymLocation>} */
+export const ASYM_LOCATIONS = {
   cietums: {
-    hint: 'Celšanas gads',
-    clues: [
-      'Cietums celts cara Krievijas laikā.',
-      'Tas ir gadsimta mijā — ap 1900. gadu.',
-      'Precīzi — pats gadsimta sākums.',
-      'Gads ir 1900.',
-    ],
+    label:  'Karostas Cietuma Kods',
+    digits: 4,
+  },
+  kanals: {
+    label:  'Tirdzniecības Kanāla Slūžu Kods',
+    digits: 4,
   },
 };
 

@@ -1,0 +1,331 @@
+{
+  "dzintars": {
+    "info": "Liepājas koncertzāle 'Lielais Dzintars' atklāta 2015. gadā. Tās unikālais dizains atgādina milzīgu dzintara gabalu — Latvijas nacionālo dārgakmeni.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kurā gadā atklāta koncertzāle 'Lielais Dzintars'?",
+          "answer": "2015",
+          "aliases": [],
+          "fact": "Lielais Dzintars atklāts 2015. gadā un tā fasāde simbolizē Latvijas nacionālo dārgakmeni."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kura orķestra mājas zāle ir Lielais Dzintars?",
+          "answer": "liepājas simfoniskā orķestra",
+          "aliases": ["simfoniskā", "simfoniskais", "liepājas simfoniskais"],
+          "fact": "Liepājas Simfoniskais orķestris — viens no vecākajiem Latvijā — regulāri uzstājas Lielajā Dzintarā."
+        }
+      },
+      {
+        "type": "action",
+        "data": {
+          "mini_game": "catcher",
+          "label": "Mūzikas Nots",
+          "collect": ["♩", "♪", "♫", "♬"],
+          "avoid": ["💤", "📵", "🔇"],
+          "required": 8
+        }
+      }
+    ]
+  },
+  "teatris": {
+    "info": "Liepājas Teātris, dibināts 1907. gadā, ir vecākais profesionālais teātris Latvijā. Atrodas skaistā jūgendstila ēkā Liepājas centrā.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kurā gadā dibināts Liepājas Teātris?",
+          "answer": "1907",
+          "aliases": [],
+          "fact": "Dibināts 1907. gadā — tas ir vecākais profesionālais teātris Latvijā."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kādā arhitektūras stilā celta Liepājas Teātra ēka?",
+          "answer": "jūgendstils",
+          "aliases": ["jugendstils", "jūgendstila", "art nouveau"],
+          "fact": "Jūgendstila ēka ar bagātīgu fasādes dekoru ir viens no Liepājas arhitektūras pērlēm."
+        }
+      },
+      {
+        "type": "action",
+        "data": {
+          "mini_game": "sequence",
+          "label": "Vēsturiskā Secība",
+          "elements": ["🎭", "🎬", "🎪", "🎨"],
+          "rounds": 3
+        }
+      }
+    ]
+  },
+  "mols": {
+    "info": "Ziemeļu mols — aptuveni 1800 metrus garš akmeņu mols Liepājas ostas ziemeļu daļā. Populāra pastaigu un makšķerēšanas vieta.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Cik metrus garš ir Ziemeļu mols?",
+          "answer": "1800",
+          "aliases": ["1800 metrus", "aptuveni 1800"],
+          "fact": "Ziemeļu mols ir aptuveni 1800 metrus garš — viens no garākajiem Latvijā."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Ko cilvēki parasti dara uz Ziemeļu mola?",
+          "answer": "makšķerē",
+          "aliases": ["makšķerēšana", "pastaigājas"],
+          "fact": "Mols ir iecienīta makšķerēšanas vieta ar skatu uz Baltijas jūru un Liepājas ostu."
+        }
+      },
+      {
+        "type": "action",
+        "data": {
+          "mini_game": "catcher",
+          "label": "Makšķerēšana",
+          "collect": ["🐟", "🐠", "🦈"],
+          "avoid": ["🪨", "🌿", "🧴"],
+          "required": 8
+        }
+      }
+    ]
+  },
+  "rtu": {
+    "info": "RTU Liepājas akadēmija, dibināta 1954. gadā, ir viena no nozīmīgākajām augstskolām Kurzemē. Piedāvā IT, inženierzinātnes un ekonomiku.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kurā gadā dibināta RTU Liepājas akadēmija?",
+          "answer": "1954",
+          "aliases": [],
+          "fact": "RTU Liepājas akadēmija dibināta 1954. gadā kā Liepājas Politehniskais institūts."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kāda IT studiju programma ir populāra RTU Liepājā?",
+          "answer": "datorika",
+          "aliases": ["datorzinātnes", "informācijas tehnoloģijas", "it"],
+          "fact": "Datorika ietver programmēšanu, datoru tīklus, datu bāzes un mākslīgo intelektu."
+        }
+      },
+      {
+        "type": "coop_dual_key",
+        "data": {
+          "mini_game": "sequence",
+          "label": "Koda Atmiņa",
+          "hint": "Dibināšanas gads",
+          "clues": [
+            "Iestāde dibināta pēc Otrā pasaules kara.",
+            "Gads beidzas ar ciparu '4'.",
+            "Piecdesmitie gadi.",
+            "Konkrēti — 1954. gads."
+          ]
+        }
+      }
+    ]
+  },
+  "ezerkrasts": {
+    "info": "Ezerkrasta taka ved gar Liepājas ezeru — piektā lielākā Latvijā. Taka piedāvā skatu platformas un informatīvus stendus par vietējo dabu.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kāda ezera krastā atrodas Ezerkrasta taka?",
+          "answer": "liepājas ezers",
+          "aliases": ["liepajas ezers", "liepājas", "liepājas ezerā"],
+          "fact": "Liepājas ezers ir piektais lielākais Latvijā un mājo daudzām aizsargātām putnu sugām."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kurš lielākais ezers Latvijā ir Liepājas ezers?",
+          "answer": "5.",
+          "aliases": ["5", "piektais"],
+          "fact": "Liepājas ezers — piektais lielākais Latvijā — aizņem 37 km²."
+        }
+      },
+      {
+        "type": "action",
+        "data": {
+          "mini_game": "flashlight",
+          "label": "Atklāj Ezeru",
+          "revealLines": ["LIEPĀJAS", "EZERS", "5. lielākais"],
+          "requiredReveal": 0.65
+        }
+      }
+    ]
+  },
+  "kanals": {
+    "info": "Tirdzniecības kanāls savieno Liepājas ezeru ar Baltijas jūru. Vēsturisks ūdensceļš kopš 16. gadsimta, svarīgs pilsētas attīstībai.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kā sauc kanālu starp Liepājas ezeru un jūru?",
+          "answer": "tirdzniecības kanāls",
+          "aliases": ["tirdzniecibas kanals", "kanāls", "tirdzniecības"],
+          "fact": "Tirdzniecības kanāls — vēsturisks ūdensceļš, kas savienoja ezeru ar jūru tirdzniecības vajadzībām."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kopš kura gadsimta kalpo Tirdzniecības kanāls?",
+          "answer": "16.",
+          "aliases": ["16", "sešpadsmitā"],
+          "fact": "Kanāls kalpo Liepājai jau kopš 16. gadsimta."
+        }
+      },
+      {
+        "type": "coop_asym",
+        "data": {
+          "mini_game": "keypad",
+          "label": "Slūžu Kods",
+          "digits": 4,
+          "description": "Navigators redz kodu — Operators to ievada uz ciparu tastatūras."
+        }
+      }
+    ]
+  },
+  "osta": {
+    "info": "Liepājas osta — viena no lielākajām Latvijā — ir unikāla ar to, ka neaizsalst ziemā. Ostas teritorijā darbojas LSEZ.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Vai Liepājas osta aizsalst ziemā? (Jā/Nē)",
+          "answer": "nē",
+          "aliases": ["ne"],
+          "fact": "Liepājas osta neaizsalst, pateicoties jūras strāvojumiem — tas padara to par vērtīgu ziemas ostu."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kā sauc Liepājas ostas speciālo ekonomisko zonu?",
+          "answer": "lsez",
+          "aliases": ["liepājas speciālā ekonomiskā zona", "liepājas sez"],
+          "fact": "LSEZ — Liepājas Speciālā ekonomiskā zona — piesaista starptautiskus uzņēmumus ar nodokļu atvieglojumiem."
+        }
+      },
+      {
+        "type": "action",
+        "data": {
+          "mini_game": "catcher",
+          "label": "Kravas Šķirošana",
+          "collect": ["📦", "🗃️", "📫"],
+          "avoid": ["💥", "🚫", "⛔"],
+          "required": 8
+        }
+      }
+    ]
+  },
+  "lsez": {
+    "info": "LSEZ (Liepājas Speciālā ekonomiskā zona) dibināta 1997. gadā. Vairāk nekā 80 uzņēmumi, tostarp starptautisks būvniecības uzņēmums UPB.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Vai UPB ir Liepājas uzņēmums? (Jā/Nē)",
+          "answer": "jā",
+          "aliases": ["ja"],
+          "fact": "UPB ir starptautisks būvniecības uzņēmums no Liepājas, kas realizē projektus visā pasaulē."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kurā gadā izveidota LSEZ?",
+          "answer": "1997",
+          "aliases": [],
+          "fact": "LSEZ izveidota 1997. gadā, lai veicinātu Liepājas reģiona ekonomisko attīstību."
+        }
+      },
+      {
+        "type": "action",
+        "data": {
+          "mini_game": "sequence",
+          "label": "Montāžas Kods",
+          "elements": ["⚙️", "🔶", "🟦", "🟩"],
+          "rounds": 3
+        }
+      }
+    ]
+  },
+  "cietums": {
+    "info": "Karostas cietums celts 1900. gadā cara armijas vajadzībām. Šobrīd tas ir vienīgais militārais cietums Eiropā, kas atvērts tūristiem.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kā sauc Karostas tūrisma cietumu?",
+          "answer": "karostas cietums",
+          "aliases": ["karosta", "karostas"],
+          "fact": "Karostas cietums ir vienīgais militārais cietums Eiropā, kas pieejams tūristiem kā muzejs."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kurā gadā celts Karostas cietums?",
+          "answer": "1900",
+          "aliases": [],
+          "fact": "Cietums celts 1900. gadā cara armijas vajadzībām Karostā — bijušajā jūras militārajā bāzē."
+        }
+      },
+      {
+        "type": "coop_asym",
+        "data": {
+          "mini_game": "keypad",
+          "label": "Cietuma Kods",
+          "digits": 4,
+          "description": "Navigators redz slepeno kodu — Operators to ievada Phaser tastatūrā."
+        }
+      }
+    ]
+  },
+  "parks": {
+    "info": "Jūrmalas parks — viens no lielākajiem parkiem Latvijā, ierīkots 19. gadsimtā. Tajā aug vairāk nekā 170 koku un krūmu sugas.",
+    "games": [
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kā sauc parku pie Liepājas jūrmalas?",
+          "answer": "jūrmalas parks",
+          "aliases": ["jurmalas parks", "jūrmalas"],
+          "fact": "Jūrmalas parks — viens no lielākajiem parkiem Latvijā — atrodas starp pilsētu un jūru."
+        }
+      },
+      {
+        "type": "quiz",
+        "data": {
+          "text": "Kurā gadsimtā ierīkots Jūrmalas parks?",
+          "answer": "19.",
+          "aliases": ["19", "deviņpadsmitajā"],
+          "fact": "Parks ierīkots 19. gadsimta otrajā pusē kā rotaļu un atpūtas vieta Liepājas iedzīvotājiem."
+        }
+      },
+      {
+        "type": "action",
+        "data": {
+          "mini_game": "catcher",
+          "label": "Dabas Kolekcija",
+          "collect": ["🍂", "🌸", "🍃", "🌿"],
+          "avoid": ["🗑️", "💨", "🚗"],
+          "required": 8
+        }
+      }
+    ]
+  }
+}

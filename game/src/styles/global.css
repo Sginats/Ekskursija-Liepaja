@@ -1348,3 +1348,19 @@ body[data-night='1']::after {
   font-size: 13px; color: var(--text-dim);
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
 }
+
+/* ── Asymmetric Navigator code display ──────────────────────── */
+.asym-code-display {
+  display: flex; gap: 10px; justify-content: center;
+  padding: 12px 0 4px;
+}
+.asym-code-digit {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 44px;
+  font-size: 26px; font-weight: 700;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 8px;
+  letter-spacing: 0;
+}

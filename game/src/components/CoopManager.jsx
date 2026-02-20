@@ -100,11 +100,16 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
         CoopState.set({ latestLootFound: itemId });
       }),
 
-      // Cooperative session started (dual-key validation)
+      // Cooperative session started (dual-key validation or asymmetric)
       SocketManager.on('coop:session_start', (session) => {
         CoopState.set({ coopSession: session, coopMultiplier: 1.0 });
-        // Bridge to Phaser: let active scene display a coop banner
-        EventBridge.emit('COOP_SESSION_START', { role: session.role, partnerName: session.partnerName, locationId: session.locationId });
+        // Bridge to Phaser for operator role: inject sessionId + coopRole into active scene
+        EventBridge.emit('COOP_SESSION_START', {
+          role:        session.role,
+          partnerName: session.partnerName,
+          locationId:  session.locationId,
+          sessionId:   session.sessionId,
+        });
       }),
 
       // Inbound coop request from another player
@@ -136,6 +141,17 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
         } else {
           CoopState.set({ coopMultiplier: 1.0, coopSession: null, coopPenalty: penalty || 3 });
         }
+      }),
+
+      // Asymmetric (Navigator/Operator) result
+      SocketManager.on('asym:result', ({ success, multiplier, penalty }) => {
+        if (success) {
+          CoopState.set({ coopMultiplier: multiplier || 1.2, coopSession: null });
+        } else {
+          CoopState.set({ coopMultiplier: 1.0, coopSession: null, coopPenalty: penalty || 3 });
+        }
+        // Bridge to Phaser: tell KeypadScene the result
+        EventBridge.emit('ASYM_RESULT', { success });
       }),
 
       // Multiplier applied notification
@@ -178,6 +194,20 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
       // We rely on map:presence broadcast to clean up
     }
   }, [currentLocationId, playerName]);
+
+  // ── Forward ASYM_SUBMIT from Phaser KeypadScene to server ─────────────────
+  useEffect(() => {
+    const unsub = EventBridge.on('ASYM_SUBMIT', ({ code, locationId }) => {
+      const session = CoopState.get().coopSession;
+      if (!session?.sessionId) return;
+      SocketManager.connect().emit('asym:submit', {
+        sessionId: session.sessionId,
+        code,
+        locationId,
+      });
+    });
+    return unsub;
+  }, []);
 
   // ── Action callbacks ──────────────────────────────────────────────────────
   const requestCoop = useCallback((targetSocketId, locationId) => {
@@ -281,6 +311,22 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Navigator panel: shows the secret code they must communicate to the Operator */}
+      {state.coopSession?.role === 'navigator' && (
+        <div className="coop-clue-panel">
+          <div className="coop-clue-header">
+            <span>🗺️ Navigators</span>
+            <span className="coop-partner-badge">Operators: {state.coopSession.partnerName}</span>
+          </div>
+          <p className="coop-clue-hint">Pastāsti partnerim šo kodu (viņš to ievada uz tastatūras):</p>
+          <div className="asym-code-display">
+            {String(state.coopSession.code).split('').map((digit, i) => (
+              <span key={i} className="asym-code-digit">{digit}</span>
+            ))}
+          </div>
         </div>
       )}
 
