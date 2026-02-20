@@ -122,14 +122,16 @@ export default class CatcherScene extends Phaser.Scene {
     this._items.add(item);
   }
 
-  update() {
+  update(time, delta) {
     if (!this._active) return;
     const { height } = this.scale;
     const bx = this._basket.x;
     const by = this._basket.y;
+    const dt = delta / 1000;
 
-    this._items.getChildren().forEach((item) => {
-      item.y += item.getData('speed') * (1 / 60);
+    const children = this._items.getChildren().slice();
+    children.forEach((item) => {
+      item.y += item.getData('speed') * dt;
       const dx = Math.abs(item.x - bx);
       const dy = Math.abs(item.y - by);
       if (dx < 40 && dy < 30) {
@@ -156,12 +158,14 @@ export default class CatcherScene extends Phaser.Scene {
     if (this._timeLeft <= 0) this._finish(false);
   }
 
-  _flashBasket() {
+  _flashBasket(color) {
+    if (color != null) this._basket.setTint(color);
     this.tweens.add({
       targets:  this._basket,
       alpha:    0.3,
       duration: SpeedController.scale(80),
       yoyo:     true,
+      onComplete: () => { this._basket.clearTint(); },
     });
   }
 

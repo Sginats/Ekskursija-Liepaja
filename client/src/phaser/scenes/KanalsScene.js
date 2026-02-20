@@ -74,10 +74,9 @@ export class KanalsScene extends Phaser.Scene {
     this.bridgeLeft.fillStyle(0x8b6914, 1);
     this.bridgeRight.fillStyle(0x8b6914, 1);
 
-    const rad = Phaser.Math.DegToRad(-angle);
-    // Left leaf: pivots at bx, rotates up to the left
-    this.bridgeLeft.fillRect(bx - len - 3, midY - 4, len, 8);
-    this.bridgeRight.fillRect(bx + 3,       midY - 4, len, 8);
+    // Draw relative to each graphics object's origin (which is set to bx, midY)
+    this.bridgeLeft.fillRect(-len - 3, -4, len, 8);
+    this.bridgeRight.fillRect(3, -4, len, 8);
 
     this.bridgeLeft.setAngle(angle);
     this.bridgeLeft.x = bx;
@@ -90,17 +89,28 @@ export class KanalsScene extends Phaser.Scene {
   _raiseBridge() {
     if (!this.gameActive || this.bridgeRaised) return;
     this.bridgeRaised = true;
+
     this.tweens.add({
-      targets: [this.bridgeLeft, this.bridgeRight],
+      targets: this.bridgeLeft,
       angle:   { from: 0, to: 65 },
+      duration: 400,
+    });
+    this.tweens.add({
+      targets: this.bridgeRight,
+      angle:   { from: 0, to: -65 },
       duration: 400,
       onComplete: () => {
         // Lower after 2.2 s
         this.time.delayedCall(2200, () => {
           if (!this.gameActive) return;
           this.tweens.add({
-            targets: [this.bridgeLeft, this.bridgeRight],
+            targets: this.bridgeLeft,
             angle:   { from: 65, to: 0 },
+            duration: 400,
+          });
+          this.tweens.add({
+            targets: this.bridgeRight,
+            angle:   { from: -65, to: 0 },
             duration: 400,
             onComplete: () => { this.bridgeRaised = false; },
           });
@@ -163,7 +173,7 @@ export class KanalsScene extends Phaser.Scene {
   }
 
   _endGame(success) {
-    if (!this.gameActive && success === false) return; // already ended by collision
+    if (!this.gameActive) return;
     this.gameActive = false;
     if (success) this.onComplete(10); else this.onFail();
   }

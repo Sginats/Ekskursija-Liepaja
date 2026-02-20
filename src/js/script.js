@@ -1013,6 +1013,7 @@ function closeBoatGame() {
 
 let antsCaught = 0;
 let antGameTimer = null;
+let antGameActive = false;
 const ANTS_REQUIRED = 5;
 const ANT_GAME_TIME = 15; 
 function startAntGame() {
