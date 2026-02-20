@@ -989,7 +989,8 @@ function finishBoatRace() {
         <h2>Pabeigts!</h2>
         <p>Tavs laiks: ${finalTime} sekundes</p>
         <p style="color: #ffaa00;">+${points} punkti!</p>
-        <button class="btn" onclick="closeBoatGame()">Turpināt</button>`;
+        <p style="color:#ffaa00;font-style:italic;">${questions['Osta'].fact}</p>
+        <button class="btn btn-full" onclick="closeBoatGame()">Turpināt →</button>`;
 }
 
 function closeBoatGame() { 
@@ -2382,7 +2383,8 @@ function finishFishing(success) {
                 <h2 style="color:#44ff88;">Zivs noķerta!</h2>
                 <p>Laiks: ${elapsed} s</p>
                 <p style="color:#ffaa00; font-size:20px; font-weight:bold;">+${points} punkti!</p>
-                <button class="btn btn-full" onclick="closeFishingGame()">Turpināt</button>
+                <p style="color:#ffaa00;font-style:italic;">${questions['Mols'].fact}</p>
+                <button class="btn btn-full" onclick="closeFishingGame()">Turpināt →</button>
             </div>`;
     } else {
         container.innerHTML = `
