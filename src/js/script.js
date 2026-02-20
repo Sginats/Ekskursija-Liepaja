@@ -26,7 +26,7 @@ const GameState = (function() {
             if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
             _score += points;
             if (_score < 0) _score = 0;
-            if (_score > 100) _score = 100;
+            if (_score > 110) _score = 110;
             _updateChecksum();
             return _score;
         },
@@ -277,11 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initBackground();
 
-    // Request a server-side game token for anti-cheat
-    fetch('src/php/start_game.php', { method: 'POST', credentials: 'include' })
-        .then(r => r.json())
-        .then(d => { if (d.token) _serverGameToken = d.token; })
-        .catch(() => {});
+    // Request a server-side game token for anti-cheat (skip on admin page)
+    if (!window.location.pathname.match(/admin\.php$/)) {
+        fetch('src/php/start_game.php', { method: 'POST', credentials: 'include' })
+            .then(r => r.json())
+            .then(d => { if (d.token) _serverGameToken = d.token; })
+            .catch(() => {});
+    }
     
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
@@ -959,10 +961,9 @@ function closeBoatGame() {
     document.getElementById('game-modal').style.display = 'none'; 
     GameState.completeTask(); 
     updateMapState(); 
-    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame(); 
+    if(GameState.getCompleted() === TOTAL_TASKS) showFinalTest(); 
 }
 
-let antGameActive = false;
 let antsCaught = 0;
 let antGameTimer = null;
 const ANTS_REQUIRED = 5;
@@ -1080,7 +1081,7 @@ function closeAntGame() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 const historyEvents = [
@@ -1170,9 +1171,8 @@ function closeHistoryGame() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
-
 
 function showMiniGame(type) {
     document.getElementById('game-modal').style.display = "block";
@@ -1333,10 +1333,97 @@ function closeQuizAndContinue() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if(GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-function showEndGame() { 
+// ============================================================================
+// FINAL TEST (shown after all 10 tasks are complete)
+// ============================================================================
+
+const _finalTestQuestions = [
+    {
+        q: 'Kurā gadā dibināts Liepājas Teātris?',
+        options: ['1895', '1907', '1920', '1935'],
+        correct: 1
+    },
+    {
+        q: 'Kurā gadā atklāta koncertzāle "Lielais Dzintars"?',
+        options: ['2010', '2012', '2015', '2018'],
+        correct: 2
+    },
+    {
+        q: 'Cik metrus garš ir Ziemeļu mols?',
+        options: ['800 m', '1200 m', '1800 m', '2500 m'],
+        correct: 2
+    },
+    {
+        q: 'Kurā gadā dibināta RTU Liepājas akadēmija?',
+        options: ['1944', '1954', '1964', '1974'],
+        correct: 1
+    },
+    {
+        q: 'Kurš lielākais ezers Latvijā ir Liepājas ezers?',
+        options: ['3.', '5.', '7.', '10.'],
+        correct: 1
+    }
+];
+
+let _finalTestScore = 0;
+let _finalTestShown = false;
+
+function showFinalTest() {
+    if (_finalTestShown || GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) return;
+    _finalTestShown = true;
+
+    document.getElementById('game-modal').style.display = 'block';
+    const guideHint = document.getElementById('guide-hint');
+    if (guideHint) guideHint.textContent = 'Pēdējais izaicinājums — noslēguma tests!';
+
+    document.querySelector('.task-section').innerHTML = `
+        <div style="text-align:center;">
+            <h2 style="color:#ffaa00; font-size:22px;">🎓 Noslēguma tests</h2>
+            <p style="color:#ccc; font-size:13px; margin-bottom:12px;">Atbildi uz 5 jautājumiem par Liepāju! (Katra pareiza atbilde: +2 punkti)</p>
+            ${_finalTestQuestions.map((q, i) => `
+                <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,170,0,0.25);border-radius:10px;padding:12px;margin:8px 0;text-align:left;">
+                    <p style="color:#ffaa00;margin:0 0 8px;font-size:13px;font-weight:bold;">${i + 1}. ${q.q}</p>
+                    ${q.options.map((opt, j) => `
+                        <label style="display:block;color:#ccc;font-size:13px;padding:3px 0;cursor:pointer;">
+                            <input type="radio" name="ftq${i}" value="${j}" style="margin-right:7px;accent-color:#ffaa00;">
+                            ${opt}
+                        </label>
+                    `).join('')}
+                </div>
+            `).join('')}
+            <button class="btn btn-full" onclick="submitFinalTest()" style="margin-top:14px;">Iesniegt atbildes →</button>
+        </div>
+    `;
+}
+
+function submitFinalTest() {
+    let bonus = 0;
+    let answered = 0;
+    _finalTestQuestions.forEach((q, i) => {
+        const sel = document.querySelector(`input[name="ftq${i}"]:checked`);
+        if (sel !== null) {
+            answered++;
+            if (parseInt(sel.value) === q.correct) bonus += 2;
+        }
+    });
+    if (answered < _finalTestQuestions.length) {
+        showNotification('Lūdzu, atbildi uz visiem jautājumiem!', 'warning', 2000);
+        return;
+    }
+    _finalTestScore = bonus;
+    if (bonus > 0) {
+        GameState.addScore(bonus);
+        showNotification(`Tests pabeigts! +${bonus} bonusu punkti`, 'success', 2000);
+    } else {
+        showNotification('Tests pabeigts! Nav bonusu punktu.', 'error', 2000);
+    }
+    setTimeout(() => { showEndGame(); }, 1800);
+}
+
+function showEndGame() {
     if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
         _ac.addViolation();
         showNotification('Spēle nav pabeigta!', 'error', 3000);
@@ -1347,7 +1434,7 @@ function showEndGame() {
     const minutes = Math.floor(elapsedSeconds / 60);
     const seconds = elapsedSeconds % 60;
     const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    
+
     const finalScore = GameState.getScore();
     showEndGameScreen(finalScore, formattedTime);
 }
@@ -1361,17 +1448,29 @@ function showEndGameScreen(finalScore, formattedTime) {
     }
     _endGameShown = true;
     document.getElementById('game-modal').style.display = 'block';
-    
+
+    const gameScore = finalScore - _finalTestScore;
+    const totalScore = finalScore;
     let medal = '🥉';
-    if (finalScore >= 80) medal = '🥇';
-    else if (finalScore >= 50) medal = '🥈';
-    
+    if (totalScore >= 88) medal = '🥇';
+    else if (totalScore >= 55) medal = '🥈';
+
+    const testLine = _finalTestShown
+        ? `<p style="font-size:17px;color:#ffaa00;margin:4px 0;">Bonusa punkti (tests): <strong>${_finalTestScore}</strong>/10</p>
+           <hr style="border-color:rgba(255,170,0,0.3);margin:10px 0;">`
+        : '';
+    const scoreLine = _finalTestShown
+        ? `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Kopā: <strong>${totalScore}</strong>/110</p>`
+        : `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Punkti: <strong>${totalScore}</strong>/100</p>`;
+
     document.querySelector('.task-section').innerHTML = `
         <div style="text-align: center;">
             <h2 style="color: #ffaa00; font-size: 28px;">${medal} Apsveicam! ${medal}</h2>
             <p style="font-size: 18px;">Tu esi pabeidzis ekskursiju pa Liepāju!</p>
             <div style="background: rgba(0,0,0,0.3); border: 2px solid #ffaa00; border-radius: 12px; padding: 20px; margin: 15px 0;">
-                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">Punkti: <strong>${finalScore}</strong>/100</p>
+                <p style="font-size:17px;color:#ffaa00;margin:4px 0;">Spēles punkti: <strong>${gameScore}</strong>/100</p>
+                ${testLine}
+                ${scoreLine}
                 <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">Laiks: <strong>${formattedTime}</strong></p>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
@@ -1428,6 +1527,7 @@ function finishGame(name, finalScore, time) {
     formData.append('tasks', _taskCompletionLog.length);
     formData.append('violations', _ac.violations);
     formData.append('gameToken', _serverGameToken || '');
+    formData.append('testScore', _finalTestScore);
     
     fetch('src/php/save_score.php', {
         method: 'POST',
@@ -1739,6 +1839,7 @@ function initBackground() {
         bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.06)`;
         bgCtx.beginPath();
         bgCtx.moveTo(0, h);
+        bgCtx.lineTo(0, skylineY + 60);
         // Dzintars concert hall dome
         bgCtx.lineTo(w * 0.05, skylineY + 60);
         bgCtx.lineTo(w * 0.06, skylineY + 40);
@@ -2260,7 +2361,7 @@ function closeFishingGame() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2372,7 +2473,7 @@ function closeSimonGame() {
     _taskCompletionLog.push({ task: 'Dzintars', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2535,7 +2636,7 @@ function closeKanalGame() {
     _taskCompletionLog.push({ task: 'Kanals', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2649,7 +2750,7 @@ function closeLSEZGame() {
     _taskCompletionLog.push({ task: 'LSEZ', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2786,7 +2887,7 @@ function closeEscapeGame() {
     _taskCompletionLog.push({ task: 'Cietums', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2891,7 +2992,7 @@ function closeBirdGame() {
     _taskCompletionLog.push({ task: 'Ezerkrasts', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2985,7 +3086,7 @@ function closeMemoryGame() {
     _taskCompletionLog.push({ task: 'Parks', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 window.startFishingGame = startFishingGame;
