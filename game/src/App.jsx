@@ -9,18 +9,20 @@ import LeaderboardView from './components/LeaderboardView.jsx';
 import AboutModal from './components/AboutModal.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import CoopProvider, { useCoopContext } from './components/CoopManager.jsx';
+import Confetti from './components/Confetti.jsx';
 import { LOCATIONS } from './data/LocationData.js';
 import { getLocationConfig } from './utils/RandomizerEngine.js';
 import EventBridge from './utils/EventBridge.js';
 import { clearSession } from './utils/SessionLock.js';
 import { WIND_MAX, applyTravelCost, WIND_PENALTY_EMPTY } from './utils/WindEnergy.js';
 import { getUnlockedCards, unlockCard, CARD_META } from './utils/Cards.js';
-import { saveScore } from './utils/Leaderboard.js';
+import { saveScore, getTopTen } from './utils/Leaderboard.js';
 import { getDayNightState } from './utils/DayNight.js';
 import AntiCheat from './utils/AntiCheat.js';
 import SocketManager from './utils/SocketManager.js';
 import { generateJournal, downloadJournal } from './utils/JournalGenerator.js';
 import GhostRun from './utils/GhostRun.js';
+import usePersistence from './hooks/usePersistence.js';
 
 const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', END: 'end' };
 const LAST_LOCATION_ID = 'parks';
@@ -47,14 +49,46 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [questionOverrides, setQuestionOverrides] = useState({});
   // Ghost run: elapsedMs from map start for playback
   const [mapElapsedMs, setMapElapsedMs] = useState(0);
+  // Finale rank (fetched after saving score)
+  const [finaleRank, setFinaleRank] = useState(null);
   const mapTimerRef = useRef(null);
 
   const { isNight } = getDayNightState();
   const { coopMultiplier, coopPenalty, joinFinale } = useCoopContext();
+  const { saveState, loadState, clearState } = usePersistence();
 
   useEffect(() => {
     document.body.setAttribute('data-night', isNight ? '1' : '0');
   }, [isNight]);
+
+  // ── Persist state on key changes ──────────────────────────────────────────
+  useEffect(() => {
+    if (phase === PHASE.MENU || phase === PHASE.END) return; // don't persist end states
+    if (!playerName) return;
+    saveState({
+      playerName,
+      score,
+      windEnergy,
+      completedLocations,
+      currentLocationId: currentLocation?.id ?? null,
+      startTime,
+    });
+  }, [score, windEnergy, completedLocations, currentLocation, phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Restore saved state on mount ─────────────────────────────────────────
+  useEffect(() => {
+    const saved = loadState();
+    if (!saved) return;
+    setPlayerName(saved.playerName);
+    setScore(saved.score ?? 0);
+    setWindEnergy(saved.windEnergy ?? WIND_MAX);
+    setCompletedLocations(saved.completedLocations ?? []);
+    setStartTime(saved.startTime ?? Date.now());
+    SocketManager.joinGame(saved.playerName);
+    onPlayerNameChange?.(saved.playerName);
+    onScoreChange?.(saved.score ?? 0);
+    setPhase(PHASE.MAP);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Hot-swap question overrides ───────────────────────────────────────────
   useEffect(() => {
@@ -115,6 +149,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setStartTime(Date.now());
     setEmptyTravelPenalties(0);
     setRoute([]);
+    setFinaleRank(null);
+    clearState();
     clearSession();
     SocketManager.joinGame(name);
     GhostRun.startRun();
@@ -122,7 +158,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     onPlayerNameChange?.(name);
     onScoreChange?.(0);
     setPhase(PHASE.MAP);
-  }, []);
+  }, [clearState]);
 
   // ── Location select ───────────────────────────────────────────────────────
   const selectLocation = useCallback((locationId) => {
@@ -204,8 +240,15 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     await saveScore({ name: playerName, score, timeSeconds: elapsed, mode: 'single' });
     GhostRun.finish(elapsed * 1000, score);
     joinFinale(score, elapsed);
+    clearState();
+    // Fetch rank — score count+1 if not in top-10 list yet
+    try {
+      const top = await getTopTen('single');
+      const idx = top.findIndex(r => r.name === playerName && r.score === score);
+      setFinaleRank(idx >= 0 ? idx + 1 : (top.length > 0 ? top.length + 1 : 1));
+    } catch { /* non-critical */ }
     setShowLeaderboard(true);
-  }, [playerName, score, startTime, joinFinale]);
+  }, [playerName, score, startTime, joinFinale, clearState]);
 
   const handleDownloadJournal = useCallback(() => {
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
@@ -254,7 +297,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       {phase === PHASE.MINIGAME && currentLocation && currentConfig && (
         <div className="game-screen">
           <ScoreBar score={score} locationName={currentLocation.name} phase="Mini-spēle" />
-          <PhaserScene miniGame={currentConfig.miniGame} locationId={currentLocation.id} />
+          <PhaserScene miniGame={currentConfig.miniGame} locationId={currentLocation.id} score={score} />
         </div>
       )}
 
@@ -288,6 +331,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
       {phase === PHASE.END && (
         <div className="end-screen">
+          <Confetti />
           <div className="end-card">
             <h2>🎊 Ekskursija Pabeigta!</h2>
             <p className="end-name">{playerName}</p>
@@ -296,6 +340,11 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
               <span>⏱ {formattedTime}</span>
               <span>🃏 {unlockedCards.length}/{LOCATIONS.length} kartītes</span>
             </div>
+            {finaleRank && (
+              <p className="end-rank">
+                🏆 Tu esi <strong>{finaleRank}.</strong> vietā no visiem spēlētājiem!
+              </p>
+            )}
             <div className="end-btns">
               <button className="menu-start-btn" onClick={handleSaveScore}>
                 💾 Saglabāt rezultātu

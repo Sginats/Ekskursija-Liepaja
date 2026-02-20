@@ -10,6 +10,7 @@ export const LOCATIONS = [
     bgGradient: ['#2d1b4e', '#1a0f30'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Mūzikas Nots',
         collect: ['♩', '♪', '♫', '♬'],
@@ -20,6 +21,7 @@ export const LOCATIONS = [
         timeLimit: 28,
       },
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Atklāj koncertzāli',
         bgColor: 0x1a0a2e,
@@ -30,6 +32,7 @@ export const LOCATIONS = [
         timeLimit: 22,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Ritma Atmiņa',
         elements: [
@@ -48,18 +51,24 @@ export const LOCATIONS = [
         text: 'Kurā gadā atklāta koncertzāle "Lielais Dzintars"?',
         answer: '2015',
         aliases: [],
+        options: ['2010', '2015', '2020'],
+        points: [10, 5, 0],
         fact: 'Lielais Dzintars atklāts 2015. gadā un tā fasāde simbolizē Latvijas nacionālo dārgakmeni.',
       },
       {
         text: 'Kura orķestra mājas zāle ir Lielais Dzintars?',
         answer: 'liepājas simfoniskā orķestra',
         aliases: ['simfoniskā', 'simfoniskais', 'liepājas simfoniskais', 'simfoniskā orķestra'],
+        options: ['Liepājas Simfoniskā orķestra', 'Latvijas Nacionālais orķestris', 'Rīgas Kamerorķestris'],
+        points: [10, 5, 0],
         fact: 'Liepājas Simfoniskais orķestris — viens no vecākajiem Latvijā — regulāri uzstājas Lielajā Dzintarā.',
       },
       {
         text: 'Ko simbolizē Lielā Dzintara ēkas arhitektūras forma?',
         answer: 'dzintaru',
         aliases: ['dzintars', 'dzintara gabalu', 'dzintara', 'dzintarkrāsu'],
+        options: ['Dzintaru', 'Jūras vilni', 'Saullēktu'],
+        points: [10, 5, 0],
         fact: 'Ēkas siluets atgādina milzīgu dzintara gabalu — tāpēc arī nosaukums "Lielais Dzintars".',
       },
     ],
@@ -76,19 +85,21 @@ export const LOCATIONS = [
     bgGradient: ['#3e1f00', '#1a0d00'],
     miniGames: [
       {
+        role: 'info_swap',
         type: 'sequence',
         label: 'Vēsturiskā Secība',
         elements: [
           { symbol: '🎭', color: 0xff9800 },
           { symbol: '🎬', color: 0xe65100 },
           { symbol: '🎪', color: 0xffcc02 },
-          { symbol: '🎨', color: 0xff6f00 },
+          { symbol: '��', color: 0xff6f00 },
         ],
         rounds: 3,
         showDuration: 780,
         gapDuration: 300,
       },
       {
+        role: 'sync_task',
         type: 'catcher',
         label: 'Lomu Šķirošana',
         collect: ['🎭', '🎬', '🎪'],
@@ -99,6 +110,7 @@ export const LOCATIONS = [
         timeLimit: 25,
       },
       {
+        role: 'classic',
         type: 'flashlight',
         label: 'Atklāj Teātri',
         bgColor: 0x1a0800,
@@ -114,18 +126,24 @@ export const LOCATIONS = [
         text: 'Kurā gadā dibināts Liepājas Teātris?',
         answer: '1907',
         aliases: [],
+        options: ['1888', '1907', '1925'],
+        points: [10, 5, 0],
         fact: 'Dibināts 1907. gadā — tas ir vecākais profesionālais teātris Latvijā.',
       },
       {
         text: 'Kādā arhitektūras stilā celta Liepājas Teātra ēka?',
         answer: 'jūgendstils',
         aliases: ['jugendstils', 'jūgendstila', 'art nouveau'],
+        options: ['Jūgendstils', 'Klasicisms', 'Baroks'],
+        points: [10, 5, 0],
         fact: 'Jūgendstila ēka ar bagātīgu fasādes dekoru ir viens no Liepājas arhitektūras pērlēm.',
       },
       {
         text: 'Vai Liepājas Teātris ir vecākais profesionālais teātris Latvijā? (Jā/Nē)',
         answer: 'jā',
         aliases: ['ja'],
+        options: ['Jā', 'Nē', 'Nezinu'],
+        points: [10, 5, 0],
         fact: 'Jā — dibināts 1907. gadā, Liepājas Teātris ir vecākais profesionālais teātris Latvijā.',
       },
     ],
@@ -142,6 +160,7 @@ export const LOCATIONS = [
     bgGradient: ['#0d2b0d', '#051505'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Makšķerēšana',
         collect: ['🐟', '🐠', '🦈'],
@@ -152,6 +171,7 @@ export const LOCATIONS = [
         timeLimit: 28,
       },
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Atklāj Molu',
         bgColor: 0x051a2e,
@@ -162,6 +182,7 @@ export const LOCATIONS = [
         timeLimit: 22,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Viļņu Ritms',
         elements: [
@@ -180,18 +201,24 @@ export const LOCATIONS = [
         text: 'Cik metrus garš ir Ziemeļu mols?',
         answer: '1800',
         aliases: ['1800 metrus', 'aptuveni 1800'],
+        options: ['900', '1800', '2500'],
+        points: [10, 5, 0],
         fact: 'Ziemeļu mols ir aptuveni 1800 metrus garš — viens no garākajiem Latvijā.',
       },
       {
         text: 'Ko cilvēki parasti dara uz Ziemeļu mola?',
         answer: 'makšķerē',
         aliases: ['makšķerēšana', 'pastaigājas', 'peldas'],
+        options: ['Makšķerē', 'Peld', 'Burājas'],
+        points: [10, 5, 0],
         fact: 'Mols ir iecienīta makšķerēšanas vieta ar skatu uz Baltijas jūru un Liepājas ostu.',
       },
       {
         text: 'Kuras ostas daļā atrodas Ziemeļu mols?',
         answer: 'ziemeļu',
         aliases: ['ziemelu', 'ziemeļu pusē'],
+        options: ['Ziemeļu', 'Dienvidu', 'Rietumu'],
+        points: [10, 5, 0],
         fact: 'Kā norāda nosaukums, mols atrodas ostas ziemeļu pusē, aizsargājot ieeju ostā.',
       },
     ],
@@ -208,6 +235,7 @@ export const LOCATIONS = [
     bgGradient: ['#2a2000', '#151000'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Debug — Ķer kļūdas!',
         collect: ['🐛', '🐞', '🦗'],
@@ -218,6 +246,7 @@ export const LOCATIONS = [
         timeLimit: 25,
       },
       {
+        role: 'info_swap',
         type: 'sequence',
         label: 'Koda Atmiņa',
         elements: [
@@ -231,6 +260,7 @@ export const LOCATIONS = [
         gapDuration: 280,
       },
       {
+        role: 'sync_task',
         type: 'flashlight',
         label: 'Atklāj Akadēmiju',
         bgColor: 0x0d0d00,
@@ -246,18 +276,24 @@ export const LOCATIONS = [
         text: 'Kurā gadā dibināta RTU Liepājas akadēmija?',
         answer: '1954',
         aliases: [],
+        options: ['1944', '1954', '1964'],
+        points: [10, 5, 0],
         fact: 'RTU Liepājas akadēmija dibināta 1954. gadā kā Liepājas Politehniskais institūts.',
       },
       {
         text: 'Kāda IT studiju programma ir populāra RTU Liepājā?',
         answer: 'datorika',
         aliases: ['datorzinātnes', 'informācijas tehnoloģijas', 'it'],
+        options: ['Datorika', 'Ekonomika', 'Arhitektūra'],
+        points: [10, 5, 0],
         fact: 'Datorika ietver programmēšanu, datoru tīklus, datu bāzes un mākslīgo intelektu.',
       },
       {
         text: 'Kurā pilsētas daļā atrodas RTU Liepājas akadēmija?',
         answer: 'centrs',
         aliases: ['pilsētas centrs', 'centrā', 'centrālajā daļā'],
+        options: ['Centrā', 'Karostā', 'Ezerparkā'],
+        points: [10, 5, 0],
         fact: 'Akadēmija atrodas Liepājas pilsētas centrā, viegli pieejama ar sabiedrisko transportu.',
       },
     ],
@@ -274,6 +310,7 @@ export const LOCATIONS = [
     bgGradient: ['#002f3a', '#001520'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Putnu Vērošana',
         collect: ['🦢', '🦆', '🐦', '🦅'],
@@ -284,6 +321,7 @@ export const LOCATIONS = [
         timeLimit: 28,
       },
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Atklāj Ezeru',
         bgColor: 0x001520,
@@ -294,6 +332,7 @@ export const LOCATIONS = [
         timeLimit: 22,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Dabas Skaņas',
         elements: [
@@ -312,18 +351,24 @@ export const LOCATIONS = [
         text: 'Kāda ezera krastā atrodas Ezerkrasta taka?',
         answer: 'liepājas ezers',
         aliases: ['liepajas ezers', 'liepājas', 'liepājas ezerā'],
+        options: ['Liepājas ezers', 'Papes ezers', 'Engures ezers'],
+        points: [10, 5, 0],
         fact: 'Liepājas ezers ir piektais lielākais Latvijā un mājo daudzām aizsargātām putnu sugām.',
       },
       {
         text: 'Kurš lielākais ezers Latvijā pēc platības ir Liepājas ezers?',
         answer: '5.',
         aliases: ['5', 'piektais'],
+        options: ['3.', '5.', '8.'],
+        points: [10, 5, 0],
         fact: 'Liepājas ezers — piektais lielākais Latvijā — aizņem 37 km².',
       },
       {
         text: 'Ko var vērot no Ezerkrasta takas skatu platformām?',
         answer: 'putnus',
         aliases: ['putni', 'ūdensputni', 'putnu kolonijas'],
+        options: ['Putnus', 'Kuģus', 'Zivis'],
+        points: [10, 5, 0],
         fact: 'Taka piedāvā unikālu iespēju vērot ligzdojošos ūdensputnus ezera niedrājos.',
       },
     ],
@@ -340,6 +385,7 @@ export const LOCATIONS = [
     bgGradient: ['#001a3a', '#000d1a'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Kanāla Laiva',
         collect: ['⛵', '🚤', '🛶'],
@@ -350,6 +396,7 @@ export const LOCATIONS = [
         timeLimit: 26,
       },
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Atklāj Kanālu',
         bgColor: 0x000d1a,
@@ -360,6 +407,7 @@ export const LOCATIONS = [
         timeLimit: 22,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Slūžu Kods',
         elements: [
@@ -378,18 +426,24 @@ export const LOCATIONS = [
         text: 'Kā sauc kanālu starp Liepājas ezeru un jūru?',
         answer: 'tirdzniecības kanāls',
         aliases: ['tirdzniecibas kanals', 'kanāls', 'tirdzniecības'],
+        options: ['Tirdzniecības kanāls', 'Liepājas kanāls', 'Ostas kanāls'],
+        points: [10, 5, 0],
         fact: 'Tirdzniecības kanāls — vēsturisks ūdensceļš, kas savienoja ezeru ar jūru tirdzniecības vajadzībām.',
       },
       {
         text: 'Kopš kura gadsimta kalpo Tirdzniecības kanāls?',
         answer: '16.',
         aliases: ['16', 'sešpadsmitā', 'sešpadsmitais'],
+        options: ['14.', '16.', '18.'],
+        points: [10, 5, 0],
         fact: 'Kanāls kalpo Liepājai jau kopš 16. gadsimta, kad pilsēta kļuva par nozīmīgu tirdzniecības centru.',
       },
       {
         text: 'Ko savieno Tirdzniecības kanāls?',
         answer: 'ezeru un jūru',
         aliases: ['ezeru un juru', 'liepājas ezeru un baltijas jūru', 'ezeru ar jūru'],
+        options: ['Ezeru un jūru', 'Divus ezerus', 'Jūru un ostu'],
+        points: [10, 5, 0],
         fact: 'Kanāls savieno Liepājas ezeru ar Baltijas jūru, nodrošinot kuģošanu caur pilsētu.',
       },
     ],
@@ -406,6 +460,7 @@ export const LOCATIONS = [
     bgGradient: ['#2a0000', '#150000'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Kravas Šķirošana',
         collect: ['📦', '🗃️', '📫'],
@@ -416,6 +471,7 @@ export const LOCATIONS = [
         timeLimit: 26,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Krāna Vadība',
         elements: [
@@ -429,6 +485,7 @@ export const LOCATIONS = [
         gapDuration: 290,
       },
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Atklāj Ostu',
         bgColor: 0x150000,
@@ -444,18 +501,24 @@ export const LOCATIONS = [
         text: 'Vai Liepājas osta aizsalst ziemā? (Jā/Nē)',
         answer: 'nē',
         aliases: ['ne'],
+        options: ['Nē', 'Jā', 'Dažreiz'],
+        points: [10, 5, 0],
         fact: 'Liepājas osta neaizsalst, pateicoties jūras strāvojumiem — tas padara to par vērtīgu ziemas ostu.',
       },
       {
         text: 'Kā sauc Liepājas ostas speciālo ekonomisko zonu?',
         answer: 'lsez',
         aliases: ['liepājas speciālā ekonomiskā zona', 'liepājas sez'],
+        options: ['LSEZ', 'LEZA', 'LPEZ'],
+        points: [10, 5, 0],
         fact: 'LSEZ — Liepājas Speciālā ekonomiskā zona — piesaista starptautiskus uzņēmumus ar nodokļu atvieglojumiem.',
       },
       {
         text: 'Kāds ir Liepājas ostas īpašums, kas to atšķir no citām ostām?',
         answer: 'neaizsalst',
         aliases: ['neiesalst', 'bezsala osta', 'neiesalst ziemā'],
+        options: ['Neaizsalst', 'Ir dziļākā osta', 'Ir lielākā osta'],
+        points: [10, 5, 0],
         fact: 'Osta darbojas visu gadu, jo Baltijas jūras strāvas novērš sasalšanu pat bargākajās ziemās.',
       },
     ],
@@ -472,6 +535,7 @@ export const LOCATIONS = [
     bgGradient: ['#1a0800', '#0d0400'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Ražošanas Līnija',
         collect: ['⚙️', '🔧', '🏭'],
@@ -482,6 +546,7 @@ export const LOCATIONS = [
         timeLimit: 26,
       },
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Atklāj LSEZ',
         bgColor: 0x0d0400,
@@ -492,6 +557,7 @@ export const LOCATIONS = [
         timeLimit: 20,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Montāžas Kods',
         elements: [
@@ -510,18 +576,24 @@ export const LOCATIONS = [
         text: 'Vai UPB ir Liepājas uzņēmums? (Jā/Nē)',
         answer: 'jā',
         aliases: ['ja'],
+        options: ['Jā', 'Nē', 'Daļēji'],
+        points: [10, 5, 0],
         fact: 'UPB ir starptautisks būvniecības uzņēmums no Liepājas, kas realizē projektus visā pasaulē.',
       },
       {
         text: 'Kurā gadā izveidota LSEZ?',
         answer: '1997',
         aliases: [],
+        options: ['1987', '1997', '2007'],
+        points: [10, 5, 0],
         fact: 'LSEZ izveidota 1997. gadā, lai veicinātu Liepājas reģiona ekonomisko attīstību.',
       },
       {
         text: 'Cik uzņēmumi darbojas LSEZ teritorijā?',
         answer: '80',
         aliases: ['vairāk nekā 80', 'aptuveni 80'],
+        options: ['Apmēram 20', '80', 'Apmēram 200'],
+        points: [10, 5, 0],
         fact: 'Vairāk nekā 80 uzņēmumi darbojas LSEZ, nodarbinot tūkstošiem Liepājas iedzīvotāju.',
       },
     ],
@@ -538,6 +610,7 @@ export const LOCATIONS = [
     bgGradient: ['#1a1a1a', '#0d0d0d'],
     miniGames: [
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Izkļūt no Cietuma',
         bgColor: 0x050505,
@@ -548,6 +621,7 @@ export const LOCATIONS = [
         timeLimit: 20,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Sardzes Maiņa',
         elements: [
@@ -561,14 +635,12 @@ export const LOCATIONS = [
         gapDuration: 280,
       },
       {
-        type: 'catcher',
-        label: 'Izvairīties no Sardzēm',
-        collect: ['🔑', '🗝️', '📜'],
-        avoid: ['👮', '🚨', '🔦'],
-        spawnRate: 1300,
-        fallSpeed: { min: 35, max: 65 },
-        required: 7,
-        timeLimit: 28,
+        role: 'classic',
+        type: 'keypad',
+        label: 'Cietuma Kods',
+        codeLength: 4,
+        showTime: 3000,
+        timeLimit: 30,
       },
     ],
     questions: [
@@ -576,18 +648,24 @@ export const LOCATIONS = [
         text: 'Kā sauc Karostas tūrisma cietumu?',
         answer: 'karostas cietums',
         aliases: ['karosta', 'karostas'],
+        options: ['Karostas cietums', 'Liepājas cietums', 'Kurzemes cietums'],
+        points: [10, 5, 0],
         fact: 'Karostas cietums ir vienīgais militārais cietums Eiropā, kas pieejams tūristiem kā muzejs.',
       },
       {
         text: 'Kurā gadā celts Karostas cietums?',
         answer: '1900',
         aliases: [],
+        options: ['1880', '1900', '1920'],
+        points: [10, 5, 0],
         fact: 'Cietums celts 1900. gadā cara armijas vajadzībām Karostā — bijušajā jūras militārajā bāzē.',
       },
       {
         text: 'Kam sākotnēji bija paredzēts Karostas cietums?',
         answer: 'armijai',
         aliases: ['cara armijai', 'militārajiem', 'karavīriem'],
+        options: ['Armijai', 'Pilsētas policijai', 'Muitas dienestam'],
+        points: [10, 5, 0],
         fact: 'Cietums sākotnēji kalpoja cara armijas karavīru sodīšanai Krievijas impērijas laikos.',
       },
     ],
@@ -604,6 +682,7 @@ export const LOCATIONS = [
     bgGradient: ['#0d2b0d', '#061206'],
     miniGames: [
       {
+        role: 'classic',
         type: 'catcher',
         label: 'Dabas Kolekcija',
         collect: ['🍂', '🌸', '🍃', '🌿'],
@@ -614,6 +693,7 @@ export const LOCATIONS = [
         timeLimit: 28,
       },
       {
+        role: 'info_swap',
         type: 'flashlight',
         label: 'Atklāj Parku',
         bgColor: 0x061206,
@@ -624,6 +704,7 @@ export const LOCATIONS = [
         timeLimit: 22,
       },
       {
+        role: 'sync_task',
         type: 'sequence',
         label: 'Gadalaiku Ritms',
         elements: [
@@ -642,18 +723,24 @@ export const LOCATIONS = [
         text: 'Kā sauc parku pie Liepājas jūrmalas?',
         answer: 'jūrmalas parks',
         aliases: ['jurmalas parks', 'jūrmalas'],
+        options: ['Jūrmalas parks', 'Liepājas parks', 'Piejūras parks'],
+        points: [10, 5, 0],
         fact: 'Jūrmalas parks — viens no lielākajiem parkiem Latvijā — atrodas starp pilsētu un jūru.',
       },
       {
         text: 'Kurā gadsimtā ierīkots Jūrmalas parks?',
         answer: '19.',
         aliases: ['19', 'deviņpadsmitajā', 'deviņpadsmitais'],
+        options: ['17.', '19.', '20.'],
+        points: [10, 5, 0],
         fact: 'Parks ierīkots 19. gadsimta otrajā pusē kā rotaļu un atpūtas vieta Liepājas iedzīvotājiem.',
       },
       {
         text: 'Cik koku un krūmu sugu aug Jūrmalas parkā?',
         answer: '170',
         aliases: ['vairāk nekā 170', 'ap 170'],
+        options: ['Ap 50', '170', 'Ap 500'],
+        points: [10, 5, 0],
         fact: 'Parkā reģistrētas vairāk nekā 170 koku un krūmu sugas, tostarp daudzi reti eksotiski augi.',
       },
     ],

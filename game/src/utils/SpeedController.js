@@ -14,7 +14,7 @@
  *   SpeedController.reset();    // back to 1.0
  */
 
-const DEFAULT_SPEED = 1.0;
+const DEFAULT_SPEED = 0.75;
 const MIN_SPEED     = 0.25;
 const MAX_SPEED     = 3.0;
 

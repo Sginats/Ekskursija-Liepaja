@@ -88,6 +88,13 @@ const lootPool = new Map();
 const coopSessions = new Map();
 
 /**
+ * Active asymmetric (Navigator/Operator) sessions.
+ * Navigator sees a generated code; Operator inputs it via the Phaser keypad.
+ * @type {Map<string, { sessionId: string, locationId: string, navigatorId: string, operatorId: string, code: string, status: string }>}
+ */
+const asymSessions = new Map();
+
+/**
  * Active flash quiz state (null when inactive).
  * @type {{ quizId: string, question: object, startedAt: number, timer: NodeJS.Timeout, responses: Map<string, string> } | null}
  */
@@ -158,7 +165,8 @@ function broadcastLootPool() {
 }
 
 function broadcastFinaleLobby() {
-  const list = Array.from(finalePlayers.values());
+  const list = Array.from(finalePlayers.values())
+    .sort((a, b) => b.score - a.score || a.timeSeconds - b.timeSeconds);
   gameNS.emit('finale:lobby_update', list);
 }
 
@@ -451,6 +459,53 @@ gameNS.on('connection', (socket) => {
     });
   });
 
+  // ── Asymmetric (Navigator / Operator) sessions ────────────────────────────
+  // ASYM_SUBMIT: Operator submits the code they heard from Navigator
+  socket.on('asym:submit', ({ sessionId, code, locationId }) => {
+    const session = asymSessions.get(sessionId);
+    if (!session || session.status !== 'active') return;
+
+    session.status   = 'complete';
+    const success    = code === session.code;
+    const multiplier = success ? COOP_MULTIPLIER : 1.0;
+    const penalty    = success ? 0 : COOP_PENALTY;
+
+    asymSessions.delete(sessionId);
+
+    if (success) {
+      [session.navigatorId, session.operatorId].forEach(sid => {
+        gameNS.to(sid).emit('asym:result', { success: true, multiplier, locationId, sessionId });
+      });
+      pushLog('info', `Asym sesija izdevās @ ${locationId}: kods ${session.code}`);
+      dbInsert('coop_sessions', {
+        session_id:       sessionId,
+        location_id:      locationId,
+        questioner_name:  players.get(session.navigatorId)?.name || null,
+        clue_holder_name: players.get(session.operatorId)?.name  || null,
+        success:          true,
+        multiplier,
+        penalty:          0,
+      });
+    } else {
+      [session.navigatorId, session.operatorId].forEach(sid => {
+        const pl = players.get(sid);
+        if (pl) pl.score = Math.max(0, pl.score - COOP_PENALTY);
+        gameNS.to(sid).emit('asym:result', { success: false, penalty, locationId, sessionId });
+      });
+      broadcastPlayerList();
+      pushLog('warn', `Asym sesija neizdevās @ ${locationId} — sods ${COOP_PENALTY} katram`);
+      dbInsert('coop_sessions', {
+        session_id:       sessionId,
+        location_id:      locationId,
+        questioner_name:  players.get(session.navigatorId)?.name || null,
+        clue_holder_name: players.get(session.operatorId)?.name  || null,
+        success:          false,
+        multiplier:       1.0,
+        penalty,
+      });
+    }
+  });
+
   // ── Loot pool ──────────────────────────────────────────────────────────────
   // LOOT_FOUND: player found a loot item at a location
   socket.on('loot:found', ({ itemId, locationId }) => {
@@ -597,6 +652,15 @@ gameNS.on('connection', (socket) => {
       }
     }
 
+    // Cleanup any asym sessions this player was part of
+    for (const [sid, session] of asymSessions) {
+      if (session.navigatorId === socket.id || session.operatorId === socket.id) {
+        const partnerId = session.navigatorId === socket.id ? session.operatorId : session.navigatorId;
+        gameNS.to(partnerId).emit('coop:partner_left', { locationId: session.locationId });
+        asymSessions.delete(sid);
+      }
+    }
+
     for (const [code, lobby] of lobbies) {
       const isHost  = lobby.host  === socket.id;
       const isGuest = lobby.guest === socket.id;
@@ -634,7 +698,13 @@ function _getCoopSession(socketId, locationId) {
 }
 
 function _startCoopSession(questionerId, clueHolderId, locationId) {
-  const DUAL_KEY = { rtu: true, cietums: true };
+  // cietums uses asymmetric (Navigator/Operator) sessions instead of dual-key
+  if (locationId === 'cietums') {
+    _startAsymSession(questionerId, clueHolderId, locationId);
+    return;
+  }
+
+  const DUAL_KEY = { rtu: true };
   if (!DUAL_KEY[locationId]) return;
 
   const sessionId = `cs_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -646,8 +716,7 @@ function _startCoopSession(questionerId, clueHolderId, locationId) {
   if (cp) cp.coopSessionId = sessionId;
 
   const CLUES = {
-    rtu:     ['RTU akadēmija dibināta pēc Otrā pasaules kara.', 'Gads beidzas ar ciparu "4".', 'Piecdesmitie gadi.', 'Konkrēti — 1954. gads.'],
-    cietums: ['Celts cara Krievijas laikā.', 'Gadsimta mijā — ap 1900. gadu.', 'Precīzi pirmais gadsimta gads.', 'Gads ir 1900.'],
+    rtu: ['RTU akadēmija dibināta pēc Otrā pasaules kara.', 'Gads beidzas ar ciparu "4".', 'Piecdesmitie gadi.', 'Konkrēti — 1954. gads.'],
   };
 
   gameNS.to(questionerId).emit('coop:session_start', {
@@ -656,11 +725,53 @@ function _startCoopSession(questionerId, clueHolderId, locationId) {
   });
   gameNS.to(clueHolderId).emit('coop:session_start', {
     sessionId, locationId, role: 'clue_holder',
-    partnerName:     qp?.name || '?',
+    partnerName:        qp?.name || '?',
     questionerSocketId: questionerId,
-    clues:           CLUES[locationId] || [],
+    clues:              CLUES[locationId] || [],
   });
   pushLog('info', `Co-op sesija sākta @ ${locationId}: ${qp?.name} & ${cp?.name}`);
+}
+
+/**
+ * Start an asymmetric Navigator/Operator session.
+ * Navigator receives the generated code; Operator inputs it via the Phaser keypad.
+ * @param {string} navigatorId – first player at the location (sees code)
+ * @param {string} operatorId  – second player at the location (inputs code)
+ * @param {string} locationId
+ */
+function _startAsymSession(navigatorId, operatorId, locationId) {
+  const ASYM_LOCATIONS = { cietums: true, kanals: true };
+  if (!ASYM_LOCATIONS[locationId]) return;
+
+  // Generate a random 4-digit code
+  const code      = String(Math.floor(1000 + Math.random() * 9000));
+  const sessionId = `as_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+  asymSessions.set(sessionId, { sessionId, locationId, navigatorId, operatorId, code, status: 'active' });
+
+  const np = players.get(navigatorId);
+  const op = players.get(operatorId);
+  if (np) np.coopSessionId = sessionId;
+  if (op) op.coopSessionId = sessionId;
+
+  // Navigator: receives the code to communicate verbally
+  gameNS.to(navigatorId).emit('coop:session_start', {
+    sessionId,
+    locationId,
+    role:        'navigator',
+    partnerName: op?.name || '?',
+    code,
+  });
+
+  // Operator: starts the Phaser keypad, no code shown
+  gameNS.to(operatorId).emit('coop:session_start', {
+    sessionId,
+    locationId,
+    role:        'operator',
+    partnerName: np?.name || '?',
+  });
+
+  pushLog('info', `Asym sesija sākta @ ${locationId}: navigator=${np?.name}, operator=${op?.name}, kods=${code}`);
 }
 
 function _checkLootSpawn(socketId, locationId) {

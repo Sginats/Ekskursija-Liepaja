@@ -1,32 +1,43 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { applyAnswerRestore } from '../utils/WindEnergy.js';
 import DynamicDifficulty from '../utils/DynamicDifficulty.js';
+import EventBridge from '../utils/EventBridge.js';
 
 export default function QuestionOverlay({ question, locationName, locationId, questionIdx, onComplete, windEnergy, onWindUpdate }) {
   const [input, setInput] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [done, setDone] = useState(false);
+  const [wrongOption, setWrongOption] = useState(null);
   const inputRef = useRef(null);
 
-  // Dynamically adjusted base points based on historical failure rate
-  const basePoints = useMemo(
+  const isMC = Array.isArray(question.options) && question.options.length > 0;
+
+  // Points per attempt: use question.points if defined, else DynamicDifficulty
+  const _ddBase   = useMemo(
     () => DynamicDifficulty.getBasePoints(locationId, questionIdx ?? 0),
     [locationId, questionIdx]
   );
-  const secondAttemptPts = useMemo(() => Math.max(Math.round(basePoints * 0.5), 3), [basePoints]);
+  const basePoints = useMemo(
+    () => question.points?.[0] ?? _ddBase,
+    [question.points, _ddBase]
+  );
+  const secondAttemptPts = useMemo(
+    () => question.points?.[1] ?? Math.max(Math.round(basePoints * 0.5), 3),
+    [question.points, basePoints]
+  );
   const diffLabel = useMemo(
     () => DynamicDifficulty.getLabel(locationId, questionIdx ?? 0),
     [locationId, questionIdx]
   );
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (!isMC) inputRef.current?.focus();
+  }, [isMC]);
 
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 'Enter' && !done) submit();
+      if (e.key === 'Enter' && !done && !isMC) submit();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -42,18 +53,30 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
     return (question.aliases || []).some(a => normalise(a) === n);
   }
 
+  // ── Text-input submission ────────────────────────────────────────────────────
   function submit() {
     if (done || !input.trim()) return;
-    const correct = isMatch(input);
+    _handleAnswer(input);
+  }
+
+  // ── Multiple-choice click ────────────────────────────────────────────────────
+  function selectOption(opt) {
+    if (done || opt === wrongOption) return;
+    _handleAnswer(opt);
+  }
+
+  // ── Shared answer logic ──────────────────────────────────────────────────────
+  function _handleAnswer(value) {
+    const correct = isMatch(value);
     const nextAttempts = attempts + 1;
 
-    // Record for dynamic difficulty tracking
     DynamicDifficulty.record(locationId, questionIdx ?? 0, correct);
 
     if (correct) {
       const pts = attempts === 0 ? basePoints : secondAttemptPts;
       setFeedback({ type: 'success', pts });
       setDone(true);
+      EventBridge.emit('ANSWER_CORRECT', { delta: pts });
       const newWind = applyAnswerRestore(windEnergy, nextAttempts);
       onWindUpdate?.(newWind);
       setTimeout(() => onComplete({ points: pts, correct: true, attempts: nextAttempts }), 1800);
@@ -61,12 +84,20 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
       setAttempts(nextAttempts);
       setFeedback({ type: 'revealed', answer: question.answer });
       setDone(true);
+      EventBridge.emit('ANSWER_WRONG', {});
       setTimeout(() => onComplete({ points: 0, correct: false, attempts: nextAttempts }), 2400);
     } else {
       setAttempts(nextAttempts);
-      setFeedback({ type: 'wrong', remaining: 2 - nextAttempts });
-      setInput('');
-      setTimeout(() => { setFeedback(null); inputRef.current?.focus(); }, 1200);
+      EventBridge.emit('ANSWER_WRONG', {});
+      const wrongFeedback = { type: 'wrong', remaining: 2 - nextAttempts };
+      if (isMC) {
+        setWrongOption(value);
+        setFeedback(wrongFeedback);
+      } else {
+        setFeedback(wrongFeedback);
+        setInput('');
+        setTimeout(() => { setFeedback(null); inputRef.current?.focus(); }, 1200);
+      }
     }
   }
 
@@ -84,7 +115,24 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
           </p>
         </div>
 
-        {!done && (
+        {/* ── Multiple-choice options ─────────────────────────────────────────── */}
+        {isMC && !done && (
+          <div className="quiz-options">
+            {question.options.map((opt) => (
+              <button
+                key={opt}
+                className={`quiz-option-btn${opt === wrongOption ? ' quiz-option-wrong' : ''}`}
+                onClick={() => selectOption(opt)}
+                disabled={opt === wrongOption}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── Text-input form (used when no options) ──────────────────────────── */}
+        {!isMC && !done && (
           <div className="quiz-form">
             <input
               ref={inputRef}

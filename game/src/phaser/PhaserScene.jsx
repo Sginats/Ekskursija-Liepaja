@@ -3,11 +3,14 @@ import Phaser from 'phaser';
 import CatcherScene from './scenes/CatcherScene.js';
 import FlashlightScene from './scenes/FlashlightScene.js';
 import SequenceScene from './scenes/SequenceScene.js';
+import KeypadScene from './scenes/KeypadScene.js';
+import EnvironmentManager from './EnvironmentManager.js';
 
 const SCENE_MAP = {
   catcher:    CatcherScene,
   flashlight: FlashlightScene,
   sequence:   SequenceScene,
+  keypad:     KeypadScene,
 };
 
 /** Fixed logical aspect ratio: 4:3 */
@@ -22,7 +25,7 @@ function getCanvasSize(containerW) {
   return { width: w, height: h };
 }
 
-export default function PhaserScene({ miniGame, locationId }) {
+export default function PhaserScene({ miniGame, locationId, score = 0 }) {
   const containerRef = useRef(null);
   const gameRef      = useRef(null);
 
@@ -41,9 +44,10 @@ export default function PhaserScene({ miniGame, locationId }) {
       width,
       height,
       backgroundColor: '#0a0a1a',
+      roundPixels:     true,
       scale: {
-        mode:           Phaser.Scale.FIT,
-        autoCenter:     Phaser.Scale.CENTER_BOTH,
+        mode:            Phaser.Scale.FIT,
+        autoCenter:      Phaser.Scale.CENTER_BOTH,
         width,
         height,
       },
@@ -57,7 +61,16 @@ export default function PhaserScene({ miniGame, locationId }) {
     game.events.once('ready', () => {
       const scenes = game.scene.getScenes(false);
       const key    = scenes[0]?.sys.settings.key;
-      if (key) game.scene.start(key, sceneData);
+      if (key) {
+        game.scene.start(key, sceneData);
+        // Attach wind particles after the scene has started
+        game.events.once('step', () => {
+          const activeScene = game.scene.getScenes(true)[0];
+          if (activeScene) {
+            activeScene._env = new EnvironmentManager(activeScene, { score });
+          }
+        });
+      }
     });
 
     gameRef.current = game;
