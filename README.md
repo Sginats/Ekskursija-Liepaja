@@ -1,4 +1,4 @@
-# 🗺️ Mācību ekskursija Liepājā
+# Macību ekskursija Liepājā
 
 Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izpēti 10 apmeklējuma punktus kartē, atbildi uz jautājumiem un sacenšoties par vietu Top 10!
 
@@ -6,7 +6,7 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ---
 
-## 📸 Ekrānuzņēmumi
+## Ekrānuzņēmumi
 
 | Galvenā izvēlne | Karte |
 |---|---|
@@ -18,34 +18,36 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ---
 
-## 🎮 Spēles noteikumi
+## Spēles noteikumi
 
 1. Apmeklē **10 vietas** Liepājā noteiktā secībā.
 2. Katrā vietā saņem informāciju par vietu un **uzdevumu** (jautājums, mini-spēle vai secības uzdevums).
 3. Punktu sistēma:
-   - ✅ Pareiza atbilde 1. mēģinājumā → **+10 punkti**
-   - ⚠️ Pareiza atbilde pēc 1 kļūdas → **+5 punkti**
-   - ❌ 2 kļūdas → **0 punkti**, atbilde parādās automātiski
+   - Pareiza atbilde 1. mēģinājumā — **+10 punkti**
+   - Pareiza atbilde pēc 1 kļūdas — **+5 punkti**
+   - 2 kļūdas — **0 punkti**, atbilde parādās automātiski
 4. Pēdējā vieta vienmēr ir **atpūtas vieta**.
-5. Spēles beigās saglabā rezultātu un iekļūsti **Top 10**!
+5. Spēles beigās parādās **noslēguma tests** — 5 jautājumi par Liepāju (katra pareiza atbilde: +2 bonusa punkti, maks. +10).
+6. Saglabā rezultātu un iekļūsti **Top 10**! Maksimālais rezultāts: **110 punkti**.
 
 ---
 
-## 🗺️ Kartes leģenda
+## Kartes leģenda
 
 | Krāsa | Kategorija |
 |-------|-----------|
-| 🟢 Zaļš | Daba un atpūta |
-| 🔵 Zils | Kultūra un vēsture |
-| 🟡 Dzeltens | RTU Liepājas akadēmija |
-| 🔴 Sarkans | Industrija un osta |
+| Zals | Daba un atpūta |
+| Zils | Kultūra un vēsture |
+| Dzeltens | RTU Liepājas akadēmija |
+| Sarkans | Industrija un osta |
 
 ---
 
-## ✨ Galvenās funkcijas
+## Galvenās funkcijas
 
 - **Viena spēlētāja** un **multiplayer** režīms (spēlē ar draugu reālajā laikā)
 - **Mini-spēles:** laivas sacīkstes, kukaiņu ķeršana, vēstures secības kārtošana
+- **Noslēguma tests:** 5 jautājumi pēc visu 10 vietu apmeklēšanas
 - **4 krāsu tēmas:** Noklusējuma (zelts), Violeta, Tumši sarkana, Zila
 - **Animēts fons:** daļiņu sistēma, kas pielāgojas izvēlētajai tēmai
 - **Iestatījumi:** mūzikas/SFX skaļums, tēma, animācijas on/off
@@ -53,7 +55,7 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ---
 
-## 🛠️ Tehnoloģijas
+## Tehnoloģijas
 
 | Slānis | Rīki |
 |--------|------|
@@ -64,7 +66,7 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ---
 
-## 📁 Struktūra
+## Struktūra
 
 ```
 Ekskursija-Liepaja/
@@ -83,7 +85,7 @@ Ekskursija-Liepaja/
 
 ---
 
-## 🚀 Palaišana
+## Palaišana
 
 > Vajadzīgs tikai **PHP**. Node.js ir neobligāts.
 
@@ -107,7 +109,7 @@ Sistēma automātiski izvēlas labāko pieejamo savienojumu (WebSocket → PHP p
 
 ---
 
-## 📚 Resursi
+## Resursi
 
 - **Karte:** OpenStreetMap (© OpenStreetMap contributors)
 - **Gida attēls (Kaija):** Autoru oriģinālzīmējums

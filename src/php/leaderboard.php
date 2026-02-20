@@ -64,11 +64,11 @@
     <div id="connection-status" class="connection-status" style="display: none;"></div>
 
     <div class="container" style="position:relative;z-index:1;max-height:100vh;overflow-y:auto;padding:30px 20px;">
-        <h1 class="title" style="font-size:52px;">🏆 Top 10 Rezultāti</h1>
+        <h1 class="title" style="font-size:52px;">Top 10 Rezultāti</h1>
 
         <div class="lb-tabs">
-            <button class="lb-tab active" onclick="showSection('single', this)">👤 Viens spēlētājs</button>
-            <button class="lb-tab" onclick="showSection('teams', this)">👥 Komandas</button>
+            <button class="lb-tab active" onclick="showSection('single', this)">Viens spēlētājs</button>
+            <button class="lb-tab" onclick="showSection('teams', this)">Komandas</button>
         </div>
 
         <!-- Single player section -->

@@ -247,7 +247,7 @@ $csrfToken  = $loggedIn ? generateCsrfToken() : '';
 
 <?php if (!$loggedIn): ?>
         <!-- Login form -->
-        <h1 class="admin-title">🔐 Admin Panelis</h1>
+        <h1 class="admin-title">Admin Panelis</h1>
         <div class="admin-card" style="max-width:400px; margin:0 auto;">
             <h2 style="text-align:center;">Pieslēgties</h2>
             <?php if ($error): ?>
@@ -273,11 +273,11 @@ $csrfToken  = $loggedIn ? generateCsrfToken() : '';
             </form>
         </div>
 
-        <h1 class="admin-title">⚙️ Admin Panelis</h1>
+        <h1 class="admin-title">Admin Panelis</h1>
 
         <!-- Single player leaderboard -->
         <div class="admin-card">
-            <h2>👤 Viens spēlētājs
+            <h2>Viens spēlētājs
                 <span class="badge-count"><?php echo count($singleData); ?> ieraksti</span>
             </h2>
             <?php if (empty($singleData)): ?>
@@ -313,14 +313,14 @@ $csrfToken  = $loggedIn ? generateCsrfToken() : '';
                     <input type="hidden" name="action" value="clear">
                     <input type="hidden" name="type" value="single">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                    <button type="submit" class="btn-danger">🗑 Notīrīt visu tabulu</button>
+                    <button type="submit" class="btn-danger">Notīrīt visu tabulu</button>
                 </form>
             </div>
         </div>
 
         <!-- Teams leaderboard -->
         <div class="admin-card">
-            <h2>👥 Komandas
+            <h2>Komandas
                 <span class="badge-count"><?php echo count($teamsData); ?> ieraksti</span>
             </h2>
             <?php if (empty($teamsData)): ?>
@@ -356,7 +356,7 @@ $csrfToken  = $loggedIn ? generateCsrfToken() : '';
                     <input type="hidden" name="action" value="clear">
                     <input type="hidden" name="type" value="teams">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                    <button type="submit" class="btn-danger">🗑 Notīrīt visu tabulu</button>
+                    <button type="submit" class="btn-danger">Notīrīt visu tabulu</button>
                 </form>
             </div>
         </div>
