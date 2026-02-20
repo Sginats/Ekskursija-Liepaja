@@ -1473,3 +1473,238 @@ body[data-night='1']::after {
 .end-rank strong {
   font-size: 22px;
 }
+
+/* ── Intro Modal ─────────────────────────────────────────────── */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 16px;
+}
+
+.intro-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.intro-title {
+  font-size: 22px;
+  color: var(--amber);
+  margin-bottom: 18px;
+}
+
+.intro-body { text-align: left; }
+
+.intro-highlight {
+  background: rgba(255, 170, 0, 0.1);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--amber);
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+.intro-text {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+.intro-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.intro-list li {
+  font-size: 13px;
+  color: var(--text-dim);
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.intro-start-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ── Pre-Final Modal ─────────────────────────────────────────── */
+.prefinal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 250;
+  padding: 16px;
+}
+
+.prefinal-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+}
+
+.prefinal-title {
+  font-size: 22px;
+  color: var(--amber);
+  margin-bottom: 14px;
+}
+
+.prefinal-text {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.prefinal-question {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.prefinal-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prefinal-theory-btn {
+  width: 100%;
+}
+
+/* ── Theory Library ──────────────────────────────────────────── */
+.theory-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 260;
+  padding: 16px;
+}
+
+.theory-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.theory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.theory-title {
+  font-size: 18px;
+  color: var(--amber);
+}
+
+.theory-counter {
+  font-size: 13px;
+  color: var(--text-dim);
+  background: rgba(255, 170, 0, 0.12);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.theory-card {
+  border: 1px solid;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.theory-loc-name {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.theory-loc-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.theory-facts { margin-top: 10px; }
+
+.theory-facts-title {
+  font-size: 14px;
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+
+.theory-fact {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.theory-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.theory-arrow {
+  flex: 1;
+  text-align: center;
+}
+
+.theory-ready-btn {
+  width: 100%;
+}
+
+/* ── Responsive: Intro, PreFinal, Theory ─────────────────────── */
+@media (max-width: 480px) {
+  .intro-panel,
+  .prefinal-panel,
+  .theory-panel {
+    padding: 22px 16px;
+    border-radius: 16px;
+  }
+  
+  .intro-title,
+  .prefinal-title {
+    font-size: 19px;
+  }
+
+  .theory-loc-name {
+    font-size: 16px;
+  }
+}
