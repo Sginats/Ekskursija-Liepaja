@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 
 // Admin password for the testing panel.
 // Change this string to update the password.
-const ADMIN_PASSWORD = 'Liepaja2025!';
+const ADMIN_PASSWORD = 'NoHomo2026';
 
 const AdminContext = createContext(null);
 
