@@ -566,7 +566,7 @@ export const LOCATIONS = [
         collect: ['🔑', '🗝️', '📜'],
         avoid: ['👮', '🚨', '🔦'],
         spawnRate: 1300,
-        fallSpeed: { min: 51, max: 98 },
+        fallSpeed: { min: 35, max: 65 },
         required: 7,
         timeLimit: 28,
       },

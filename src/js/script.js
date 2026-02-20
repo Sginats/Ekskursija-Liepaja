@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sfx = document.getElementById('hover-sound');
     if (sfx) {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
-        sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
+        sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.2;
     }
 
     // Background music setup
