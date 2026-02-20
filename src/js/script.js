@@ -862,7 +862,7 @@ function showLocationThenStart(type, callback) {
             <h3>${info.name}</h3>
             <p>${info.desc}</p>
         </div>
-        <button class="btn" id="btn-start-task">Turpināt uz uzdevumu →</button>
+        <button class="btn btn-full" id="btn-start-task">Turpināt uz uzdevumu →</button>
     `;
     document.getElementById('btn-start-task').addEventListener('click', function() {
         document.getElementById('game-modal').style.display = 'none';
@@ -900,7 +900,7 @@ function startBoatGame() {
         <p>${instruction}</p>
         <h3 id="boat-timer">0.00 s</h3>
         <p id="boat-progress">Spiedienu skaits: 0/${BOAT_RACE_CONFIG.REQUIRED_PRESSES}</p>
-        <button class="btn" onclick="initBoatRace()">SĀKT</button>`;
+        <button class="btn btn-full" onclick="initBoatRace()">SĀKT</button>`;
 }
 
 function initBoatRace() {
