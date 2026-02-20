@@ -7,6 +7,8 @@ import ScoreBar from './components/ScoreBar.jsx';
 import CardCollection from './components/CardCollection.jsx';
 import LeaderboardView from './components/LeaderboardView.jsx';
 import AboutModal from './components/AboutModal.jsx';
+import AdminPanel from './components/AdminPanel.jsx';
+import CoopProvider, { useCoopContext } from './components/CoopManager.jsx';
 import { LOCATIONS } from './data/LocationData.js';
 import { getLocationConfig } from './utils/RandomizerEngine.js';
 import EventBridge from './utils/EventBridge.js';
@@ -15,12 +17,15 @@ import { WIND_MAX, applyTravelCost, WIND_PENALTY_EMPTY } from './utils/WindEnerg
 import { getUnlockedCards, unlockCard, CARD_META } from './utils/Cards.js';
 import { saveScore } from './utils/Leaderboard.js';
 import { getDayNightState } from './utils/DayNight.js';
+import AntiCheat from './utils/AntiCheat.js';
+import SocketManager from './utils/SocketManager.js';
+import { generateJournal, downloadJournal } from './utils/JournalGenerator.js';
 
 const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', END: 'end' };
-
 const LAST_LOCATION_ID = 'parks';
 
-export default function App() {
+// ── Inner game wrapped inside CoopProvider ────────────────────────────────────
+function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [phase, setPhase] = useState(PHASE.MENU);
   const [playerName, setPlayerName] = useState('');
   const [score, setScore] = useState(0);
@@ -32,11 +37,43 @@ export default function App() {
   const [showCards, setShowCards] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [emptyTravelPenalties, setEmptyTravelPenalties] = useState(0);
   const [unlockedCards, setUnlockedCards] = useState(getUnlockedCards());
-  const { isNight } = getDayNightState();
+  const [route, setRoute] = useState([]);
+  // Live question overrides received from admin hot-swap
+  const [questionOverrides, setQuestionOverrides] = useState({});
 
+  const { isNight } = getDayNightState();
+  const { coopMultiplier, coopPenalty, joinFinale } = useCoopContext();
+
+  useEffect(() => {
+    document.body.setAttribute('data-night', isNight ? '1' : '0');
+  }, [isNight]);
+
+  // ── Hot-swap question overrides ───────────────────────────────────────────
+  useEffect(() => {
+    const unsub1 = SocketManager.on('questions:overrides', (data) => {
+      setQuestionOverrides(data || {});
+    });
+    const unsub2 = SocketManager.on('questions:override', ({ locationId, questionIdx, patch }) => {
+      setQuestionOverrides(prev => ({
+        ...prev,
+        [`${locationId}:${questionIdx}`]: { ...(prev[`${locationId}:${questionIdx}`] || {}), ...patch },
+      }));
+    });
+    const unsub3 = SocketManager.on('questions:reset', ({ locationId, questionIdx }) => {
+      setQuestionOverrides(prev => {
+        const next = { ...prev };
+        delete next[`${locationId}:${questionIdx}`];
+        return next;
+      });
+    });
+    return () => { unsub1(); unsub2(); unsub3(); };
+  }, []);
+
+  // ── Minigame → question transition ───────────────────────────────────────
   useEffect(() => {
     const unsub = EventBridge.on('MINIGAME_COMPLETE', ({ bonusPoints }) => {
       setScore(s => s + (bonusPoints || 0));
@@ -45,10 +82,14 @@ export default function App() {
     return unsub;
   }, []);
 
+  // ── Apply co-op penalty if any ────────────────────────────────────────────
   useEffect(() => {
-    document.body.setAttribute('data-night', isNight ? '1' : '0');
-  }, [isNight]);
+    if (coopPenalty && coopPenalty > 0) {
+      setScore(s => Math.max(0, s - coopPenalty));
+    }
+  }, [coopPenalty]);
 
+  // ── Start ─────────────────────────────────────────────────────────────────
   const handleStart = useCallback((name) => {
     setPlayerName(name);
     setScore(0);
@@ -57,20 +98,22 @@ export default function App() {
     setCurrentLocation(null);
     setStartTime(Date.now());
     setEmptyTravelPenalties(0);
+    setRoute([]);
     clearSession();
+    SocketManager.joinGame(name);
+    onPlayerNameChange?.(name);
+    onScoreChange?.(0);
     setPhase(PHASE.MAP);
   }, []);
 
+  // ── Location select ───────────────────────────────────────────────────────
   const selectLocation = useCallback((locationId) => {
     const loc = LOCATIONS.find(l => l.id === locationId);
     if (!loc || completedLocations.includes(locationId)) return;
 
     const availableOrder = LOCATIONS.filter(l => !completedLocations.includes(l.id));
     const isLast = availableOrder.length === 1;
-
-    if (isLast && locationId !== LAST_LOCATION_ID) {
-      return;
-    }
+    if (isLast && locationId !== LAST_LOCATION_ID) return;
 
     let newEnergy = applyTravelCost(windEnergy);
     let penalty = emptyTravelPenalties;
@@ -82,12 +125,33 @@ export default function App() {
     setWindEnergy(newEnergy);
     setCurrentLocation(loc);
     setCurrentConfig(getLocationConfig(loc));
+    AntiCheat.startLocation(loc.id);
+    SocketManager.reportLocation(loc.id);
+    onLocationChange?.(loc.id);
     setPhase(PHASE.MINIGAME);
   }, [completedLocations, windEnergy, emptyTravelPenalties]);
 
-  const handleQuestionComplete = useCallback(({ points }) => {
-    setScore(s => s + points);
+  // ── Question complete ─────────────────────────────────────────────────────
+  const handleQuestionComplete = useCallback(({ points, correct, attempts }) => {
+    // Apply coop multiplier if active
+    const finalPoints = Math.round(points * (coopMultiplier > 1 ? coopMultiplier : 1));
+    setScore(s => s + finalPoints);
+    onScoreChange?.(score + finalPoints);
+
     const locId = currentLocation.id;
+    const elapsed = AntiCheat.finishLocation(locId, score + finalPoints);
+
+    // Build route entry for journal
+    const cfg = currentConfig;
+    setRoute(prev => [...prev, {
+      locationId:        locId,
+      locationName:      currentLocation.name,
+      pointsEarned:      finalPoints,
+      questionText:      cfg?.question?.text,
+      fact:              cfg?.question?.fact,
+      answeredCorrectly: correct,
+    }]);
+
     setCompletedLocations(prev => {
       const next = [...prev, locId];
       if (next.length === LOCATIONS.length) {
@@ -95,20 +159,17 @@ export default function App() {
       }
       return next;
     });
+
     const isNew = unlockCard(locId);
     setUnlockedCards(getUnlockedCards());
+    onLocationChange?.(null);
     if (isNew) {
       setNewCardId(locId);
       setPhase(PHASE.CARD);
-    } else {
-      setPhase(prev => prev === PHASE.CARD ? PHASE.CARD : PHASE.MAP);
-      if (completedLocations.length + 1 === LOCATIONS.length) {
-        setPhase(PHASE.END);
-      } else {
-        setPhase(PHASE.MAP);
-      }
+    } else if (completedLocations.length + 1 < LOCATIONS.length) {
+      setPhase(PHASE.MAP);
     }
-  }, [currentLocation, completedLocations]);
+  }, [currentLocation, currentConfig, completedLocations, score, coopMultiplier]);
 
   const handleCardDismiss = useCallback(() => {
     setNewCardId(null);
@@ -122,13 +183,29 @@ export default function App() {
   const handleSaveScore = useCallback(async () => {
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
     await saveScore({ name: playerName, score, timeSeconds: elapsed, mode: 'single' });
+    joinFinale(score, elapsed);
     setShowLeaderboard(true);
-  }, [playerName, score, startTime]);
+  }, [playerName, score, startTime, joinFinale]);
+
+  const handleDownloadJournal = useCallback(() => {
+    const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+    const text = generateJournal({ playerName, score, timeSeconds: elapsed, route });
+    downloadJournal(text);
+  }, [playerName, score, startTime, route]);
 
   const formattedTime = (() => {
     if (!startTime || phase !== PHASE.END) return '00:00';
     const s = Math.round((Date.now() - startTime) / 1000);
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  })();
+
+  // Merge hot-swap overrides into the current config question
+  const effectiveConfig = (() => {
+    if (!currentConfig || !currentLocation) return currentConfig;
+    const key = `${currentLocation.id}:${currentConfig.question._idx ?? 0}`;
+    const ovr = questionOverrides[key];
+    if (!ovr) return currentConfig;
+    return { ...currentConfig, question: { ...currentConfig.question, ...ovr } };
   })();
 
   return (
@@ -141,6 +218,7 @@ export default function App() {
             <button className="nav-btn" onClick={() => setShowCards(true)}>🃏 Kartītes</button>
             <button className="nav-btn" onClick={() => setShowLeaderboard(true)}>🏆 TOP 10</button>
             <button className="nav-btn" onClick={() => setShowAbout(true)}>ℹ Par spēli</button>
+            <button className="nav-btn admin-nav-btn" onClick={() => setShowAdmin(true)}>⚙ Admin</button>
           </div>
           <MapScreen
             completedLocations={completedLocations}
@@ -158,11 +236,11 @@ export default function App() {
         </div>
       )}
 
-      {phase === PHASE.QUESTION && currentLocation && currentConfig && (
+      {phase === PHASE.QUESTION && currentLocation && effectiveConfig && (
         <div className="game-screen">
           <ScoreBar score={score} locationName={currentLocation.name} phase="Jautājums" />
           <QuestionOverlay
-            question={currentConfig.question}
+            question={effectiveConfig.question}
             locationName={currentLocation.name}
             onComplete={handleQuestionComplete}
             windEnergy={windEnergy}
@@ -176,9 +254,7 @@ export default function App() {
           <div className="card-reveal-box">
             <p className="card-reveal-label">🎉 Jaunā kartīte atbloķēta!</p>
             <div className="card-reveal-card">
-              <span style={{ fontSize: 56 }}>
-                {CARD_META[newCardId]?.emoji}
-              </span>
+              <span style={{ fontSize: 56 }}>{CARD_META[newCardId]?.emoji}</span>
               <strong>{CARD_META[newCardId]?.title}</strong>
             </div>
             <button className="menu-start-btn" onClick={handleCardDismiss}>Turpināt →</button>
@@ -200,6 +276,9 @@ export default function App() {
               <button className="menu-start-btn" onClick={handleSaveScore}>
                 💾 Saglabāt rezultātu
               </button>
+              <button className="nav-btn" onClick={handleDownloadJournal}>
+                📄 Lejupielādēt žurnālu
+              </button>
               <button className="nav-btn" onClick={() => setShowLeaderboard(true)}>
                 🏆 TOP 10
               </button>
@@ -211,15 +290,31 @@ export default function App() {
         </div>
       )}
 
-      {showCards && (
-        <CardCollection unlockedCards={unlockedCards} onClose={() => setShowCards(false)} />
-      )}
-      {showLeaderboard && (
-        <LeaderboardView onClose={() => setShowLeaderboard(false)} />
-      )}
-      {showAbout && (
-        <AboutModal onClose={() => setShowAbout(false)} />
-      )}
+      {showCards       && <CardCollection unlockedCards={unlockedCards} onClose={() => setShowCards(false)} />}
+      {showLeaderboard && <LeaderboardView onClose={() => setShowLeaderboard(false)} />}
+      {showAbout       && <AboutModal onClose={() => setShowAbout(false)} />}
+      {showAdmin       && <AdminPanel onClose={() => setShowAdmin(false)} />}
     </div>
+  );
+}
+
+// ── Root export: App state is lifted above CoopProvider ──────────────────────
+export default function App() {
+  const [playerName, setPlayerName] = useState('');
+  const [currentLocationId, setCurrentLocationId] = useState(null);
+  const [score, setScore] = useState(0);
+
+  return (
+    <CoopProvider
+      playerName={playerName}
+      currentLocationId={currentLocationId}
+      score={score}
+    >
+      <GameRoot
+        onPlayerNameChange={setPlayerName}
+        onLocationChange={setCurrentLocationId}
+        onScoreChange={setScore}
+      />
+    </CoopProvider>
   );
 }
