@@ -177,8 +177,8 @@ const CONNECTION_MODE_WS = 'websocket';
 let connectionMode = CONNECTION_MODE_PHP;
 
 const taskSequence = [
-    'Cietums', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
-    'LSEZ', 'Mols', 'RTU', 'Ezerkrasts', 'Parks'
+    'Parks', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
+    'LSEZ', 'Mols', 'RTU', 'Cietums', 'Ezerkrasts'
 ];
 
 // Answer verification system — answers stored as pre-computed hashes only
@@ -2970,7 +2970,7 @@ function initBirdGame() {
     birdActive = true; birdCaught = 0; birdTimeLeft = BIRD_GAME_TIME;
     document.querySelector('.task-section').innerHTML = `
         <p id="bird-stats" style="color:#ffaa00;margin:0 0 4px;font-size:13px;">Putni: 0/${BIRDS_NEEDED} | ${BIRD_GAME_TIME}s</p>
-        <div id="bird-field" style="position:relative;width:100%;height:200px;background:linear-gradient(180deg,rgba(100,180,255,0.2),rgba(30,120,60,0.3));border:2px solid rgba(255,170,0,0.3);border-radius:8px;overflow:hidden;cursor:crosshair;"></div>`;
+        <div id="bird-field" style="position:relative;width:220px;height:200px;background:linear-gradient(180deg,rgba(100,180,255,0.2),rgba(30,120,60,0.3));border:2px solid rgba(255,170,0,0.3);border-radius:8px;overflow:hidden;cursor:crosshair;"></div>`;
     if (birdTimer2) clearInterval(birdTimer2);
     birdTimer2 = setInterval(function() {
         if (!birdActive) return;
