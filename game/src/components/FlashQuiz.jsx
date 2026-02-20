@@ -33,7 +33,7 @@ export default function FlashQuiz({ quiz, onSubmit }) {
     if (submitted) return;
     setSubmitted(true);
     clearInterval(intervalRef.current);
-    if (answer) onSubmit(quizId, answer);
+    onSubmit(quizId, answer ?? null);
   }
 
   const urgency = timeLeft <= 5 ? 'urgent' : timeLeft <= 10 ? 'warning' : '';

@@ -8,13 +8,20 @@ export default function LeaderboardView({ mode = 'single', onClose }) {
 
   useEffect(() => {
     setLoading(true);
-    getTopTen(activeMode).then(data => {
-      setRows(data || []);
-      setLoading(false);
-    });
+    getTopTen(activeMode)
+      .then(data => {
+        setRows(data || []);
+      })
+      .catch(() => {
+        setRows([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [activeMode]);
 
   function fmtTime(s) {
+    if (s == null || isNaN(s)) return '--:--';
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;

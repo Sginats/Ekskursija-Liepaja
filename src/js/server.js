@@ -374,6 +374,12 @@ gameNS.on('connection', (socket) => {
   socket.on('coop:request', ({ targetSocketId, locationId }) => {
     const p = players.get(socket.id);
     if (!p) return;
+    // Validate target exists and is at the same location
+    const target = players.get(targetSocketId);
+    if (!target || target.currentLocation !== locationId) {
+      socket.emit('coop:request_error', { msg: 'Target not available' });
+      return;
+    }
     gameNS.to(targetSocketId).emit('coop:requested', {
       requesterId:   socket.id,
       requesterName: p.name,
@@ -387,6 +393,12 @@ gameNS.on('connection', (socket) => {
     // Validate requester is still connected and at the same location
     const requester = players.get(requesterId);
     if (!requester || requester.currentLocation !== locationId) {
+      socket.emit('coop:request_expired', { locationId });
+      return;
+    }
+    // Validate acceptor is also at the same location
+    const acceptor = players.get(socket.id);
+    if (!acceptor || acceptor.currentLocation !== locationId) {
       socket.emit('coop:request_expired', { locationId });
       return;
     }

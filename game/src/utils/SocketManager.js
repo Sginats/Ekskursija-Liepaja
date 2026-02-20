@@ -62,6 +62,7 @@ const SocketManager = {
       }
       if (_locationId) {
         _socket.emit('player:location', { locationId: _locationId });
+        _socket.emit('location:join', { locationId: _locationId });
       }
       if (_coopRoomId) {
         _socket.emit('coop:rejoin', { roomId: _coopRoomId });
