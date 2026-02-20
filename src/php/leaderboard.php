@@ -103,6 +103,9 @@
         </div>
 
         <button class="btn btnLead" onclick="location.href='../../index.html'" style="margin-top:20px;">Atpakaļ</button>
+        <div style="text-align:center; margin-top:18px;">
+            <a href="admin.php" style="color:rgba(255,170,0,0.45); font-size:12px; text-decoration:none;">⚙ Admin</a>
+        </div>
     </div>
 
     <?php

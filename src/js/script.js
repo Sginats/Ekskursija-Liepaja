@@ -793,7 +793,13 @@ function startActivity(type) {
     else if (type === 'RTU') showLocationThenStart(type, function() { startAntGame(); });
     else if (type === 'Teatris') showLocationThenStart(type, function() { startHistorySequence(); });
     else if (type === 'Mols') showLocationThenStart(type, function() { startFishingGame(); });
+    else if (type === 'Dzintars') showLocationThenStart(type, function() { startSimonGame(); });
+    else if (type === 'Kanals') showLocationThenStart(type, function() { startKanalGame(); });
+    else if (type === 'LSEZ') showLocationThenStart(type, function() { startLSEZGame(); });
+    else if (type === 'Ezerkrasts') showLocationThenStart(type, function() { startBirdGame(); });
+    else if (type === 'Parks') showLocationThenStart(type, function() { startMemoryGame(); });
     else if (myRole && myLobbyCode) showLocationThenStart(type, function() { showMiniGame(type); });
+    else if (type === 'Cietums') showLocationThenStart(type, function() { startEscapeGame(); });
     else showLocationThenStart(type, function() { showQuiz(type); });
 }
 
@@ -943,6 +949,7 @@ function closeBoatGame() {
         showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
+    recordMiniScore('Osta', 10);
     _ac.activeTask = false;
     _ac.taskType = null;
     _taskCompletionLog.push({ task: 'Osta', time: Date.now() });
@@ -1066,6 +1073,7 @@ function closeAntGame() {
         showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
+    recordMiniScore('RTU', 10);
     _ac.activeTask = false;
     _ac.taskType = null;
     _taskCompletionLog.push({ task: 'RTU', time: Date.now() });
@@ -1155,6 +1163,7 @@ function closeHistoryGame() {
         showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
+    recordMiniScore('Teatris', 10);
     _ac.activeTask = false;
     _ac.taskType = null;
     _taskCompletionLog.push({ task: 'Teatris', time: Date.now() });
@@ -2170,6 +2179,7 @@ function closeFishingGame() {
         showNotification('Aizdomīga darbība!', 'error', 3000);
         return;
     }
+    recordMiniScore('Mols', 10);
     _ac.activeTask = false;
     _ac.taskType = null;
     _taskCompletionLog.push({ task: 'Mols', time: Date.now() });
@@ -2181,10 +2191,756 @@ function closeFishingGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
 }
 
-window.initFishingLogic = initFishingLogic;
+// ============================================================================
+// recordMiniScore — report a minigame score to the server-side session
+// ============================================================================
+function recordMiniScore(taskId, points) {
+    if (!_serverGameToken) return;
+    fetch('src/php/record_task_score.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameToken: _serverGameToken, taskId: taskId, points: points })
+    }).catch(function() {});
+}
+
+// ============================================================================
+// DZINTARS — Simon Says (Mūzikas Atmiņa)
+// ============================================================================
+const SIMON_COLORS = ['red', 'blue', 'green', 'yellow'];
+let simonSeq = [], simonIdx = 0, simonRound = 0;
+const SIMON_TOTAL_ROUNDS = 3;
+
+function startSimonGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🎵 Mūzikas Atmiņa</h2>
+        <p>Atceries un atkārto krāsu secību!</p>
+        <button class="btn btn-full" onclick="initSimonRounds()">SĀKT</button>`;
+}
+
+function initSimonRounds() {
+    simonSeq = []; simonRound = 0;
+    runNextSimonRound();
+}
+
+function renderSimonGrid() {
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🎵 Kārta ${simonRound}/${SIMON_TOTAL_ROUNDS}</h2>
+        <p id="simon-msg" style="color:#ffaa00;">Vēro secību...</p>
+        <div class="simon-grid">
+            ${SIMON_COLORS.map(function(c) { return `<div id="sg-${c}" class="simon-btn simon-${c}" onclick="simonClick('${c}')"></div>`; }).join('')}
+        </div>`;
+    setSimonClickable(false);
+}
+
+function setSimonClickable(on) {
+    document.querySelectorAll('.simon-btn').forEach(function(b) { b.style.pointerEvents = on ? 'auto' : 'none'; });
+}
+
+function lightSimon(color, lit) {
+    const el = document.getElementById('sg-' + color);
+    if (el) { if (lit) el.classList.add('lit'); else el.classList.remove('lit'); }
+}
+
+function runNextSimonRound() {
+    simonRound++;
+    simonIdx = 0;
+    simonSeq.push(SIMON_COLORS[Math.floor(Math.random() * 4)]);
+    renderSimonGrid();
+    simonSeq.forEach(function(c, i) {
+        setTimeout(function() { lightSimon(c, true); },  800 + i * 700);
+        setTimeout(function() { lightSimon(c, false); }, 800 + i * 700 + 450);
+    });
+    setTimeout(function() {
+        const msg = document.getElementById('simon-msg');
+        if (msg) msg.textContent = 'Tava kārta! Atkārto secību.';
+        setSimonClickable(true);
+    }, 800 + simonSeq.length * 700 + 200);
+}
+
+function simonClick(color) {
+    lightSimon(color, true);
+    setTimeout(function() { lightSimon(color, false); }, 200);
+    if (color !== simonSeq[simonIdx]) {
+        const gh = document.getElementById('guide-hint');
+        if (gh) gh.textContent = getRandomBubble(false);
+        GameState.addScore(-5);
+        document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Nepareizi!</h2>
+            <p style="color:#f44336;">Nepareizā krāsa! -5 punkti.</p>
+            <button class="btn btn-full" onclick="initSimonRounds()">Mēģināt vēlreiz</button>`;
+        return;
+    }
+    simonIdx++;
+    if (simonIdx < simonSeq.length) return;
+    if (simonRound >= SIMON_TOTAL_ROUNDS) {
+        const gh = document.getElementById('guide-hint');
+        if (gh) gh.textContent = getRandomBubble(true);
+        GameState.addScore(10);
+        document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Lieliski! 🎵</h2>
+            <p style="color:#4CAF50;">Visas kārtas pareizi! +10 punkti!</p>
+            <p style="color:#ffaa00;font-style:italic;">${questions['Dzintars'].fact}</p>
+            <button class="btn btn-full" onclick="closeSimonGame()">Turpināt →</button>`;
+    } else {
+        const msg = document.getElementById('simon-msg');
+        if (msg) msg.textContent = 'Pareizi! Nākamā kārta...';
+        setSimonClickable(false);
+        setTimeout(runNextSimonRound, 900);
+    }
+}
+
+function closeSimonGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'Dzintars') { _ac.addViolation(); showNotification('Aizdomīga darbība!', 'error', 3000); return; }
+    recordMiniScore('Dzintars', 10);
+    _ac.activeTask = false; _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Dzintars', time: Date.now() });
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask(); updateMapState();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+}
+
+// ============================================================================
+// KANALS — Boat Dodge (Laivas Vairīšanās)
+// ============================================================================
+let kanalGameActive = false, kanalAnimId2 = null;
+let kanalPlayerX = 160, kanalHits = 0, kanalDodges = 0;
+let kanalFrames = 0, kanalTimeLeft = 0, kanalTimer2 = null;
+let kanalObstacles2 = [];
+let kanalKeys2 = { left: false, right: false };
+let kanalW = 320, kanalH = 260;
+const KANAL_PLAYER_Y2 = 220;
+const KANAL_GAME_TIME2 = 20;
+const KANAL_DODGES_NEEDED = 8;
+const KANAL_MAX_HITS2 = 3;
+
+function startKanalGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🚢 Kanāla Laiva</h2>
+        <p>Izvairīties no akmeņiem kanālā!</p>
+        <p style="font-size:13px;opacity:0.7;">${isTouch ? 'Spied kreisi/labi pogas.' : 'Lieto ← → taustiņus vai pogas.'}</p>
+        <button class="btn btn-full" onclick="initKanalGame()">SĀKT</button>`;
+}
+
+function initKanalGame() {
+    kanalGameActive = true;
+    kanalObstacles2 = []; kanalHits = 0; kanalDodges = 0; kanalFrames = 0;
+    kanalTimeLeft = KANAL_GAME_TIME2;
+    kanalKeys2 = { left: false, right: false };
+    document.querySelector('.task-section').innerHTML = `
+        <p id="kanal-stats" style="color:#ffaa00;margin:0 0 4px;font-size:13px;">Izvairīšanās: 0/${KANAL_DODGES_NEEDED} | ❤ ${KANAL_MAX_HITS2} | ⏱ ${KANAL_GAME_TIME2}s</p>
+        <canvas id="kanalCanvas" style="width:100%;display:block;border:2px solid rgba(255,170,0,0.3);border-radius:8px;touch-action:none;"></canvas>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="boat-tap-btn" style="padding:12px 5px;"
+                onmousedown="kanalSetKey(true,true)" onmouseup="kanalSetKey(true,false)"
+                ontouchstart="kanalSetKey(true,true);event.preventDefault()" ontouchend="kanalSetKey(true,false)">← Kreisi</button>
+            <button class="boat-tap-btn" style="padding:12px 5px;"
+                onmousedown="kanalSetKey(false,true)" onmouseup="kanalSetKey(false,false)"
+                ontouchstart="kanalSetKey(false,true);event.preventDefault()" ontouchend="kanalSetKey(false,false)">Labi →</button>
+        </div>`;
+    const canvas = document.getElementById('kanalCanvas');
+    const rect = canvas.getBoundingClientRect();
+    kanalW = rect.width > 0 ? Math.floor(rect.width) : 320;
+    kanalH = Math.floor(kanalW * 0.8);
+    canvas.width = kanalW; canvas.height = kanalH;
+    kanalPlayerX = kanalW / 2;
+    document.removeEventListener('keydown', kanalKeyDown2);
+    document.removeEventListener('keyup', kanalKeyUp2);
+    document.addEventListener('keydown', kanalKeyDown2);
+    document.addEventListener('keyup', kanalKeyUp2);
+    if (kanalTimer2) clearInterval(kanalTimer2);
+    kanalTimer2 = setInterval(function() {
+        if (!kanalGameActive) return;
+        kanalTimeLeft--;
+        updateKanalStats();
+        if (kanalTimeLeft <= 0) finishKanalGame();
+    }, 1000);
+    if (kanalAnimId2) cancelAnimationFrame(kanalAnimId2);
+    kanalLoop();
+}
+
+function kanalSetKey(isLeft, on) { if (isLeft) kanalKeys2.left = on; else kanalKeys2.right = on; }
+function kanalKeyDown2(e) {
+    if (e.key === 'ArrowLeft'  || e.key === 'a') kanalKeys2.left  = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') kanalKeys2.right = true;
+}
+function kanalKeyUp2(e) {
+    if (e.key === 'ArrowLeft'  || e.key === 'a') kanalKeys2.left  = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') kanalKeys2.right = false;
+}
+
+function updateKanalStats() {
+    const el = document.getElementById('kanal-stats');
+    if (el) el.textContent = `Izvairīšanās: ${kanalDodges}/${KANAL_DODGES_NEEDED} | ❤ ${Math.max(0, KANAL_MAX_HITS2 - kanalHits)} | ⏱ ${kanalTimeLeft}s`;
+}
+
+function kanalLoop() {
+    if (!kanalGameActive) return;
+    const canvas = document.getElementById('kanalCanvas');
+    if (!canvas) { kanalGameActive = false; return; }
+    const ctx = canvas.getContext('2d');
+    const W = kanalW, H = kanalH;
+    const PY = Math.floor(H * 0.85);
+
+    if (kanalKeys2.left)  kanalPlayerX = Math.max(28, kanalPlayerX - 4);
+    if (kanalKeys2.right) kanalPlayerX = Math.min(W - 28, kanalPlayerX + 4);
+
+    ctx.fillStyle = '#1a4a7a'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#5c4a1e'; ctx.fillRect(0, 0, 18, H); ctx.fillRect(W - 18, 0, 18, H);
+    ctx.strokeStyle = 'rgba(100,180,255,0.12)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+        const ry = (kanalFrames * 1.5 + i * (H / 4)) % H;
+        ctx.beginPath(); ctx.moveTo(18, ry); ctx.lineTo(W - 18, ry); ctx.stroke();
+    }
+    kanalFrames++;
+    if (kanalFrames % 50 === 0) {
+        kanalObstacles2.push({ x: 28 + Math.random() * (W - 56), y: -20, spd: 1.2 + Math.random() * 0.8 });
+    }
+
+    let newHits = 0, newDodges = 0;
+    kanalObstacles2 = kanalObstacles2.filter(function(obs) {
+        obs.y += obs.spd;
+        ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('🪨', obs.x, obs.y);
+        ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+        const dx = kanalPlayerX - obs.x, dy = PY - obs.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 28) { newHits++; return false; }
+        if (obs.y > H + 20) { newDodges++; return false; }
+        return true;
+    });
+
+    ctx.fillStyle = '#ffaa00';
+    ctx.beginPath(); ctx.moveTo(kanalPlayerX, PY - 18); ctx.lineTo(kanalPlayerX - 13, PY + 8); ctx.lineTo(kanalPlayerX + 13, PY + 8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillRect(kanalPlayerX - 2, PY - 28, 4, 12);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.beginPath(); ctx.moveTo(kanalPlayerX, PY - 28); ctx.lineTo(kanalPlayerX + 10, PY - 18); ctx.lineTo(kanalPlayerX, PY - 16); ctx.fill();
+
+    if (newHits > 0) { kanalHits += newHits; updateKanalStats(); if (kanalHits >= KANAL_MAX_HITS2) { finishKanalGame(); return; } }
+    if (newDodges > 0) { kanalDodges += newDodges; updateKanalStats(); if (kanalDodges >= KANAL_DODGES_NEEDED) { finishKanalGame(); return; } }
+    kanalAnimId2 = requestAnimationFrame(kanalLoop);
+}
+
+function finishKanalGame() {
+    if (!kanalGameActive) return;
+    kanalGameActive = false;
+    if (kanalTimer2) { clearInterval(kanalTimer2); kanalTimer2 = null; }
+    if (kanalAnimId2) { cancelAnimationFrame(kanalAnimId2); kanalAnimId2 = null; }
+    document.removeEventListener('keydown', kanalKeyDown2);
+    document.removeEventListener('keyup', kanalKeyUp2);
+    const success = kanalDodges >= KANAL_DODGES_NEEDED && kanalHits < KANAL_MAX_HITS2;
+    const gh = document.getElementById('guide-hint');
+    if (gh) gh.textContent = getRandomBubble(success);
+    if (success) {
+        const pts = kanalHits === 0 ? 10 : 7;
+        GameState.addScore(pts);
+        document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Labi padarīts! 🚢</h2>
+            <p>Izvairīšanās: ${kanalDodges} | Trāpījumi: ${kanalHits}</p>
+            <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
+            <p style="color:#ffaa00;font-style:italic;">${questions['Kanals'].fact}</p>
+            <button class="btn btn-full" onclick="closeKanalGame()">Turpināt →</button>`;
+    } else {
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Neizdevās! 💥</h2>
+            <p>Laiva saskārās ar ${kanalHits} akmeņiem vai laiks beidzās.</p>
+            <button class="btn btn-full" onclick="initKanalGame()">Mēģināt vēlreiz</button>`;
+    }
+}
+
+function closeKanalGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'Kanals') { _ac.addViolation(); showNotification('Aizdomīga darbība!', 'error', 3000); return; }
+    recordMiniScore('Kanals', 10);
+    kanalGameActive = false;
+    document.removeEventListener('keydown', kanalKeyDown2);
+    document.removeEventListener('keyup', kanalKeyUp2);
+    _ac.activeTask = false; _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Kanals', time: Date.now() });
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask(); updateMapState();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+}
+
+// ============================================================================
+// LSEZ — Cargo Sort (Kravas Šķirošana)
+// ============================================================================
+let lsezActive = false, lsezCorrect = 0, lsezWrong = 0, lsezRound2 = 0;
+let lsezCurrentBin = -1, lsezItemTimer = null;
+const LSEZ_TOTAL2 = 10;
+const LSEZ_ITEM_MS = 3000;
+const LSEZ_TYPES2 = [
+    { label: 'Sarkana', color: '#b22222', bin: 0 },
+    { label: 'Zila',    color: '#1e4fa0', bin: 1 },
+    { label: 'Zaļa',    color: '#1a6b2a', bin: 2 },
+];
+const LSEZ_ICONS = ['📦', '🗃', '📫'];
+
+function startLSEZGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <h2>📦 Kravas Šķirošana</h2>
+        <p>Šķiro kastes pēc krāsas atbilstošajā tvertnē!</p>
+        <p style="font-size:13px;opacity:0.7;">Klikšķini uz pareizās tvertnes pirms laiks beidzas.</p>
+        <button class="btn btn-full" onclick="initLSEZGame()">SĀKT</button>`;
+}
+
+function initLSEZGame() {
+    lsezActive = true; lsezCorrect = 0; lsezWrong = 0; lsezRound2 = 0;
+    lsezNextItem();
+}
+
+function lsezNextItem() {
+    if (!lsezActive) return;
+    if (lsezRound2 >= LSEZ_TOTAL2) { finishLSEZGame(); return; }
+    lsezRound2++;
+    const type = LSEZ_TYPES2[Math.floor(Math.random() * LSEZ_TYPES2.length)];
+    lsezCurrentBin = type.bin;
+    const icon = LSEZ_ICONS[type.bin];
+    let msLeft = LSEZ_ITEM_MS;
+    document.querySelector('.task-section').innerHTML = `
+        <p style="color:#ffaa00;margin:0 0 4px;font-size:13px;">Kaste ${lsezRound2}/${LSEZ_TOTAL2} | ✓ ${lsezCorrect} | ✗ ${lsezWrong}</p>
+        <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;margin-bottom:10px;">
+            <div id="lsez-bar" style="height:100%;width:100%;background:#ffaa00;border-radius:3px;transition:width 0.1s linear;"></div>
+        </div>
+        <div style="text-align:center;padding:10px 0;">
+            <span style="font-size:52px;filter:drop-shadow(0 0 12px ${type.color});">${icon}</span>
+            <p style="font-size:22px;font-weight:bold;color:${type.color};margin:6px 0 0;">${type.label}</p>
+        </div>
+        <p style="text-align:center;font-size:12px;opacity:0.6;margin-bottom:8px;">Izvēlies pareizo tvertni:</p>
+        <div style="display:flex;gap:6px;">
+            ${LSEZ_TYPES2.map(function(t, i) {
+                return `<button class="btn btn-full" style="background:${t.color};border:2px solid ${t.color};font-size:13px;padding:10px 4px;" onclick="lsezSort(${i})">${t.label}</button>`;
+            }).join('')}
+        </div>`;
+    if (lsezItemTimer) clearInterval(lsezItemTimer);
+    lsezItemTimer = setInterval(function() {
+        msLeft -= 100;
+        const bar = document.getElementById('lsez-bar');
+        if (bar) bar.style.width = Math.max(0, msLeft / LSEZ_ITEM_MS * 100) + '%';
+        if (msLeft <= 0) { clearInterval(lsezItemTimer); lsezItemTimer = null; lsezWrong++; lsezShowFeedback(false); }
+    }, 100);
+}
+
+function lsezSort(binIdx) {
+    if (!lsezActive) return;
+    if (lsezItemTimer) { clearInterval(lsezItemTimer); lsezItemTimer = null; }
+    const ok = lsezCurrentBin === binIdx;
+    if (ok) lsezCorrect++; else lsezWrong++;
+    lsezShowFeedback(ok);
+}
+
+function lsezShowFeedback(ok) {
+    const sec = document.querySelector('.task-section');
+    if (!sec) return;
+    const p = document.createElement('p');
+    p.style.cssText = `color:${ok ? '#4CAF50' : '#f44336'};font-size:16px;font-weight:bold;text-align:center;margin:4px 0 0;`;
+    p.textContent = ok ? '✓ Pareizi!' : '✗ Nepareizi!';
+    sec.appendChild(p);
+    setTimeout(lsezNextItem, 600);
+}
+
+function finishLSEZGame() {
+    lsezActive = false;
+    if (lsezItemTimer) { clearInterval(lsezItemTimer); lsezItemTimer = null; }
+    const success = lsezCorrect >= 7;
+    const gh = document.getElementById('guide-hint');
+    if (gh) gh.textContent = getRandomBubble(success);
+    if (success) {
+        const pts = lsezCorrect >= 9 ? 10 : 7;
+        GameState.addScore(pts);
+        document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Lielisks darbs! 📦</h2>
+            <p>Pareizi šķirots: ${lsezCorrect}/${LSEZ_TOTAL2}</p>
+            <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
+            <p style="color:#ffaa00;font-style:italic;">${questions['LSEZ'].fact}</p>
+            <button class="btn btn-full" onclick="closeLSEZGame()">Turpināt →</button>`;
+    } else {
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Nepietiekami! 📦</h2>
+            <p>Pareizi šķirots: ${lsezCorrect}/${LSEZ_TOTAL2} (vajag vismaz 7)</p>
+            <button class="btn btn-full" onclick="initLSEZGame()">Mēģināt vēlreiz</button>`;
+    }
+}
+
+function closeLSEZGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'LSEZ') { _ac.addViolation(); showNotification('Aizdomīga darbība!', 'error', 3000); return; }
+    recordMiniScore('LSEZ', 10);
+    lsezActive = false;
+    if (lsezItemTimer) { clearInterval(lsezItemTimer); lsezItemTimer = null; }
+    _ac.activeTask = false; _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'LSEZ', time: Date.now() });
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask(); updateMapState();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+}
+
+// ============================================================================
+// CIETUMS — Guard Escape (single-player timing game)
+// ============================================================================
+let cietActive = false, cietSteps = 0, cietGuardPos = 0, cietGuardDir = 1;
+let cietGuardSpd = 1.2, cietAnimId3 = null;
+const CIET_STEPS_NEEDED = 5;
+
+function startEscapeGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🔒 Izvairīšanās</h2>
+        <p>Sardze patruļo. Spied <strong>SPACE</strong> vai pogu, kad rādītājs ir <strong>zaļajā zonā</strong>!</p>
+        <p style="font-size:13px;opacity:0.7;">Vajadzīgi ${CIET_STEPS_NEEDED} veiksmīgi soļi, lai aizbēgtu.</p>
+        <button class="btn btn-full" onclick="initEscapeGame()">SĀKT</button>`;
+}
+
+function initEscapeGame() {
+    cietActive = true; cietSteps = 0; cietGuardPos = 0; cietGuardDir = 1; cietGuardSpd = 1.2;
+    document.querySelector('.task-section').innerHTML = `
+        <p id="ciet-status" style="color:#ffaa00;margin:0 0 6px;">Soļi: 0/${CIET_STEPS_NEEDED}</p>
+        <canvas id="cietCanvas" style="width:100%;display:block;border:2px solid rgba(255,170,0,0.3);border-radius:8px;"></canvas>
+        <button class="boat-tap-btn" onclick="cietMove()" style="margin-top:8px;">🏃 BĒG!</button>
+        <p style="font-size:11px;opacity:0.5;text-align:center;margin-top:4px;">vai SPACE taustiņš</p>`;
+    const canvas = document.getElementById('cietCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const cw = rect.width > 0 ? Math.floor(rect.width) : 320;
+    canvas.width = cw; canvas.height = Math.floor(cw * 0.38);
+    document.removeEventListener('keydown', cietKeyHandler);
+    document.addEventListener('keydown', cietKeyHandler);
+    if (cietAnimId3) cancelAnimationFrame(cietAnimId3);
+    cietDrawLoop();
+}
+
+function cietKeyHandler(e) {
+    if (cietActive && (e.code === 'Space' || e.key === ' ')) { e.preventDefault(); cietMove(); }
+}
+
+function cietDrawLoop() {
+    if (!cietActive) return;
+    const canvas = document.getElementById('cietCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    cietGuardPos += cietGuardDir * cietGuardSpd;
+    if (cietGuardPos >= 100) { cietGuardPos = 100; cietGuardDir = -1; }
+    if (cietGuardPos <= 0)   { cietGuardPos = 0;   cietGuardDir =  1; }
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#1a0f05'; ctx.fillRect(0, 0, W, H);
+
+    const sx = Math.floor(0.6 * (W - 20)) + 10;
+    const ex = Math.floor(0.8 * (W - 20)) + 10;
+    ctx.fillStyle = 'rgba(0,200,80,0.18)'; ctx.fillRect(sx, 0, ex - sx, H);
+    ctx.strokeStyle = 'rgba(0,220,80,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ex, 0); ctx.lineTo(ex, H); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,220,80,0.7)';
+    ctx.font = `bold ${Math.max(10, Math.floor(H * 0.18))}px Poppins,Arial`;
+    ctx.textAlign = 'center'; ctx.fillText('✓ BĒG!', (sx + ex) / 2, H * 0.28); ctx.textAlign = 'start';
+
+    const isSafe = cietGuardPos >= 60 && cietGuardPos <= 80;
+    const gx = 10 + (cietGuardPos / 100) * (W - 20);
+
+    ctx.fillStyle = '#333'; ctx.fillRect(10, H - 18, W - 20, 10);
+    ctx.fillStyle = isSafe ? '#00cc55' : '#ff4444';
+    ctx.beginPath(); ctx.arc(gx, H - 13, 7, 0, Math.PI * 2); ctx.fill();
+
+    const gy = H * 0.52;
+    ctx.fillStyle = '#444'; ctx.fillRect(gx - 10, gy, 20, 22);
+    ctx.fillStyle = '#c8a060'; ctx.beginPath(); ctx.arc(gx, gy - 10, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(gx + cietGuardDir * 4, gy - 11, 2, 0, Math.PI * 2); ctx.fill();
+    if (!isSafe) {
+        ctx.fillStyle = 'rgba(255,255,80,0.07)';
+        ctx.beginPath(); ctx.moveTo(gx + cietGuardDir * 6, gy - 8);
+        ctx.lineTo(gx + cietGuardDir * 55, gy - 25); ctx.lineTo(gx + cietGuardDir * 55, gy + 5); ctx.closePath(); ctx.fill();
+    }
+
+    ctx.fillStyle = isSafe ? '#00cc55' : '#ff4444';
+    ctx.font = `bold ${Math.max(11, Math.floor(H * 0.20))}px Poppins,Arial`;
+    ctx.textAlign = 'center'; ctx.fillText(isSafe ? '🟢 DROŠS' : '🔴 UZMANĪBU!', W / 2, H * 0.52); ctx.textAlign = 'start';
+
+    cietAnimId3 = requestAnimationFrame(cietDrawLoop);
+}
+
+function cietMove() {
+    if (!cietActive) return;
+    const isSafe = cietGuardPos >= 60 && cietGuardPos <= 80;
+    if (isSafe) {
+        cietSteps++;
+        cietGuardSpd = Math.min(3.5, 1.2 + cietSteps * 0.35);
+        const st = document.getElementById('ciet-status');
+        if (st) st.textContent = `Soļi: ${cietSteps}/${CIET_STEPS_NEEDED}`;
+        if (cietSteps >= CIET_STEPS_NEEDED) { finishEscapeGame(true); } else { showNotification('✓ Labi!', 'success', 700); }
+    } else {
+        showNotification('⚠ Sardze redz tevi!', 'error', 800);
+        cietSteps = Math.max(0, cietSteps - 1);
+        const st = document.getElementById('ciet-status');
+        if (st) st.textContent = `Soļi: ${cietSteps}/${CIET_STEPS_NEEDED}`;
+    }
+}
+
+function finishEscapeGame(success) {
+    if (!cietActive) return;
+    cietActive = false;
+    if (cietAnimId3) { cancelAnimationFrame(cietAnimId3); cietAnimId3 = null; }
+    document.removeEventListener('keydown', cietKeyHandler);
+    const gh = document.getElementById('guide-hint');
+    if (gh) gh.textContent = getRandomBubble(success);
+    if (success) {
+        GameState.addScore(10);
+        document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Aizbēgi! 🏃</h2>
+            <p style="color:#4CAF50;">Tu veiksmīgi izvairījies no sardzēm! +10 punkti!</p>
+            <p style="color:#ffaa00;font-style:italic;">${questions['Cietums'].fact}</p>
+            <button class="btn btn-full" onclick="closeEscapeGame()">Turpināt →</button>`;
+    } else {
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Noķerts! 🚨</h2>
+            <p style="color:#f44336;">Sardze tevi pamanīja!</p>
+            <button class="btn btn-full" onclick="initEscapeGame()">Mēģināt vēlreiz</button>`;
+    }
+}
+
+function closeEscapeGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'Cietums') { _ac.addViolation(); showNotification('Aizdomīga darbība!', 'error', 3000); return; }
+    recordMiniScore('Cietums', 10);
+    cietActive = false;
+    document.removeEventListener('keydown', cietKeyHandler);
+    _ac.activeTask = false; _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Cietums', time: Date.now() });
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask(); updateMapState();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+}
+
+// ============================================================================
+// EZERKRASTS — Bird Spotting (Putnu Vērošana)
+// ============================================================================
+let birdActive = false, birdCaught = 0, birdTimeLeft = 0, birdTimer2 = null, birdSpawnInt = null;
+const BIRDS_NEEDED = 8;
+const BIRD_GAME_TIME = 22;
+const BIRD_EMOJIS = ['🦢', '🦆', '🐦', '🦅', '🦉'];
+
+function startBirdGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🦢 Putnu Vērošana</h2>
+        <p>Nofotografē putnus pirms tie aizlido!</p>
+        <p style="font-size:13px;opacity:0.7;">Klikšķini uz putniem. Vajadzīgi ${BIRDS_NEEDED} putni ${BIRD_GAME_TIME} sekundēs.</p>
+        <button class="btn btn-full" onclick="initBirdGame()">SĀKT</button>`;
+}
+
+function initBirdGame() {
+    birdActive = true; birdCaught = 0; birdTimeLeft = BIRD_GAME_TIME;
+    document.querySelector('.task-section').innerHTML = `
+        <p id="bird-stats" style="color:#ffaa00;margin:0 0 4px;font-size:13px;">📸 Putni: 0/${BIRDS_NEEDED} | ⏱ ${BIRD_GAME_TIME}s</p>
+        <div id="bird-field" style="position:relative;width:100%;height:200px;background:linear-gradient(180deg,rgba(100,180,255,0.2),rgba(30,120,60,0.3));border:2px solid rgba(255,170,0,0.3);border-radius:8px;overflow:hidden;cursor:crosshair;"></div>`;
+    if (birdTimer2) clearInterval(birdTimer2);
+    birdTimer2 = setInterval(function() {
+        if (!birdActive) return;
+        birdTimeLeft--;
+        const el = document.getElementById('bird-stats');
+        if (el) el.textContent = `📸 Putni: ${birdCaught}/${BIRDS_NEEDED} | ⏱ ${birdTimeLeft}s`;
+        if (birdTimeLeft <= 0) finishBirdGame();
+    }, 1000);
+    if (birdSpawnInt) clearInterval(birdSpawnInt);
+    birdSpawnInt = setInterval(function() { if (birdActive) spawnBird(); }, 1400);
+    spawnBird(); spawnBird();
+}
+
+function spawnBird() {
+    if (!birdActive) return;
+    const field = document.getElementById('bird-field');
+    if (!field) return;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const b = document.createElement('div');
+    const em = BIRD_EMOJIS[Math.floor(Math.random() * BIRD_EMOJIS.length)];
+    const sz = isTouch ? 44 : 32;
+    const stay = 1500 + Math.random() * 1200;
+    b.textContent = em;
+    b.style.cssText = `position:absolute;font-size:${sz}px;cursor:pointer;user-select:none;opacity:0;transition:opacity 0.25s;left:${2 + Math.random() * 80}%;top:${5 + Math.random() * 68}%;z-index:5;${isTouch ? 'padding:6px;' : ''}`;
+    field.appendChild(b);
+    requestAnimationFrame(function() { if (b.parentNode) b.style.opacity = '1'; });
+    const flyTimer = setTimeout(function() {
+        if (!b.parentNode) return;
+        b.style.opacity = '0';
+        setTimeout(function() { if (b.parentNode) b.parentNode.removeChild(b); }, 280);
+    }, stay);
+    const catchBird = function(e) {
+        e.preventDefault();
+        if (!birdActive || !b.parentNode) return;
+        clearTimeout(flyTimer);
+        birdCaught++;
+        b.textContent = '📸'; b.style.transition = 'all 0.2s'; b.style.transform = 'scale(1.4)';
+        const el = document.getElementById('bird-stats');
+        if (el) el.textContent = `📸 Putni: ${birdCaught}/${BIRDS_NEEDED} | ⏱ ${birdTimeLeft}s`;
+        setTimeout(function() { if (b.parentNode) b.parentNode.removeChild(b); }, 200);
+        if (birdCaught >= BIRDS_NEEDED) finishBirdGame();
+    };
+    b.addEventListener('click', catchBird);
+    b.addEventListener('touchstart', catchBird, { passive: false });
+}
+
+function finishBirdGame() {
+    if (!birdActive) return;
+    birdActive = false;
+    if (birdTimer2) { clearInterval(birdTimer2); birdTimer2 = null; }
+    if (birdSpawnInt) { clearInterval(birdSpawnInt); birdSpawnInt = null; }
+    const success = birdCaught >= BIRDS_NEEDED;
+    const gh = document.getElementById('guide-hint');
+    if (gh) gh.textContent = getRandomBubble(success);
+    if (success) {
+        const pts = birdTimeLeft > 10 ? 10 : 7;
+        GameState.addScore(pts);
+        document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Lielisks! 🦢</h2>
+            <p>Nofotografēti ${birdCaught} putni!</p>
+            <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
+            <p style="color:#ffaa00;font-style:italic;">${questions['Ezerkrasts'].fact}</p>
+            <button class="btn btn-full" onclick="closeBirdGame()">Turpināt →</button>`;
+    } else {
+        document.querySelector('.task-section').innerHTML = `
+            <h2>Nepietiekami! 📷</h2>
+            <p>Nofotografēti ${birdCaught}/${BIRDS_NEEDED} putni.</p>
+            <button class="btn btn-full" onclick="initBirdGame()">Mēģināt vēlreiz</button>`;
+    }
+}
+
+function closeBirdGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'Ezerkrasts') { _ac.addViolation(); showNotification('Aizdomīga darbība!', 'error', 3000); return; }
+    recordMiniScore('Ezerkrasts', 10);
+    birdActive = false;
+    _ac.activeTask = false; _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Ezerkrasts', time: Date.now() });
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask(); updateMapState();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+}
+
+// ============================================================================
+// PARKS — Memory Cards (Atmiņas Kārtis)
+// ============================================================================
+let memActive = false, memCards = [], memFlipped2 = [], memMatched2 = 0, memMoves = 0, memLock = false;
+const MEM_PAIRS2 = ['🌲', '🌳', '🌴', '🌿'];
+
+function startMemoryGame() {
+    document.getElementById('game-modal').style.display = 'block';
+    document.querySelector('.task-section').innerHTML = `
+        <h2>🌲 Koku Atmiņa</h2>
+        <p>Atrodi visus koku pārus!</p>
+        <p style="font-size:13px;opacity:0.7;">Apvērs divas kārtis – ja simboli sakrīt, tās paliek atklātas.</p>
+        <button class="btn btn-full" onclick="initMemoryGame()">SĀKT</button>`;
+}
+
+function initMemoryGame() {
+    memActive = true; memFlipped2 = []; memMatched2 = 0; memMoves = 0; memLock = false;
+    const deck = [...MEM_PAIRS2, ...MEM_PAIRS2].sort(function() { return Math.random() - 0.5; });
+    memCards = deck.map(function(v, i) { return { id: i, value: v, matched: false }; });
+    renderMemoryBoard();
+}
+
+function renderMemoryBoard() {
+    document.querySelector('.task-section').innerHTML = `
+        <p id="mem-stats" style="color:#ffaa00;margin:0 0 6px;font-size:13px;">Soļi: ${memMoves} | Pāri: ${memMatched2}/${MEM_PAIRS2.length}</p>
+        <div class="mem-grid">${memCards.map(function(c) {
+            return `<div class="mem-card${c.matched ? ' matched' : ''}" id="mc-${c.id}" onclick="memFlip(${c.id})"><div class="mem-back">?</div><div class="mem-front">${c.value}</div></div>`;
+        }).join('')}</div>`;
+    memFlipped2.forEach(function(id) {
+        const el = document.getElementById('mc-' + id);
+        if (el && !memCards[id].matched) el.classList.add('flipped');
+    });
+}
+
+function memFlip(id) {
+    if (!memActive || memLock) return;
+    const card = memCards[id];
+    if (!card || card.matched || memFlipped2.includes(id)) return;
+    const el = document.getElementById('mc-' + id);
+    if (!el) return;
+    el.classList.add('flipped');
+    memFlipped2.push(id);
+    if (memFlipped2.length < 2) return;
+    memMoves++;
+    memLock = true;
+    const a = memFlipped2[0], b = memFlipped2[1];
+    if (memCards[a].value === memCards[b].value) {
+        memCards[a].matched = memCards[b].matched = true;
+        memMatched2++;
+        memFlipped2 = []; memLock = false;
+        document.getElementById('mc-' + a).classList.add('matched');
+        document.getElementById('mc-' + b).classList.add('matched');
+        const st = document.getElementById('mem-stats');
+        if (st) st.textContent = `Soļi: ${memMoves} | Pāri: ${memMatched2}/${MEM_PAIRS2.length}`;
+        if (memMatched2 >= MEM_PAIRS2.length) setTimeout(finishMemoryGame, 400);
+    } else {
+        setTimeout(function() {
+            const ea = document.getElementById('mc-' + a), eb = document.getElementById('mc-' + b);
+            if (ea) ea.classList.remove('flipped');
+            if (eb) eb.classList.remove('flipped');
+            memFlipped2 = []; memLock = false;
+            const st = document.getElementById('mem-stats');
+            if (st) st.textContent = `Soļi: ${memMoves} | Pāri: ${memMatched2}/${MEM_PAIRS2.length}`;
+        }, 900);
+    }
+}
+
+function finishMemoryGame() {
+    if (!memActive) return;
+    memActive = false;
+    const gh = document.getElementById('guide-hint');
+    if (gh) gh.textContent = getRandomBubble(true);
+    const pts = memMoves <= 5 ? 10 : 7;
+    GameState.addScore(pts);
+    document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
+    document.querySelector('.task-section').innerHTML = `
+        <h2>Apsveicam! 🌲</h2>
+        <p>Atrasti visi pāri ${memMoves} soļos!</p>
+        <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
+        <p style="color:#ffaa00;font-style:italic;">${questions['Parks'].fact}</p>
+        <button class="btn btn-full" onclick="closeMemoryGame()">Turpināt →</button>`;
+}
+
+function closeMemoryGame() {
+    if (!_ac.activeTask || _ac.taskType !== 'Parks') { _ac.addViolation(); showNotification('Aizdomīga darbība!', 'error', 3000); return; }
+    recordMiniScore('Parks', 10);
+    memActive = false;
+    _ac.activeTask = false; _ac.taskType = null;
+    _taskCompletionLog.push({ task: 'Parks', time: Date.now() });
+    document.getElementById('game-modal').style.display = 'none';
+    GameState.completeTask(); updateMapState();
+    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+}
 
 window.startFishingGame = startFishingGame;
 window.closeFishingGame = closeFishingGame;
+window.startSimonGame = startSimonGame;
+window.initSimonRounds = initSimonRounds;
+window.simonClick = simonClick;
+window.closeSimonGame = closeSimonGame;
+window.startKanalGame = startKanalGame;
+window.initKanalGame = initKanalGame;
+window.kanalSetKey = kanalSetKey;
+window.closeKanalGame = closeKanalGame;
+window.startLSEZGame = startLSEZGame;
+window.initLSEZGame = initLSEZGame;
+window.lsezSort = lsezSort;
+window.closeLSEZGame = closeLSEZGame;
+window.startEscapeGame = startEscapeGame;
+window.initEscapeGame = initEscapeGame;
+window.cietMove = cietMove;
+window.closeEscapeGame = closeEscapeGame;
+window.startBirdGame = startBirdGame;
+window.initBirdGame = initBirdGame;
+window.closeBirdGame = closeBirdGame;
+window.startMemoryGame = startMemoryGame;
+window.initMemoryGame = initMemoryGame;
+window.memFlip = memFlip;
+window.closeMemoryGame = closeMemoryGame;
 window.toggleModal = toggleModal;
 window.startSingleGame = startSingleGame;
 window.openLobby = openLobby;
