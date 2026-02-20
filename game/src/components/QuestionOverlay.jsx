@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { applyAnswerRestore } from '../utils/WindEnergy.js';
 import DynamicDifficulty from '../utils/DynamicDifficulty.js';
+import EventBridge from '../utils/EventBridge.js';
 
 export default function QuestionOverlay({ question, locationName, locationId, questionIdx, onComplete, windEnergy, onWindUpdate }) {
   const [input, setInput] = useState('');
@@ -75,6 +76,7 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
       const pts = attempts === 0 ? basePoints : secondAttemptPts;
       setFeedback({ type: 'success', pts });
       setDone(true);
+      EventBridge.emit('ANSWER_CORRECT', { delta: pts });
       const newWind = applyAnswerRestore(windEnergy, nextAttempts);
       onWindUpdate?.(newWind);
       setTimeout(() => onComplete({ points: pts, correct: true, attempts: nextAttempts }), 1800);
@@ -82,9 +84,11 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
       setAttempts(nextAttempts);
       setFeedback({ type: 'revealed', answer: question.answer });
       setDone(true);
+      EventBridge.emit('ANSWER_WRONG', {});
       setTimeout(() => onComplete({ points: 0, correct: false, attempts: nextAttempts }), 2400);
     } else {
       setAttempts(nextAttempts);
+      EventBridge.emit('ANSWER_WRONG', {});
       const wrongFeedback = { type: 'wrong', remaining: 2 - nextAttempts };
       if (isMC) {
         setWrongOption(value);

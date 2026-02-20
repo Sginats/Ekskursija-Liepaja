@@ -26,6 +26,11 @@ let _socket = null;
 let _pingInterval = null;
 const PING_INTERVAL_MS = 10_000;
 
+/** Stored credentials for automatic room-rejoin after reconnect */
+let _playerName   = null;
+let _locationId   = null;
+let _coopRoomId   = null;
+
 const SocketManager = {
   /** @returns {boolean} */
   get connected() {
@@ -41,15 +46,26 @@ const SocketManager = {
     if (_socket) return _socket;
 
     _socket = io(`${SERVER_URL}/game`, {
-      transports:         ['websocket', 'polling'],
+      transports:           ['websocket', 'polling'],
       reconnectionAttempts: 10,
-      reconnectionDelay:  2_000,
-      timeout:            10_000,
+      reconnectionDelay:    2_000,
+      timeout:              10_000,
     });
 
     _socket.on('connect', () => {
       console.info('[SocketManager] connected', _socket.id);
       this._startPing();
+      // ── Co-op reconnect: re-announce player and location ──────────────────
+      if (_playerName) {
+        console.info('[SocketManager] reconnect: re-joining as', _playerName);
+        _socket.emit('player:join', { name: _playerName });
+      }
+      if (_locationId) {
+        _socket.emit('player:location', { locationId: _locationId });
+      }
+      if (_coopRoomId) {
+        _socket.emit('coop:rejoin', { roomId: _coopRoomId });
+      }
     });
 
     _socket.on('disconnect', (reason) => {
@@ -74,6 +90,9 @@ const SocketManager = {
       _socket.disconnect();
       _socket = null;
     }
+    _playerName = null;
+    _locationId = null;
+    _coopRoomId = null;
   },
 
   /**
@@ -81,6 +100,7 @@ const SocketManager = {
    * @param {string} name
    */
   joinGame(name) {
+    _playerName = name;
     this._emit('player:join', { name });
   },
 
@@ -89,7 +109,16 @@ const SocketManager = {
    * @param {string} locationId
    */
   reportLocation(locationId) {
+    _locationId = locationId;
     this._emit('player:location', { locationId });
+  },
+
+  /**
+   * Store the active co-op room ID so it can be re-joined after reconnect.
+   * @param {string|null} roomId
+   */
+  setCoopRoom(roomId) {
+    _coopRoomId = roomId || null;
   },
 
   /**
