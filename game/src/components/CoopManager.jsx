@@ -340,7 +340,7 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
         <div className="coop-clue-panel">
           <div className="coop-clue-header">
             <span>🎮 Operators</span>
-            <span className="coop-partner-badge">Navigators: {state.coopSession.partnerName}</span>
+            <span className="coop-partner-badge">Navigator: {state.coopSession.partnerName}</span>
           </div>
           <p className="coop-clue-hint">Klausies navigatoru un ievadi dzirdēto kodu uz tastatūras!</p>
         </div>

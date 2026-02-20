@@ -227,10 +227,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     if (isNew) {
       setNewCardId(locId);
       setPhase(PHASE.CARD);
-    } else if (completedLocations.length + 1 < LOCATIONS.length) {
-      setPhase(PHASE.MAP);
     } else {
-      // Last location completed, no new card — go back to map (PreFinal will show)
       setPhase(PHASE.MAP);
     }
   }, [currentLocation, currentConfig, completedLocations, score, coopMultiplier]);
