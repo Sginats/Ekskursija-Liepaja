@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import MainMenu from './components/MainMenu.jsx';
 import MapScreen from './components/MapScreen.jsx';
 import PhaserScene from './phaser/PhaserScene.jsx';
@@ -20,6 +20,7 @@ import { getDayNightState } from './utils/DayNight.js';
 import AntiCheat from './utils/AntiCheat.js';
 import SocketManager from './utils/SocketManager.js';
 import { generateJournal, downloadJournal } from './utils/JournalGenerator.js';
+import GhostRun from './utils/GhostRun.js';
 
 const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', END: 'end' };
 const LAST_LOCATION_ID = 'parks';
@@ -44,6 +45,9 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [route, setRoute] = useState([]);
   // Live question overrides received from admin hot-swap
   const [questionOverrides, setQuestionOverrides] = useState({});
+  // Ghost run: elapsedMs from map start for playback
+  const [mapElapsedMs, setMapElapsedMs] = useState(0);
+  const mapTimerRef = useRef(null);
 
   const { isNight } = getDayNightState();
   const { coopMultiplier, coopPenalty, joinFinale } = useCoopContext();
@@ -89,6 +93,18 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     }
   }, [coopPenalty]);
 
+  // ── Ghost run: advance elapsed-ms counter while on map ────────────────────
+  useEffect(() => {
+    if (phase === PHASE.MAP && startTime) {
+      mapTimerRef.current = setInterval(() => {
+        setMapElapsedMs(Date.now() - startTime);
+      }, 500);
+    } else {
+      clearInterval(mapTimerRef.current);
+    }
+    return () => clearInterval(mapTimerRef.current);
+  }, [phase, startTime]);
+
   // ── Start ─────────────────────────────────────────────────────────────────
   const handleStart = useCallback((name) => {
     setPlayerName(name);
@@ -101,6 +117,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setRoute([]);
     clearSession();
     SocketManager.joinGame(name);
+    GhostRun.startRun();
+    setMapElapsedMs(0);
     onPlayerNameChange?.(name);
     onScoreChange?.(0);
     setPhase(PHASE.MAP);
@@ -127,6 +145,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setCurrentConfig(getLocationConfig(loc));
     AntiCheat.startLocation(loc.id);
     SocketManager.reportLocation(loc.id);
+    GhostRun.mark(loc.id, startTime ? Date.now() - startTime : 0);
     onLocationChange?.(loc.id);
     setPhase(PHASE.MINIGAME);
   }, [completedLocations, windEnergy, emptyTravelPenalties]);
@@ -183,6 +202,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const handleSaveScore = useCallback(async () => {
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
     await saveScore({ name: playerName, score, timeSeconds: elapsed, mode: 'single' });
+    GhostRun.finish(elapsed * 1000, score);
     joinFinale(score, elapsed);
     setShowLeaderboard(true);
   }, [playerName, score, startTime, joinFinale]);
@@ -225,6 +245,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
             onSelectLocation={selectLocation}
             score={score}
             windEnergy={windEnergy}
+            ghostLocationId={GhostRun.getGhostLocation(mapElapsedMs)}
+            ghostBestTime={GhostRun.getBestTimeLabel()}
           />
         </>
       )}
@@ -242,6 +264,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
           <QuestionOverlay
             question={effectiveConfig.question}
             locationName={currentLocation.name}
+            locationId={currentLocation.id}
+            questionIdx={effectiveConfig.question._idx ?? 0}
             onComplete={handleQuestionComplete}
             windEnergy={windEnergy}
             onWindUpdate={setWindEnergy}

@@ -8,6 +8,7 @@
     "dev": "node --watch src/js/server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
     "socket.io": "^4.8.3",
     "ws": "^8.19.0"
   }

@@ -59,6 +59,33 @@ export default class SequenceScene extends Phaser.Scene {
 
     this._buttons = this._buildButtons(width, height);
     this.time.delayedCall(SpeedController.scale(400), () => this._nextRound());
+
+    // ── Co-op Phaser bridge ────────────────────────────────────────────────
+    this._coopText = null;
+    this._coopUnsubs = [
+      EventBridge.on('COOP_SESSION_START', ({ partnerName }) => {
+        this._showCoopBanner(`🤝 Ko-op: ${partnerName}`, '#ffd700');
+      }),
+      EventBridge.on('COOP_CLUE_RECEIVED', ({ clue }) => {
+        this._showCoopBanner(`💡 ${clue}`, '#4caf50');
+      }),
+      EventBridge.on('COOP_MULTIPLIER', ({ multiplier }) => {
+        this._showCoopBanner(`✨ Ko-op ×${multiplier}!`, '#ffaa00');
+      }),
+    ];
+  }
+
+  _showCoopBanner(msg, color = '#ffd700') {
+    const { width } = this.scale;
+    if (this._coopText) this._coopText.destroy();
+    this._coopText = this.add.text(width / 2, 48, msg, {
+      fontSize: '13px', fontFamily: 'Poppins, Arial',
+      color, backgroundColor: 'rgba(0,0,0,0.65)',
+      padding: { x: 12, y: 5 },
+    }).setOrigin(0.5).setDepth(30);
+    this.time.delayedCall(SpeedController.scale(2800), () => {
+      if (this._coopText) { this._coopText.destroy(); this._coopText = null; }
+    });
   }
 
   _buildButtons(width, height) {
@@ -144,6 +171,7 @@ export default class SequenceScene extends Phaser.Scene {
     if (btnIdx !== expected) {
       this._inputEnabled = false;
       this._active = false;
+      this._coopUnsubs?.forEach(u => u());
       this._statusText.setText('Nepareizi!').setColor('#f44336');
       this.time.delayedCall(1200, () =>
         EventBridge.emit('MINIGAME_COMPLETE', { success: false, bonusPoints: 0 })
@@ -156,6 +184,7 @@ export default class SequenceScene extends Phaser.Scene {
 
     this._inputEnabled = false;
     if (this._round >= this._cfg.rounds) {
+      this._coopUnsubs?.forEach(u => u());
       this._statusText.setText('Lieliski! ✓').setColor('#4caf50');
       this.time.delayedCall(900, () =>
         EventBridge.emit('MINIGAME_COMPLETE', { success: true, bonusPoints: 5 })

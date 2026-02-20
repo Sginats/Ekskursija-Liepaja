@@ -11,6 +11,34 @@
 const http       = require('http');
 const { Server } = require('socket.io');
 
+// ── Optional Supabase client (server-side, uses service_role key) ─────────────
+let supabase = null;
+const SUPABASE_URL      = process.env.SUPABASE_URL;
+const SUPABASE_SVC_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (SUPABASE_URL && SUPABASE_SVC_KEY) {
+  const { createClient } = require('@supabase/supabase-js');
+  supabase = createClient(SUPABASE_URL, SUPABASE_SVC_KEY);
+  console.log('[server] ✓ Supabase connected — DB writes enabled.');
+} else {
+  console.warn('[server] ⚠  SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY not set — DB writes disabled.');
+}
+
+/**
+ * Fire-and-forget DB write.  Never throws — logs errors to console only.
+ * @param {string} table
+ * @param {object} row
+ */
+async function dbInsert(table, row) {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase.from(table).insert(row);
+    if (error) console.error(`[db] insert(${table}) error:`, error.message);
+  } catch (e) {
+    console.error(`[db] insert(${table}) exception:`, e.message);
+  }
+}
+
 // ── Config ────────────────────────────────────────────────────────────────────
 const PORT               = process.env.PORT        || 8080;
 const ADMIN_SECRET       = process.env.ADMIN_SECRET;
@@ -193,6 +221,17 @@ function resolveFlashQuiz() {
   broadcastGlobalProgress();
   pushLog('info', `Flash viktorīna beigusies: ${correctCount}/${responses.size} pareizi, +${communityPoints} kopīgie punkti`);
 
+  // Persist result to DB
+  dbInsert('flash_quiz_results', {
+    quiz_id:          quizId,
+    question_id:      question.id,
+    player_name:      null, // aggregate row
+    answer:           null,
+    correct:          majority,
+    community_points: communityPoints,
+    majority_correct: majority,
+  });
+
   clearTimeout(flashQuiz.timer);
   flashQuiz = null;
 
@@ -366,6 +405,16 @@ gameNS.on('connection', (socket) => {
         gameNS.to(sid).emit('dual_key:result', { success: true, multiplier: COOP_MULTIPLIER, locationId });
       });
       pushLog('info', `Dual-key izdevās @ ${locationId}`);
+      // Persist to DB
+      dbInsert('coop_sessions', {
+        session_id:       sessionId,
+        location_id:      locationId,
+        questioner_name:  players.get(session.questionerId)?.name || null,
+        clue_holder_name: players.get(session.clueHolderId)?.name || null,
+        success:          true,
+        multiplier:       COOP_MULTIPLIER,
+        penalty:          0,
+      });
     } else {
       // Adaptive penalty: both players lose points
       [session.questionerId, session.clueHolderId].forEach(sid => {
@@ -377,6 +426,16 @@ gameNS.on('connection', (socket) => {
       });
       broadcastPlayerList();
       pushLog('warn', `Dual-key neizdevās @ ${locationId} — sods ${COOP_PENALTY} punkti katram`);
+      // Persist to DB
+      dbInsert('coop_sessions', {
+        session_id:       sessionId,
+        location_id:      locationId,
+        questioner_name:  players.get(session.questionerId)?.name || null,
+        clue_holder_name: players.get(session.clueHolderId)?.name || null,
+        success:          false,
+        multiplier:       1.0,
+        penalty:          COOP_PENALTY,
+      });
     }
   });
 
@@ -400,6 +459,7 @@ gameNS.on('connection', (socket) => {
     lootPool.set(itemId, { itemId, foundBy: p.name, foundAt: locationId });
     broadcastLootPool();
     pushLog('info', `Priekšmets atrasts: ${itemId} (${p.name} @ ${locationId})`, { player: p.name });
+    dbInsert('loot_events', { item_id: itemId, event_type: 'found', player_name: p.name, location_id: locationId });
   });
 
   // LOOT_USE: player consumes a loot item for a bonus
@@ -414,6 +474,7 @@ gameNS.on('connection', (socket) => {
     socket.emit('loot:bonus', { itemId, bonusPoints: 5, targetLocationId });
     broadcastPlayerList();
     pushLog('info', `Priekšmets izmantots: ${itemId} (${p.name} @ ${targetLocationId})`);
+    dbInsert('loot_events', { item_id: itemId, event_type: 'used', player_name: p.name, location_id: targetLocationId });
   });
 
   // ── Flash quiz ─────────────────────────────────────────────────────────────
@@ -444,6 +505,10 @@ gameNS.on('connection', (socket) => {
     });
     broadcastFinaleLobby();
     pushLog('info', `${p.name} pievienojās fināla lobijam (${score} pts, ${timeSeconds}s)`);
+    dbInsert('finale_sessions', {
+      session_key: `${new Date().toISOString().slice(0, 10)}_${Date.now()}`,
+      players:     JSON.stringify(Array.from(finalePlayers.values())),
+    });
   });
 
   // ── Ping ──────────────────────────────────────────────────────────────────

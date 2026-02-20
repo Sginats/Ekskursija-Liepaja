@@ -20,6 +20,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import SocketManager from '../utils/SocketManager.js';
 import CoopState     from '../utils/CoopState.js';
+import EventBridge   from '../utils/EventBridge.js';
 import { LOCATIONS } from '../data/LocationData.js';
 import FlashQuiz     from './FlashQuiz.jsx';
 import FinaleLobby   from './FinaleLobby.jsx';
@@ -102,6 +103,8 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
       // Cooperative session started (dual-key validation)
       SocketManager.on('coop:session_start', (session) => {
         CoopState.set({ coopSession: session, coopMultiplier: 1.0 });
+        // Bridge to Phaser: let active scene display a coop banner
+        EventBridge.emit('COOP_SESSION_START', { role: session.role, partnerName: session.partnerName, locationId: session.locationId });
       }),
 
       // Inbound coop request from another player
@@ -122,6 +125,8 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
             coopSession: { ...cur.coopSession, receivedClue: clueData },
           });
         }
+        // Bridge to Phaser: show clue notification in active scene
+        EventBridge.emit('COOP_CLUE_RECEIVED', clueData);
       }),
 
       // Dual-key result
@@ -136,6 +141,8 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
       // Multiplier applied notification
       SocketManager.on('coop:multiplier_applied', ({ multiplier }) => {
         CoopState.set({ coopMultiplier: multiplier });
+        // Bridge to Phaser: display multiplier bonus overlay in active scene
+        EventBridge.emit('COOP_MULTIPLIER', { multiplier });
       }),
 
       // Flash quiz

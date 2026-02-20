@@ -10,7 +10,7 @@ const CATEGORY_COLORS = {
   industry:  { dot: '#f44336', label: 'Industrija & osta' },
 };
 
-export default function MapScreen({ completedLocations, onSelectLocation, score, windEnergy }) {
+export default function MapScreen({ completedLocations, onSelectLocation, score, windEnergy, ghostLocationId, ghostBestTime }) {
   const { otherPlayers, occupiedLocations } = useCoopContext();
 
   return (
@@ -79,6 +79,20 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
                 </div>
               );
             })}
+          {/* Ghost run dot (previous best run) */}
+          {ghostLocationId && (() => {
+            const ghostLoc = LOCATIONS.find(l => l.id === ghostLocationId);
+            if (!ghostLoc) return null;
+            return (
+              <div
+                className="map-ghost-dot"
+                style={{ left: `${ghostLoc.mapPosition.x}%`, top: `${ghostLoc.mapPosition.y}%` }}
+                title={`👻 Rekords: ${ghostBestTime}`}
+              >
+                <span className="map-ghost-icon">👻</span>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -93,6 +107,12 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
           <span className="legend-item">
             <span className="legend-dot" style={{ background: '#ff9800', border: '2px solid #fff' }} />
             Citi spēlētāji ({otherPlayers.length})
+          </span>
+        )}
+        {ghostLocationId && ghostBestTime && (
+          <span className="legend-item">
+            <span className="legend-dot" style={{ background: 'rgba(180,100,255,0.8)' }} />
+            Rekords: {ghostBestTime}
           </span>
         )}
       </div>

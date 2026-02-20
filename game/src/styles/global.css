@@ -1323,3 +1323,28 @@ body[data-night='1']::after {
 /* ── Admin map area offset when bar visible ──────────────────── */
 .map-area-wrap { margin-top: 145px; }
 
+
+/* ── Ghost Run map dot ───────────────────────────────────────── */
+.map-ghost-dot {
+  position: absolute;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(160, 80, 255, 0.25);
+  border: 2px dashed rgba(180, 100, 255, 0.85);
+  transform: translate(-50%, -50%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 14;
+  pointer-events: none;
+  animation: ghostPulse 2s ease-in-out infinite;
+}
+.map-ghost-icon { font-size: 13px; line-height: 1; }
+@keyframes ghostPulse {
+  0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+  50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.18); }
+}
+
+/* ── Dynamic difficulty badge ────────────────────────────────── */
+.question-attempts {
+  font-size: 13px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}

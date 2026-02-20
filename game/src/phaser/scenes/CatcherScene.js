@@ -72,6 +72,33 @@ export default class CatcherScene extends Phaser.Scene {
     });
 
     this._spawnItem();
+
+    // ── Co-op Phaser bridge ────────────────────────────────────────────────
+    this._coopText = null;
+    this._coopUnsubs = [
+      EventBridge.on('COOP_SESSION_START', ({ partnerName }) => {
+        this._showCoopBanner(`🤝 Ko-op: ${partnerName}`, '#ffd700');
+      }),
+      EventBridge.on('COOP_CLUE_RECEIVED', ({ clue }) => {
+        this._showCoopBanner(`💡 ${clue}`, '#4caf50');
+      }),
+      EventBridge.on('COOP_MULTIPLIER', ({ multiplier }) => {
+        this._showCoopBanner(`✨ Ko-op ×${multiplier}!`, '#ffaa00');
+      }),
+    ];
+  }
+
+  _showCoopBanner(msg, color = '#ffd700') {
+    const { width } = this.scale;
+    if (this._coopText) this._coopText.destroy();
+    this._coopText = this.add.text(width / 2, 48, msg, {
+      fontSize: '13px', fontFamily: 'Poppins, Arial',
+      color, backgroundColor: 'rgba(0,0,0,0.65)',
+      padding: { x: 12, y: 6 },
+    }).setOrigin(0.5).setDepth(30);
+    this.time.delayedCall(SpeedController.scale(2800), () => {
+      if (this._coopText) { this._coopText.destroy(); this._coopText = null; }
+    });
   }
 
   _spawnItem() {
@@ -143,6 +170,8 @@ export default class CatcherScene extends Phaser.Scene {
     this._active = false;
     this._spawnTimer?.remove();
     this._countdownTimer?.remove();
+    // Unsubscribe co-op listeners
+    this._coopUnsubs?.forEach(u => u());
 
     const { width, height } = this.scale;
     const pts = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 5 : 3) : 0;

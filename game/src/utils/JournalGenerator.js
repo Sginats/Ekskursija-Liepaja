@@ -12,6 +12,16 @@
  */
 
 /**
+ * Format seconds as MM:SS.
+ * @param {number} totalSeconds
+ * @returns {string}
+ */
+export function formatTime(totalSeconds) {
+  const s = Math.round(totalSeconds);
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/**
  * @typedef {Object} RouteEntry
  * @property {string}   locationId
  * @property {string}   locationName
@@ -36,10 +46,8 @@
  * @returns {string}
  */
 export function generateJournal({ playerName, score, timeSeconds, route = [], mode = 'single' }) {
-  const date     = new Date().toLocaleDateString('lv-LV', { dateStyle: 'long' });
-  const mins     = String(Math.floor(timeSeconds / 60)).padStart(2, '0');
-  const secs     = String(timeSeconds % 60).padStart(2, '0');
-  const timeStr  = `${mins}:${secs}`;
+  const date    = new Date().toLocaleDateString('lv-LV', { dateStyle: 'long' });
+  const timeStr = formatTime(timeSeconds);
   const maxScore = route.length * 10;
 
   const lines = [
