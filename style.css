@@ -1798,6 +1798,7 @@ body[data-theme="blue"] #tabulaiTR {
     gap: 10px;
     max-width: 220px;
     margin: 15px auto;
+    min-width: 220px;
 }
 .simon-btn {
     height: 75px;

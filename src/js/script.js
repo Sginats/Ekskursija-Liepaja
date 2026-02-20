@@ -177,8 +177,8 @@ const CONNECTION_MODE_WS = 'websocket';
 let connectionMode = CONNECTION_MODE_PHP;
 
 const taskSequence = [
-    'Mols', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
-    'LSEZ', 'Cietums', 'RTU', 'Ezerkrasts', 'Parks'
+    'Cietums', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
+    'LSEZ', 'Mols', 'RTU', 'Ezerkrasts', 'Parks'
 ];
 
 // Answer verification system — answers stored as pre-computed hashes only
@@ -2814,7 +2814,7 @@ function closeLSEZGame() {
 // ============================================================================
 // CIETUMS — Guard Escape (single-player timing game)
 // ============================================================================
-let cietActive = false, cietSteps = 0, cietGuardPos = 0, cietGuardDir = 1;
+let cietActive = false, cietSteps = 0, cietGuardPos = 0, cietGuardDir = 0.5;
 let cietGuardSpd = 1.2, cietAnimId3 = null;
 const CIET_STEPS_NEEDED = 5;
 
@@ -2832,7 +2832,7 @@ function initEscapeGame() {
     document.querySelector('.task-section').innerHTML = `
         <p id="ciet-status" style="color:#ffaa00;margin:0 0 6px;">Soļi: 0/${CIET_STEPS_NEEDED}</p>
         <canvas id="cietCanvas" style="width:100%;display:block;border:2px solid rgba(255,170,0,0.3);border-radius:8px;"></canvas>
-        <button class="boat-tap-btn" onclick="cietMove()" style="margin-top:8px;">BEG!</button>
+        <button class="boat-tap-btn" onclick="cietMove()" style="margin-top:8px;">BĒG!</button>
         <p style="font-size:11px;opacity:0.5;text-align:center;margin-top:4px;">vai SPACE taustiņš</p>`;
     const canvas = document.getElementById('cietCanvas');
     const rect = canvas.getBoundingClientRect();
@@ -2901,7 +2901,8 @@ function cietMove() {
     const isSafe = cietGuardPos >= 60 && cietGuardPos <= 80;
     if (isSafe) {
         cietSteps++;
-        cietGuardSpd = Math.min(3.5, 1.2 + cietSteps * 0.35);
+        //speed
+        cietGuardSpd = Math.min(1 /* max */, 0.6 /* min */ + cietSteps * 0.35);
         const st = document.getElementById('ciet-status');
         if (st) st.textContent = `Soļi: ${cietSteps}/${CIET_STEPS_NEEDED}`;
         if (cietSteps >= CIET_STEPS_NEEDED) { finishEscapeGame(true); } else { showNotification('✓ Labi!', 'success', 700); }
