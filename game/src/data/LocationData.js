@@ -317,7 +317,7 @@ export const LOCATIONS = [
       {
         text: 'Kurš lielākais ezers Latvijā pēc platības ir Liepājas ezers?',
         answer: '5.',
-        aliases: ['5', 'piektais', 'piekts'],
+        aliases: ['5', 'piektais'],
         fact: 'Liepājas ezers — piektais lielākais Latvijā — aizņem 37 km².',
       },
       {
