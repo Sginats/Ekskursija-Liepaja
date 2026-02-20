@@ -93,7 +93,8 @@ export class AntScene extends Phaser.Scene {
       );
 
     ant.on('pointerdown', () => {
-      if (!this.gameActive) return;
+      if (!this.gameActive || ant.getData('caught')) return;
+      ant.setData('caught', true);
       this.antsCaught++;
       this.countText.setText(`Nokerti: ${this.antsCaught}/${ANTS_REQUIRED}`);
 

@@ -140,6 +140,7 @@ export default class FlashlightScene extends Phaser.Scene {
 
   _buildMask(width, height) {
     this._maskGfx = this.add.graphics().setDepth(11);
+    this._gradientGfx = this.add.graphics().setDepth(12);
     this._flashX = width / 2;
     this._flashY = height / 2;
   }
@@ -194,17 +195,15 @@ export default class FlashlightScene extends Phaser.Scene {
     this._darkOverlay.slice(this._flashX, this._flashY, r, 0, Math.PI * 2, false);
     this._darkOverlay.fillPath();
 
-    const grd = this.add.graphics().setDepth(12);
-    const colors = [0x000000];
+    this._gradientGfx.clear();
     const steps = 6;
     for (let i = steps; i >= 1; i--) {
       const alpha = (i / steps) * 0.55;
       const stepR = r * (1 + (steps - i) * 0.18);
-      grd.fillStyle(0x000000, alpha);
-      grd.slice(this._flashX, this._flashY, stepR, 0, Math.PI * 2, false);
-      grd.fillPath();
+      this._gradientGfx.fillStyle(0x000000, alpha);
+      this._gradientGfx.slice(this._flashX, this._flashY, stepR, 0, Math.PI * 2, false);
+      this._gradientGfx.fillPath();
     }
-    grd.destroy();
   }
 
   _tick() {

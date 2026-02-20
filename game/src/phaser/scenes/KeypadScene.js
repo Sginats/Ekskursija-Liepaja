@@ -36,6 +36,7 @@ export default class KeypadScene extends Phaser.Scene {
     this._timeLeft   = this._timeLimit;
     this._codeVisible = false;
     this._coopUnsubs  = [];
+    this._autoSubmitTimer = null;
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -209,12 +210,14 @@ export default class KeypadScene extends Phaser.Scene {
 
     if (lbl === 'CLR') {
       this._entered = '';
+      if (this._autoSubmitTimer) { this._autoSubmitTimer.remove(); this._autoSubmitTimer = null; }
       this._updateDisplay();
       return;
     }
 
     if (lbl === 'ENT') {
       if (this._entered.length < this._codeLength) return; // incomplete
+      if (this._autoSubmitTimer) { this._autoSubmitTimer.remove(); this._autoSubmitTimer = null; }
       this._submit();
       return;
     }
@@ -226,7 +229,10 @@ export default class KeypadScene extends Phaser.Scene {
 
     // Auto-submit when full length reached
     if (this._entered.length === this._codeLength) {
-      this.time.delayedCall(SpeedController.scale(300), () => this._submit());
+      this._autoSubmitTimer = this.time.delayedCall(SpeedController.scale(300), () => {
+        this._autoSubmitTimer = null;
+        this._submit();
+      });
     }
   }
 

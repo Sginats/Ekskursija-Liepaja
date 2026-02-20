@@ -99,7 +99,7 @@ export class CietumScene extends Phaser.Scene {
             this.time.delayedCall(700, () => this._startRound());
           }
         } else {
-          this.hintText.setText('Nepareizi! Mēģini velreiz.').setColor('#f44336');
+          this.hintText.setText('Nepareizi! Spēle beigusies.').setColor('#f44336');
           this._endGame(false);
         }
       });

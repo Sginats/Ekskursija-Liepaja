@@ -173,7 +173,7 @@ export default class SequenceScene extends Phaser.Scene {
       this._active = false;
       this._coopUnsubs?.forEach(u => u());
       this._statusText.setText('Nepareizi!').setColor('#f44336');
-      this.time.delayedCall(1200, () =>
+      this.time.delayedCall(SpeedController.scale(1200), () =>
         EventBridge.emit('MINIGAME_COMPLETE', { success: false, bonusPoints: 0 })
       );
       return;
@@ -186,12 +186,12 @@ export default class SequenceScene extends Phaser.Scene {
     if (this._round >= this._cfg.rounds) {
       this._coopUnsubs?.forEach(u => u());
       this._statusText.setText('Lieliski! ✓').setColor('#4caf50');
-      this.time.delayedCall(900, () =>
+      this.time.delayedCall(SpeedController.scale(900), () =>
         EventBridge.emit('MINIGAME_COMPLETE', { success: true, bonusPoints: 5 })
       );
     } else {
       this._statusText.setText('Pareizi! Nākamā kārta...').setColor('#4caf50');
-      this.time.delayedCall(800, () => this._nextRound());
+      this.time.delayedCall(SpeedController.scale(800), () => this._nextRound());
     }
   }
 }
