@@ -3186,4 +3186,5 @@ window.sendReady = sendReady;
 window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
 window.toggleAnimations = toggleAnimations;
+window.submitFinalTest = submitFinalTest;
 })(); 
