@@ -1,15 +1,4 @@
-import { useState } from 'react';
-
 export default function IntroModal({ onDismiss }) {
-  const [visible, setVisible] = useState(true);
-
-  if (!visible) return null;
-
-  const handleStart = () => {
-    setVisible(false);
-    onDismiss();
-  };
-
   return (
     <div className="intro-overlay" role="dialog" aria-modal="true">
       <div className="intro-panel">
@@ -34,7 +23,7 @@ export default function IntroModal({ onDismiss }) {
           </ul>
         </div>
 
-        <button className="menu-start-btn intro-start-btn" onClick={handleStart}>
+        <button className="menu-start-btn intro-start-btn" onClick={onDismiss}>
           Sapratu — Sākt! →
         </button>
       </div>

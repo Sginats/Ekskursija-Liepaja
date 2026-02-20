@@ -234,11 +234,9 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
   const handleCardDismiss = useCallback(() => {
     setNewCardId(null);
+    setPhase(PHASE.MAP);
     if (completedLocations.length >= LOCATIONS.length) {
       setShowPreFinal(true);
-      setPhase(PHASE.MAP);
-    } else {
-      setPhase(PHASE.MAP);
     }
   }, [completedLocations]);
 
