@@ -1858,3 +1858,19 @@ body[data-theme="blue"] #tabulaiTR {
     border-color: rgba(100,220,100,0.6);
     background: rgba(0,50,0,0.5);
 }
+
+.admin-corner-link {
+    color: rgba(255,170,0,0.45);
+    font-size: 11px;
+    text-decoration: none;
+    padding: 5px 10px;
+    border: 1px solid rgba(255,136,0,0.25);
+    border-radius: 8px;
+    background: rgba(255,136,0,0.08);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.admin-corner-link:hover {
+    color: #ffaa00;
+    border-color: #ffaa00;
+    background: rgba(255,136,0,0.15);
+}

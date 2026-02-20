@@ -17,8 +17,8 @@
 <body>
     <div class="wrap" id="bg-wrap"></div>
     <canvas id="cursor-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;"></canvas>
-    <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
-    <audio id="bg-music" src="skana/music.mp3" loop preload="auto"></audio>
+    <audio id="hover-sound" src="skana/hover.wav" preload="auto"></audio>
+    <audio id="bg-music" src="skana/music.wav" loop preload="auto"></audio>
 
     <div id="connection-status" class="connection-status" style="display: none;"></div>
 
@@ -36,6 +36,9 @@
 
         <div class="authors-corner" id="authors-corner">
             Autori: Niks Šenvalds, Dans Bitenieks
+        </div>
+        <div style="position:fixed;bottom:12px;right:14px;z-index:50;">
+            <a href="src/php/admin.php" class="admin-corner-link">🔒 Admin</a>
         </div>
     </div>
 

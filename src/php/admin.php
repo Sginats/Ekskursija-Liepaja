@@ -2,7 +2,7 @@
 session_start();
 
 // Admin password hash – change this to your own password using password_hash('yourpassword', PASSWORD_DEFAULT)
-define('ADMIN_PASSWORD_HASH', '$2y$10$h1gQVoT/0gfFY8USdNPgROAzfh11HLpBJc6QqBLOXt52c8.C/hKFi'); // default: admin123
+define('ADMIN_PASSWORD_HASH', '$2y$10$3EovJLK0HIVeKIl.ECuNUuhiMU5PiEtdz1odHcomITw3NpZux4NMi'); // default: admin123
 
 $error = '';
 $action = isset($_POST['action']) ? $_POST['action'] : '';

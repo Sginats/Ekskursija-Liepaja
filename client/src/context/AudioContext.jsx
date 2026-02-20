@@ -18,12 +18,12 @@ export function AudioProvider({ children }) {
 
   // Create audio elements once
   useEffect(() => {
-    const music = new Audio('/skana/music.mp3');
+    const music = new Audio('/skana/music.wav');
     music.loop = true;
     music.volume = musicVolume / 100;
     musicRef.current = music;
 
-    const hover = new Audio('/skana/hover.mp3');
+    const hover = new Audio('/skana/hover.wav');
     hover.volume = sfxVolume / 100;
     hover.preload = 'auto';
     hoverRef.current = hover;
