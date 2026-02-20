@@ -485,6 +485,41 @@ body[data-night='1']::after {
 }
 .quiz-submit-btn:hover { opacity: 0.88; transform: translateY(-1px); }
 
+/* ── Multiple-choice option buttons ─────────────────────────── */
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.quiz-option-btn {
+  width: 100%;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s;
+}
+.quiz-option-btn:hover:not(:disabled) {
+  background: rgba(255, 170, 0, 0.12);
+  border-color: var(--amber);
+  transform: translateY(-1px);
+}
+.quiz-option-btn.quiz-option-wrong {
+  background: rgba(244, 67, 54, 0.12);
+  border-color: rgba(244, 67, 54, 0.45);
+  color: #ff6b6b;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .feedback {
   margin-top: 16px;
   padding: 14px 16px;
