@@ -20,7 +20,7 @@ export default function CardCollection({ unlockedCards, onClose }) {
               <div
                 key={loc.id}
                 className={`card ${unlocked ? 'card-unlocked' : 'card-locked'} card-${meta?.rarity}`}
-                style={{ borderColor: unlocked ? meta?.color : '#444' }}
+                style={{ borderColor: unlocked ? meta?.color : 'rgba(255, 170, 0, 0.15)' }}
               >
                 <span className="card-emoji">{unlocked ? meta?.emoji : '🔒'}</span>
                 <span className="card-name">{unlocked ? meta?.title : '???'}</span>

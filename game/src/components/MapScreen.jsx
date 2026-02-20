@@ -50,8 +50,8 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
                 style={{
                   left:       `${loc.mapPosition.x}%`,
                   top:        `${loc.mapPosition.y}%`,
-                  background: done ? '#555' : catColor,
-                  borderColor: done ? '#888' : catColor,
+                  background: done ? 'rgba(170, 170, 170, 0.35)' : catColor,
+                  borderColor: done ? 'rgba(170, 170, 170, 0.5)' : catColor,
                   boxShadow:  done ? 'none' : `0 0 12px ${catColor}88`,
                 }}
                 onClick={() => onSelectLocation(loc.id)}
@@ -110,13 +110,13 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
         ))}
         {otherPlayers.length > 0 && (
           <span className="legend-item">
-            <span className="legend-dot" style={{ background: '#ff9800', border: '2px solid #fff' }} />
+            <span className="legend-dot" style={{ background: 'var(--amber)', border: '2px solid var(--text)' }} />
             Citi spēlētāji ({otherPlayers.length})
           </span>
         )}
         {ghostLocationId && ghostBestTime && (
           <span className="legend-item">
-            <span className="legend-dot" style={{ background: 'rgba(180,100,255,0.8)' }} />
+            <span className="legend-dot" style={{ background: 'var(--sea-light)' }} />
             Rekords: {ghostBestTime}
           </span>
         )}

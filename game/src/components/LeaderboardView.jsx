@@ -60,7 +60,7 @@ export default function LeaderboardView({ mode = 'single', onClose }) {
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={4} style={{ textAlign: 'center', color: '#aaa' }}>Nav rezultātu</td></tr>
+                <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-dim)' }}>Nav rezultātu</td></tr>
               )}
               {rows.map((row, i) => (
                 <tr key={i} className={i < 3 ? `top-${i + 1}` : ''}>

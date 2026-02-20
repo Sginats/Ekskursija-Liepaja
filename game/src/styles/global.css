@@ -1364,8 +1364,8 @@ body[data-night='1']::after {
   position: absolute;
   width: 22px; height: 22px;
   border-radius: 50%;
-  background: rgba(160, 80, 255, 0.25);
-  border: 2px dashed rgba(180, 100, 255, 0.85);
+  background: rgba(44, 111, 168, 0.25);
+  border: 2px dashed rgba(44, 111, 168, 0.85);
   transform: translate(-50%, -50%);
   display: flex; align-items: center; justify-content: center;
   z-index: 14;
