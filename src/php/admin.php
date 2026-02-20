@@ -74,6 +74,28 @@ if ($loggedIn) {
         header('Location: admin.php');
         exit;
     }
+
+    // Handle bug log clear
+    if ($action === 'clear_bugs' && verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        file_put_contents(__DIR__ . '/../data/bug_log.txt', '');
+        header('Location: admin.php');
+        exit;
+    }
+
+    // Handle bug log delete single entry
+    if ($action === 'delete_bug' && verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $idx  = isset($_POST['index']) ? (int)$_POST['index'] : -1;
+        $file = __DIR__ . '/../data/bug_log.txt';
+        if (file_exists($file) && $idx >= 0) {
+            $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if (isset($lines[$idx])) {
+                unset($lines[$idx]);
+                file_put_contents($file, implode("\n", array_values($lines)) . (count($lines) > 0 ? "\n" : ''), LOCK_EX);
+            }
+        }
+        header('Location: admin.php');
+        exit;
+    }
 }
 
 // Load leaderboard data for display
@@ -98,6 +120,28 @@ function loadLeaderboard(string $file): array {
 $singleData = $loggedIn ? loadLeaderboard(__DIR__ . '/../data/leaderboard.txt') : [];
 $teamsData  = $loggedIn ? loadLeaderboard(__DIR__ . '/../data/teams_leaderboard.txt') : [];
 $csrfToken  = $loggedIn ? generateCsrfToken() : '';
+
+function loadBugLog(string $file): array {
+    if (!file_exists($file)) return [];
+    $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $results = [];
+    foreach ($lines as $i => $line) {
+        $parts = explode('|', $line, 8);
+        $results[] = [
+            'index'   => $i,
+            'ts'      => htmlspecialchars(trim($parts[0] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'page'    => htmlspecialchars(trim($parts[1] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'message' => htmlspecialchars(trim($parts[2] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'source'  => htmlspecialchars(trim($parts[3] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'line'    => (int)($parts[4] ?? 0),
+            'col'     => (int)($parts[5] ?? 0),
+            'stack'   => htmlspecialchars(trim($parts[6] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'ua'      => htmlspecialchars(trim($parts[7] ?? ''), ENT_QUOTES, 'UTF-8'),
+        ];
+    }
+    return array_reverse($results); // newest first
+}
+$bugData = $loggedIn ? loadBugLog(__DIR__ . '/../data/bug_log.txt') : [];
 ?>
 <!DOCTYPE html>
 <html lang="lv">
@@ -357,6 +401,70 @@ $csrfToken  = $loggedIn ? generateCsrfToken() : '';
                     <input type="hidden" name="type" value="teams">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
                     <button type="submit" class="btn-danger">Notīrīt visu tabulu</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bug log -->
+        <div class="admin-card">
+            <h2>Kļūdu žurnāls
+                <span class="badge-count"><?php echo count($bugData); ?> ieraksti</span>
+                <?php if (!empty($bugData)): ?>
+                <span style="font-size:12px; color:#888; font-weight:400; margin-left:8px;">Jaunākie pirmie</span>
+                <?php endif; ?>
+            </h2>
+            <?php if (empty($bugData)): ?>
+                <p class="empty-msg">Nav reģistrētu kļūdu. 🎉</p>
+            <?php else: ?>
+                <div style="overflow-x:auto;">
+                    <table class="lb-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Laiks</th>
+                                <th>Lapa</th>
+                                <th>Ziņojums</th>
+                                <th>Avots&nbsp;:&nbsp;rinda</th>
+                                <th>Dzēst</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($bugData as $i => $row): ?>
+                            <tr>
+                                <td><?php echo $i + 1; ?></td>
+                                <td style="white-space:nowrap; font-size:12px; color:#aaa;"><?php echo $row['ts']; ?></td>
+                                <td style="font-size:12px; max-width:140px; word-break:break-all;"><?php echo $row['page']; ?></td>
+                                <td style="font-size:13px; max-width:260px;">
+                                    <?php echo $row['message']; ?>
+                                    <?php if (!empty($row['stack'])): ?>
+                                        <details style="margin-top:4px;">
+                                            <summary style="color:#888; font-size:11px; cursor:pointer;">Stack trace ▸</summary>
+                                            <pre style="font-size:10px; color:#aaa; white-space:pre-wrap; margin:4px 0 0; background:rgba(0,0,0,0.3); padding:6px; border-radius:4px;"><?php echo $row['stack']; ?></pre>
+                                        </details>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="font-size:12px; color:#aaa; white-space:nowrap;">
+                                    <?php echo $row['source'] ? $row['source'] . ' : ' . $row['line'] : '—'; ?>
+                                </td>
+                                <td>
+                                    <form method="POST" action="admin.php" onsubmit="return confirm('Dzēst šo kļūdu?');" style="margin:0;">
+                                        <input type="hidden" name="action" value="delete_bug">
+                                        <input type="hidden" name="index" value="<?php echo $row['index']; ?>">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <button type="submit" class="btn-del">Dzēst</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            <div style="margin-top:16px;">
+                <form method="POST" action="admin.php" onsubmit="return confirm('Vai tiešām notīrīt visu kļūdu žurnālu?');" style="display:inline;">
+                    <input type="hidden" name="action" value="clear_bugs">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                    <button type="submit" class="btn-danger">Notīrīt kļūdu žurnālu</button>
                 </form>
             </div>
         </div>
