@@ -1174,11 +1174,9 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         width: 100%;
         font-size: 18px;
     }
-    }.btnMini{
-        width: 100%;
+    .btnMini {
         width: 280px;
     }
-    
 }
 
 /* Large screens */
