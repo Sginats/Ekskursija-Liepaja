@@ -102,7 +102,6 @@ export class KanalsScene extends Phaser.Scene {
       onComplete: () => {
         // Lower after 2.2 s
         this.time.delayedCall(2200, () => {
-          if (!this.gameActive) return;
           this.tweens.add({
             targets: this.bridgeLeft,
             angle:   { from: 65, to: 0 },
