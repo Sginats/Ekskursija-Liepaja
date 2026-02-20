@@ -152,10 +152,9 @@ export default function GameMap() {
               />
             );
           })}
-        </div>
 
-        {/* Legend */}
-        <div className={styles.legend}>
+          {/* Legend */}
+          <div className={styles.legend}>
           <p className={styles.legendTitle}>Apskates vietas</p>
           <div className={styles.legendItem}>
             <span className={`${styles.dot} ${styles['color-green']}`} />
@@ -173,6 +172,7 @@ export default function GameMap() {
             <span className={`${styles.dot} ${styles['color-red']}`} />
             Industrija un osta
           </div>
+        </div>
         </div>
       </div>
 
