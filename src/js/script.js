@@ -1733,6 +1733,78 @@ function initBackground() {
                 }
             }
         }
+
+        // City skyline silhouette at the bottom
+        const skylineY = h * 0.72;
+        bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.06)`;
+        bgCtx.beginPath();
+        bgCtx.moveTo(0, h);
+        // Dzintars concert hall dome
+        bgCtx.lineTo(w * 0.05, skylineY + 60);
+        bgCtx.lineTo(w * 0.06, skylineY + 40);
+        bgCtx.lineTo(w * 0.065, skylineY + 20);
+        bgCtx.arc(w * 0.075, skylineY + 20, w * 0.01, Math.PI, 0, false);
+        bgCtx.lineTo(w * 0.09, skylineY + 40);
+        bgCtx.lineTo(w * 0.10, skylineY + 60);
+        // City block
+        bgCtx.lineTo(w * 0.15, skylineY + 60);
+        bgCtx.lineTo(w * 0.15, skylineY + 30);
+        bgCtx.lineTo(w * 0.22, skylineY + 30);
+        bgCtx.lineTo(w * 0.22, skylineY + 60);
+        // Theatre spire
+        bgCtx.lineTo(w * 0.28, skylineY + 60);
+        bgCtx.lineTo(w * 0.28, skylineY + 10);
+        bgCtx.lineTo(w * 0.285, skylineY);
+        bgCtx.lineTo(w * 0.29, skylineY + 10);
+        bgCtx.lineTo(w * 0.29, skylineY + 60);
+        // Lighthouse / tower
+        bgCtx.lineTo(w * 0.35, skylineY + 60);
+        bgCtx.lineTo(w * 0.35, skylineY + 5);
+        bgCtx.lineTo(w * 0.355, skylineY + 2);
+        bgCtx.lineTo(w * 0.36, skylineY + 5);
+        bgCtx.lineTo(w * 0.36, skylineY + 60);
+        // Port crane
+        bgCtx.lineTo(w * 0.42, skylineY + 60);
+        bgCtx.lineTo(w * 0.42, skylineY + 25);
+        bgCtx.lineTo(w * 0.50, skylineY + 10);
+        bgCtx.lineTo(w * 0.50, skylineY + 25);
+        bgCtx.lineTo(w * 0.44, skylineY + 25);
+        bgCtx.lineTo(w * 0.44, skylineY + 60);
+        // Low blocks
+        bgCtx.lineTo(w * 0.55, skylineY + 60);
+        bgCtx.lineTo(w * 0.55, skylineY + 45);
+        bgCtx.lineTo(w * 0.65, skylineY + 45);
+        bgCtx.lineTo(w * 0.65, skylineY + 60);
+        // RTU building
+        bgCtx.lineTo(w * 0.70, skylineY + 60);
+        bgCtx.lineTo(w * 0.70, skylineY + 20);
+        bgCtx.lineTo(w * 0.78, skylineY + 20);
+        bgCtx.lineTo(w * 0.78, skylineY + 60);
+        // Mols pier / lighthouse
+        bgCtx.lineTo(w * 0.88, skylineY + 60);
+        bgCtx.lineTo(w * 0.88, skylineY + 35);
+        bgCtx.lineTo(w * 0.90, skylineY + 15);
+        bgCtx.lineTo(w * 0.92, skylineY + 35);
+        bgCtx.lineTo(w * 0.92, skylineY + 60);
+        bgCtx.lineTo(w, skylineY + 60);
+        bgCtx.lineTo(w, h);
+        bgCtx.closePath();
+        bgCtx.fill();
+
+        // Sea waves at the very bottom
+        const waveT = animationsEnabled ? Date.now() / 2000 : 0;
+        const waveY = h * 0.88;
+        bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.08)`;
+        bgCtx.lineWidth = 1.5;
+        for (let wave = 0; wave < 3; wave++) {
+            bgCtx.beginPath();
+            for (let x = 0; x <= w; x += 6) {
+                const y = waveY + wave * 12 + Math.sin(x / 80 + waveT + wave * 1.2) * 6;
+                if (x === 0) bgCtx.moveTo(x, y);
+                else bgCtx.lineTo(x, y);
+            }
+            bgCtx.stroke();
+        }
     }
 
     drawBg();
@@ -2917,6 +2989,7 @@ function closeMemoryGame() {
 }
 
 window.startFishingGame = startFishingGame;
+window.initFishingLogic = initFishingLogic;
 window.closeFishingGame = closeFishingGame;
 window.startSimonGame = startSimonGame;
 window.initSimonRounds = initSimonRounds;

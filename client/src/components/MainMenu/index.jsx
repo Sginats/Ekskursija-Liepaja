@@ -171,6 +171,51 @@ export default function MainMenu() {
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // City skyline silhouette
+      const skyY = h * 0.72;
+      ctx.fillStyle = 'rgba(255,170,0,0.05)';
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      ctx.lineTo(w * 0.05, skyY + 60); ctx.lineTo(w * 0.065, skyY + 20);
+      ctx.arc(w * 0.075, skyY + 20, w * 0.01, Math.PI, 0, false);
+      ctx.lineTo(w * 0.10, skyY + 60);
+      ctx.lineTo(w * 0.15, skyY + 60); ctx.lineTo(w * 0.15, skyY + 30);
+      ctx.lineTo(w * 0.22, skyY + 30); ctx.lineTo(w * 0.22, skyY + 60);
+      ctx.lineTo(w * 0.28, skyY + 60); ctx.lineTo(w * 0.28, skyY + 10);
+      ctx.lineTo(w * 0.285, skyY); ctx.lineTo(w * 0.29, skyY + 10);
+      ctx.lineTo(w * 0.29, skyY + 60);
+      ctx.lineTo(w * 0.35, skyY + 60); ctx.lineTo(w * 0.35, skyY + 5);
+      ctx.lineTo(w * 0.355, skyY + 2); ctx.lineTo(w * 0.36, skyY + 5);
+      ctx.lineTo(w * 0.36, skyY + 60);
+      ctx.lineTo(w * 0.42, skyY + 60); ctx.lineTo(w * 0.42, skyY + 25);
+      ctx.lineTo(w * 0.50, skyY + 10); ctx.lineTo(w * 0.50, skyY + 25);
+      ctx.lineTo(w * 0.44, skyY + 25); ctx.lineTo(w * 0.44, skyY + 60);
+      ctx.lineTo(w * 0.55, skyY + 60); ctx.lineTo(w * 0.55, skyY + 45);
+      ctx.lineTo(w * 0.65, skyY + 45); ctx.lineTo(w * 0.65, skyY + 60);
+      ctx.lineTo(w * 0.70, skyY + 60); ctx.lineTo(w * 0.70, skyY + 20);
+      ctx.lineTo(w * 0.78, skyY + 20); ctx.lineTo(w * 0.78, skyY + 60);
+      ctx.lineTo(w * 0.88, skyY + 60); ctx.lineTo(w * 0.88, skyY + 35);
+      ctx.lineTo(w * 0.90, skyY + 15); ctx.lineTo(w * 0.92, skyY + 35);
+      ctx.lineTo(w * 0.92, skyY + 60); ctx.lineTo(w, skyY + 60);
+      ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+
+      // Animated sea waves
+      const waveT = Date.now() / 2000;
+      const waveY = h * 0.88;
+      ctx.lineWidth = 1.5;
+      for (let wave = 0; wave < 3; wave++) {
+        ctx.strokeStyle = `rgba(255,170,0,${0.07 - wave * 0.015})`;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 6) {
+          const y = waveY + wave * 12 + Math.sin(x / 80 + waveT + wave * 1.2) * 6;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
       particlesRef.current.forEach((p) => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
