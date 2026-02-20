@@ -1,686 +1,707 @@
 {
-  "dzintars": {
-    "info": "Liepājas koncertzāle 'Lielais Dzintars' atklāta 2015. gadā. Tās unikālais dizains atgādina milzīgu dzintara gabalu — Latvijas nacionālo dārgakmeni.",
-    "games": [
-      {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Mūzikas Nots",
-          "description": "Solo spēle: ķer krītošās mūzikas nots, izvairīties no traucēkļiem.",
-          "collect": ["♩", "♪", "♫", "♬"],
-          "avoid": ["💤", "📵", "🔇"],
-          "required": 8
-        }
-      },
-      {
-        "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Koncertzāli",
-          "description": "Viens spēlētājs (Navigators) redz, kurus apgabalos jāizceļ (gads, nosaukums). Otrs (Operators) pārvieto lukturi un atklāj fonā slēpto tekstu. Socket.io notikumi: server→Navigator: 'info_swap:start' {clue, sessionId}; Operators emitē 'sync_task:progress' lai ziņotu par progresu.",
-          "revealLines": ["LIELAIS", "DZINTARS", "2015"],
-          "requiredReveal": 0.65
-        }
-      },
-      {
-        "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Ritma Atmiņa",
-          "description": "Abi spēlētāji vienlaicīgi atkārto vienu un to pašu melodisko secību. Servera notikumi: 'sync_task:ready' (kad abi gatavi) → 'sync_task:start'; katrs spēlētājs emitē 'sync_task:progress' ar pašreizējo posmu.",
-          "elements": ["🟣", "🔵", "🟡", "🟢"],
-          "rounds": 3
-        }
-      }
-    ],
-    "questions": [
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kurā gadā atklāta koncertzāle 'Lielais Dzintars'?",
-          "options": ["2010", "2015", "2020"],
-          "answer": "2015",
-          "points": [10, 5, 0],
-          "fact": "Lielais Dzintars atklāts 2015. gadā un tā fasāde simbolizē Latvijas nacionālo dārgakmeni."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kura orķestra mājas zāle ir Lielais Dzintars?",
-          "options": ["Liepājas Simfoniskā orķestra", "Latvijas Nacionālais orķestris", "Rīgas Kamerorķestris"],
-          "answer": "Liepājas Simfoniskā orķestra",
-          "points": [10, 5, 0],
-          "fact": "Liepājas Simfoniskais orķestris — viens no vecākajiem Latvijā — regulāri uzstājas Lielajā Dzintarā."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Ko simbolizē Lielā Dzintara ēkas arhitektūras forma?",
-          "options": ["Dzintaru", "Jūras vilni", "Saullēktu"],
-          "answer": "Dzintaru",
-          "points": [10, 5, 0],
-          "fact": "Ēkas siluets atgādina milzīgu dzintara gabalu — tāpēc arī nosaukums 'Lielais Dzintars'."
-        }
-      }
-    ]
-  },
-  "teatris": {
-    "info": "Liepājas Teātris, dibināts 1907. gadā, ir vecākais profesionālais teātris Latvijā. Atrodas skaistā jūgendstila ēkā Liepājas centrā.",
-    "games": [
-      {
-        "type": "coop_info_swap",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Vēsturiskā Secība",
-          "description": "Navigators redz pareizo simbolu secību (uz lapas vai ekrāna) un mutiski norāda to Operatoram. Operators ievada secību Phaser skatā. Socket.io: 'info_swap:start' {sequence, sessionId}; 'info_swap:complete' {correct}.",
-          "elements": ["🎭", "🎬", "🎪", "🎨"],
-          "rounds": 3
-        }
-      },
-      {
-        "type": "coop_sync_task",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Lomu Šķirošana",
-          "description": "Abi spēlētāji vienlaicīgi šķiro simbolus. Servera notikumi: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress' {progress, playerName}.",
-          "collect": ["🎭", "🎬", "🎪"],
-          "avoid": ["🚫", "💤", "📵"],
-          "required": 7
-        }
-      },
-      {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Teātri",
-          "description": "Solo spēle: pārvieto lukturi pa tumšo ekrānu, lai atklātu slēptos vārdus.",
-          "revealLines": ["LIEPĀJAS", "TEĀTRIS", "1907"],
-          "requiredReveal": 0.60
-        }
-      }
-    ],
-    "questions": [
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kurā gadā dibināts Liepājas Teātris?",
-          "options": ["1888", "1907", "1925"],
-          "answer": "1907",
-          "points": [10, 5, 0],
-          "fact": "Dibināts 1907. gadā — tas ir vecākais profesionālais teātris Latvijā."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kādā arhitektūras stilā celta Liepājas Teātra ēka?",
-          "options": ["Jūgendstils", "Klasicisms", "Baroks"],
-          "answer": "Jūgendstils",
-          "points": [10, 5, 0],
-          "fact": "Jūgendstila ēka ar bagātīgu fasādes dekoru ir viens no Liepājas arhitektūras pērlēm."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Vai Liepājas Teātris ir vecākais profesionālais teātris Latvijā?",
-          "options": ["Jā", "Nē", "Nezinu"],
-          "answer": "Jā",
-          "points": [10, 5, 0],
-          "fact": "Jā — dibināts 1907. gadā, Liepājas Teātris ir vecākais profesionālais teātris Latvijā."
-        }
-      }
-    ]
-  },
-  "mols": {
+  "Mols": {
     "info": "Ziemeļu mols — aptuveni 1800 metrus garš akmeņu mols Liepājas ostas ziemeļu daļā. Populāra pastaigu un makšķerēšanas vieta.",
     "games": [
       {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Makšķerēšana",
-          "description": "Solo spēle: noķer krītošās zivis, izvairīties no akmeņiem.",
-          "collect": ["🐟", "🐠", "🦈"],
-          "avoid": ["🪨", "🌿", "🧴"],
-          "required": 8
-        }
-      },
-      {
+        "id": "mols_game_info_swap",
         "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Molu",
-          "description": "Navigators nolasa tekstu no kartes un diktē Operatoram, kuru vārdu meklēt. Operators pārvieto lukturi. Socket.io: 'info_swap:start' {targetWord, sessionId}.",
-          "revealLines": ["ZIEMEĻU", "MOLS", "1800 m"],
-          "requiredReveal": 0.62
-        }
+        "title": "Atklāj Molu",
+        "desc": "Navigators nolasa tekstu no kartes un diktē Operatoram, kuru vārdu meklēt. Operators pārvieto lukturi Phaser skatā un atklāj slēptos vārdus.",
+        "socketEvents": {
+          "start": "mols_info_swap_start",
+          "clue": "mols_info_swap_clue",
+          "progress": "mols_info_swap_progress",
+          "complete": "mols_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["ZIEMEĻU", "MOLS", "1800 m"],
+        "requiredReveal": 0.62
       },
       {
+        "id": "mols_game_sync_task",
         "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Viļņu Ritms",
-          "description": "Abi spēlētāji vienlaicīgi izpilda viļņu ritma secību. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress'.",
-          "elements": ["🌊", "🐟", "⛵", "🦅"],
-          "rounds": 3
-        }
+        "title": "Viļņu Ritms",
+        "desc": "Abi spēlētāji vienlaicīgi izpilda viļņu ritma secību, nospiežot pareizos simbolus vienā laikā.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["🌊", "🐟", "⛵", "🦅"],
+        "rounds": 3
+      },
+      {
+        "id": "mols_game_classic",
+        "type": "classic_challenge",
+        "title": "Makšķerēšana",
+        "desc": "Solo spēle: noķer krītošās zivis, izvairīties no akmeņiem un aļģēm.",
+        "mini_game": "catcher",
+        "collect": ["🐟", "🐠", "🦈"],
+        "avoid": ["🪨", "🌿", "🧴"],
+        "required": 8
       }
     ],
     "questions": [
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Cik metrus garš ir Ziemeļu mols?",
-          "options": ["900", "1800", "2500"],
-          "answer": "1800",
-          "points": [10, 5, 0],
-          "fact": "Ziemeļu mols ir aptuveni 1800 metrus garš — viens no garākajiem Latvijā."
-        }
+        "text": "Cik metrus garš ir Ziemeļu mols?",
+        "options": ["900", "1800", "2500"],
+        "answer": "1800",
+        "points": [10, 5, 0],
+        "fact": "Ziemeļu mols ir aptuveni 1800 metrus garš — viens no garākajiem Latvijā."
       },
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Ko cilvēki parasti dara uz Ziemeļu mola?",
-          "options": ["Makšķerē", "Peld", "Burājas"],
-          "answer": "Makšķerē",
-          "points": [10, 5, 0],
-          "fact": "Mols ir iecienīta makšķerēšanas vieta ar skatu uz Baltijas jūru un Liepājas ostu."
-        }
+        "text": "Ko cilvēki parasti dara uz Ziemeļu mola?",
+        "options": ["Makšķerē", "Peld", "Burājas"],
+        "answer": "Makšķerē",
+        "points": [10, 5, 0],
+        "fact": "Mols ir iecienīta makšķerēšanas vieta ar skatu uz Baltijas jūru un Liepājas ostu."
       },
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Kuras ostas daļā atrodas Ziemeļu mols?",
-          "options": ["Ziemeļu", "Dienvidu", "Rietumu"],
-          "answer": "Ziemeļu",
-          "points": [10, 5, 0],
-          "fact": "Kā norāda nosaukums, mols atrodas ostas ziemeļu pusē, aizsargājot ieeju ostā."
-        }
+        "text": "Kuras ostas daļā atrodas Ziemeļu mols?",
+        "options": ["Ziemeļu", "Dienvidu", "Rietumu"],
+        "answer": "Ziemeļu",
+        "points": [10, 5, 0],
+        "fact": "Kā norāda nosaukums, mols atrodas ostas ziemeļu pusē, aizsargājot ieeju ostā."
       }
     ]
   },
-  "rtu": {
-    "info": "RTU Liepājas akadēmija, dibināta 1954. gadā, ir viena no nozīmīgākajām augstskolām Kurzemē. Piedāvā IT, inženierzinātnes un ekonomiku.",
-    "games": [
-      {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Debug — Ķer kļūdas!",
-          "description": "Solo spēle: ķer koda kļūdas (🐛🐞��), izvairīties no pareiziem rezultātiem.",
-          "collect": ["🐛", "🐞", "🦗"],
-          "avoid": ["✅", "💡", "⭐"],
-          "required": 7
-        }
-      },
-      {
-        "type": "coop_info_swap",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Koda Atmiņa",
-          "description": "Dual-key: Navigators redz krāsu kodu secību un mutiski norāda Operatoram. Operators ievada kodu Phaser skatā. Socket.io: 'coop:session_start' {role:'navigator', clues, sessionId}; 'dual_key:submit' {correct}.",
-          "clues": [
-            "Iestāde dibināta pēc Otrā pasaules kara.",
-            "Gads beidzas ar ciparu '4'.",
-            "Piecdesmitie gadi.",
-            "Konkrēti — 1954. gads."
-          ],
-          "rounds": 4
-        }
-      },
-      {
-        "type": "coop_sync_task",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Akadēmiju",
-          "description": "Abi spēlētāji vienlaicīgi apgaismo citas ekrāna daļas. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress' {progress}.",
-          "revealLines": ["RTU", "LIEPĀJA", "1954"],
-          "requiredReveal": 0.62
-        }
-      }
-    ],
-    "questions": [
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kurā gadā dibināta RTU Liepājas akadēmija?",
-          "options": ["1944", "1954", "1964"],
-          "answer": "1954",
-          "points": [10, 5, 0],
-          "fact": "RTU Liepājas akadēmija dibināta 1954. gadā kā Liepājas Politehniskais institūts."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kāda IT studiju programma ir populāra RTU Liepājā?",
-          "options": ["Datorika", "Ekonomika", "Arhitektūra"],
-          "answer": "Datorika",
-          "points": [10, 5, 0],
-          "fact": "Datorika ietver programmēšanu, datoru tīklus, datu bāzes un mākslīgo intelektu."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kurā pilsētas daļā atrodas RTU Liepājas akadēmija?",
-          "options": ["Centrā", "Karostā", "Ezerparkā"],
-          "answer": "Centrā",
-          "points": [10, 5, 0],
-          "fact": "Akadēmija atrodas Liepājas pilsētas centrā, viegli pieejama ar sabiedrisko transportu."
-        }
-      }
-    ]
-  },
-  "ezerkrasts": {
-    "info": "Ezerkrasta taka ved gar Liepājas ezeru — piektā lielākā Latvijā. Taka piedāvā skatu platformas un informatīvus stendus par vietējo dabu.",
-    "games": [
-      {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Putnu Vērošana",
-          "description": "Solo spēle: ķer aizsargātās putnu sugas, izvairīties no rūpnieciskiem simboliem.",
-          "collect": ["🦢", "🦆", "🐦", "🦅"],
-          "avoid": ["🏭", "🚗", "📣"],
-          "required": 8
-        }
-      },
-      {
-        "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Ezeru",
-          "description": "Navigators nolasa datus no ekrāna skata un norāda Operatoram, kur vērst gaismu. Socket.io: 'info_swap:start' {targetWord: '5. lielākais', sessionId}.",
-          "revealLines": ["LIEPĀJAS", "EZERS", "5. lielākais"],
-          "requiredReveal": 0.65
-        }
-      },
-      {
-        "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Dabas Skaņas",
-          "description": "Abi spēlētāji vienlaicīgi izpilda dabas skaņu secību. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress'.",
-          "elements": ["🦢", "🌿", "💧", "🌅"],
-          "rounds": 3
-        }
-      }
-    ],
-    "questions": [
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kāda ezera krastā atrodas Ezerkrasta taka?",
-          "options": ["Liepājas ezers", "Papes ezers", "Engures ezers"],
-          "answer": "Liepājas ezers",
-          "points": [10, 5, 0],
-          "fact": "Liepājas ezers ir piektais lielākais Latvijā un mājo daudzām aizsargātām putnu sugām."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kurš lielākais ezers Latvijā pēc platības ir Liepājas ezers?",
-          "options": ["3.", "5.", "8."],
-          "answer": "5.",
-          "points": [10, 5, 0],
-          "fact": "Liepājas ezers — piektais lielākais Latvijā — aizņem 37 km²."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Ko var vērot no Ezerkrasta takas skatu platformām?",
-          "options": ["Putnus", "Kuģus", "Zivis"],
-          "answer": "Putnus",
-          "points": [10, 5, 0],
-          "fact": "Taka piedāvā unikālu iespēju vērot ligzdojošos ūdensputnus ezera niedrājos."
-        }
-      }
-    ]
-  },
-  "kanals": {
-    "info": "Tirdzniecības kanāls savieno Liepājas ezeru ar Baltijas jūru. Vēsturisks ūdensceļš kopš 16. gadsimta, svarīgs pilsētas attīstībai.",
-    "games": [
-      {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Kanāla Laiva",
-          "description": "Solo spēle: vadi laivu pa kanālu, ķerot kuģu simbolus, izvairīties no šķēršļiem.",
-          "collect": ["⛵", "🚤", "🛶"],
-          "avoid": ["🪨", "🌊", "🔴"],
-          "required": 7
-        }
-      },
-      {
-        "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Kanālu",
-          "description": "Navigators redz kanāla koordinātes un norāda Operatoram virzienu. Socket.io: 'info_swap:start' {hint: '16. gadsimts', sessionId}.",
-          "revealLines": ["TIRDZNIECĪBAS", "KANĀLS", "kopš 16. gs."],
-          "requiredReveal": 0.62
-        }
-      },
-      {
-        "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Slūžu Kods",
-          "description": "Abi spēlētāji vienlaicīgi ievada slūžu atvēršanas kodu. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress'.",
-          "elements": ["🔵", "⚓", "🟩", "🔑"],
-          "rounds": 3
-        }
-      }
-    ],
-    "questions": [
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kā sauc kanālu starp Liepājas ezeru un jūru?",
-          "options": ["Tirdzniecības kanāls", "Liepājas kanāls", "Ostas kanāls"],
-          "answer": "Tirdzniecības kanāls",
-          "points": [10, 5, 0],
-          "fact": "Tirdzniecības kanāls — vēsturisks ūdensceļš, kas savienoja ezeru ar jūru tirdzniecības vajadzībām."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kopš kura gadsimta kalpo Tirdzniecības kanāls?",
-          "options": ["14.", "16.", "18."],
-          "answer": "16.",
-          "points": [10, 5, 0],
-          "fact": "Kanāls kalpo Liepājai jau kopš 16. gadsimta, kad pilsēta kļuva par nozīmīgu tirdzniecības centru."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Ko savieno Tirdzniecības kanāls?",
-          "options": ["Ezeru un jūru", "Divus ezerus", "Jūru un ostu"],
-          "answer": "Ezeru un jūru",
-          "points": [10, 5, 0],
-          "fact": "Kanāls savieno Liepājas ezeru ar Baltijas jūru, nodrošinot kuģošanu caur pilsētu."
-        }
-      }
-    ]
-  },
-  "osta": {
-    "info": "Liepājas osta — viena no lielākajām Latvijā — ir unikāla ar to, ka neaizsalst ziemā. Ostas teritorijā darbojas LSEZ.",
-    "games": [
-      {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Kravas Šķirošana",
-          "description": "Solo spēle: šķiro pareizos kravas elementus, izvairīties no bīstamiem simboliem.",
-          "collect": ["📦", "🗃️", "📫"],
-          "avoid": ["💥", "🚫", "⛔"],
-          "required": 8
-        }
-      },
-      {
-        "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Krāna Vadība",
-          "description": "Abi spēlētāji vienlaicīgi vada krāna kustību ar gaismas signāliem. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress'.",
-          "elements": ["🔴", "��", "🟡", "🟢"],
-          "rounds": 4
-        }
-      },
-      {
-        "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Ostu",
-          "description": "Navigators redz kravas manifesta datus un norāda Operatoram, kur atrodas slēptā informācija. Socket.io: 'info_swap:start' {hint: 'neaizsalst', sessionId}.",
-          "revealLines": ["LIEPĀJAS", "OSTA", "neaizsalst"],
-          "requiredReveal": 0.60
-        }
-      }
-    ],
-    "questions": [
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Vai Liepājas osta aizsalst ziemā?",
-          "options": ["Nē", "Jā", "Dažreiz"],
-          "answer": "Nē",
-          "points": [10, 5, 0],
-          "fact": "Liepājas osta neaizsalst, pateicoties jūras strāvojumiem — tas padara to par vērtīgu ziemas ostu."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kā sauc Liepājas ostas speciālo ekonomisko zonu?",
-          "options": ["LSEZ", "LEZA", "LPEZ"],
-          "answer": "LSEZ",
-          "points": [10, 5, 0],
-          "fact": "LSEZ — Liepājas Speciālā ekonomiskā zona — piesaista starptautiskus uzņēmumus ar nodokļu atvieglojumiem."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kāds ir Liepājas ostas īpašums, kas to atšķir no citām ostām?",
-          "options": ["Neaizsalst", "Ir dziļākā osta", "Ir lielākā osta"],
-          "answer": "Neaizsalst",
-          "points": [10, 5, 0],
-          "fact": "Osta darbojas visu gadu, jo Baltijas jūras strāvas novērš sasalšanu pat bargākajās ziemās."
-        }
-      }
-    ]
-  },
-  "lsez": {
-    "info": "LSEZ (Liepājas Speciālā ekonomiskā zona) dibināta 1997. gadā. Vairāk nekā 80 uzņēmumi, tostarp starptautisks būvniecības uzņēmums UPB.",
-    "games": [
-      {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Ražošanas Līnija",
-          "description": "Solo spēle: ķer ražošanas elementus, izvairīties no defektiem.",
-          "collect": ["⚙️", "🔧", "🏭"],
-          "avoid": ["💥", "🔴", "⛔"],
-          "required": 8
-        }
-      },
-      {
-        "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj LSEZ",
-          "description": "Navigators redz ražotnes plānojumu un norāda Operatoram, kur ir slepenā informācija. Socket.io: 'info_swap:start' {hint: '1997 / 80+', sessionId}.",
-          "revealLines": ["LSEZ", "1997", "80+ uzņēmumi"],
-          "requiredReveal": 0.60
-        }
-      },
-      {
-        "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Montāžas Kods",
-          "description": "Abi spēlētāji vienlaicīgi montē detaļu secību. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress'.",
-          "elements": ["⚙️", "🔶", "🟦", "🟩"],
-          "rounds": 3
-        }
-      }
-    ],
-    "questions": [
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Vai UPB ir Liepājas uzņēmums?",
-          "options": ["Jā", "Nē", "Daļēji"],
-          "answer": "Jā",
-          "points": [10, 5, 0],
-          "fact": "UPB ir starptautisks būvniecības uzņēmums no Liepājas, kas realizē projektus visā pasaulē."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Kurā gadā izveidota LSEZ?",
-          "options": ["1987", "1997", "2007"],
-          "answer": "1997",
-          "points": [10, 5, 0],
-          "fact": "LSEZ izveidota 1997. gadā, lai veicinātu Liepājas reģiona ekonomisko attīstību."
-        }
-      },
-      {
-        "type": "multiple_choice",
-        "data": {
-          "text": "Cik uzņēmumi darbojas LSEZ teritorijā?",
-          "options": ["Apmēram 20", "80", "Apmēram 200"],
-          "answer": "80",
-          "points": [10, 5, 0],
-          "fact": "Vairāk nekā 80 uzņēmumi darbojas LSEZ, nodarbinot tūkstošiem Liepājas iedzīvotāju."
-        }
-      }
-    ]
-  },
-  "cietums": {
+  "Cietums": {
     "info": "Karostas cietums celts 1900. gadā cara armijas vajadzībām. Šobrīd tas ir vienīgais militārais cietums Eiropā, kas atvērts tūristiem.",
     "games": [
       {
+        "id": "cietums_game_info_swap",
         "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Izkļūt no Cietuma",
-          "description": "Navigators redz izkļūšanas maršrutu un mutīgi norāda Operatoram, kur jātumšina meklēšanas laukums. Socket.io: 'info_swap:start' {hint: 'CIETUMS / 1900', sessionId}.",
-          "revealLines": ["KAROSTAS", "CIETUMS", "1900"],
-          "requiredReveal": 0.55
-        }
+        "title": "Izkļūt no Cietuma",
+        "desc": "Navigators redz izkļūšanas maršrutu un mutiski norāda Operatoram, kur jāvērš lukturis, lai atklātu slēpto informāciju.",
+        "socketEvents": {
+          "start": "cietums_info_swap_start",
+          "clue": "cietums_info_swap_clue",
+          "progress": "cietums_info_swap_progress",
+          "complete": "cietums_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["KAROSTAS", "CIETUMS", "1900"],
+        "requiredReveal": 0.55
       },
       {
+        "id": "cietums_game_sync_task",
         "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Sardzes Maiņa",
-          "description": "Abi spēlētāji vienlaicīgi izpilda sardzes maiņas secību. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress'.",
-          "elements": ["🔒", "��", "🚪", "🏃"],
-          "rounds": 4
-        }
+        "title": "Sardzes Maiņa",
+        "desc": "Abi spēlētāji vienlaicīgi izpilda sardzes maiņas secību, nospiežot simbolus pareizā secībā.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["🔒", "🔑", "🚪", "🏃"],
+        "rounds": 4
       },
       {
+        "id": "cietums_game_classic",
         "type": "classic_challenge",
-        "data": {
-          "mini_game": "keypad",
-          "label": "Cietuma Kods",
-          "description": "Solo spēle: atceries 4-ciparu kodu (parādīts 3 s) un ievadi to uz tastatūras. Co-op: Navigators redz kodu React UI, Operators ievada to.",
-          "codeLength": 4,
-          "showTime": 3000,
-          "timeLimit": 30
-        }
+        "title": "Cietuma Kods",
+        "desc": "Solo spēle: atceries 4-ciparu kodu (parādīts īsu brīdi) un ievadi to uz ciparu tastatūras. Co-op: Navigators redz kodu, Operators ievada.",
+        "mini_game": "keypad",
+        "codeLength": 4,
+        "showTime": 3000,
+        "timeLimit": 30
       }
     ],
     "questions": [
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Kā sauc Karostas tūrisma cietumu?",
-          "options": ["Karostas cietums", "Liepājas cietums", "Kurzemes cietums"],
-          "answer": "Karostas cietums",
-          "points": [10, 5, 0],
-          "fact": "Karostas cietums ir vienīgais militārais cietums Eiropā, kas pieejams tūristiem kā muzejs."
-        }
+        "text": "Kā sauc Karostas tūrisma cietumu?",
+        "options": ["Karostas cietums", "Liepājas cietums", "Kurzemes cietums"],
+        "answer": "Karostas cietums",
+        "points": [10, 5, 0],
+        "fact": "Karostas cietums ir vienīgais militārais cietums Eiropā, kas pieejams tūristiem kā muzejs."
       },
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Kurā gadā celts Karostas cietums?",
-          "options": ["1880", "1900", "1920"],
-          "answer": "1900",
-          "points": [10, 5, 0],
-          "fact": "Cietums celts 1900. gadā cara armijas vajadzībām Karostā — bijušajā jūras militārajā bāzē."
-        }
+        "text": "Kurā gadā celts Karostas cietums?",
+        "options": ["1880", "1900", "1920"],
+        "answer": "1900",
+        "points": [10, 5, 0],
+        "fact": "Cietums celts 1900. gadā cara armijas vajadzībām Karostā — bijušajā jūras militārajā bāzē."
       },
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Kam sākotnēji bija paredzēts Karostas cietums?",
-          "options": ["Armijai", "Pilsētas policijai", "Muitas dienestam"],
-          "answer": "Armijai",
-          "points": [10, 5, 0],
-          "fact": "Cietums sākotnēji kalpoja cara armijas karavīru sodīšanai Krievijas impērijas laikos."
-        }
+        "text": "Kam sākotnēji bija paredzēts Karostas cietums?",
+        "options": ["Armijai", "Pilsētas policijai", "Muitas dienestam"],
+        "answer": "Armijai",
+        "points": [10, 5, 0],
+        "fact": "Cietums sākotnēji kalpoja cara armijas karavīru sodīšanai Krievijas impērijas laikos."
       }
     ]
   },
-  "parks": {
-    "info": "Jūrmalas parks — viens no lielākajiem parkiem Latvijā, ierīkots 19. gadsimtā. Tajā aug vairāk nekā 170 koku un krūmu sugas.",
+  "Kanals": {
+    "info": "Tirdzniecības kanāls savieno Liepājas ezeru ar Baltijas jūru. Vēsturisks ūdensceļš kopš 16. gadsimta, svarīgs pilsētas attīstībai.",
     "games": [
       {
-        "type": "classic_challenge",
-        "data": {
-          "mini_game": "catcher",
-          "label": "Dabas Kolekcija",
-          "description": "Solo spēle: ķer krītošos dabas elementus, izvairīties no piesārņojuma.",
-          "collect": ["🍂", "🌸", "🍃", "🌿"],
-          "avoid": ["🗑️", "💨", "🚗"],
-          "required": 8
-        }
-      },
-      {
+        "id": "kanals_game_info_swap",
         "type": "coop_info_swap",
-        "data": {
-          "mini_game": "flashlight",
-          "label": "Atklāj Parku",
-          "description": "Navigators redz botanisko ceļvedi un norāda Operatoram, kur atrodas suga nosaukumi. Socket.io: 'info_swap:start' {hint: '170+ sugas', sessionId}.",
-          "revealLines": ["JŪRMALAS", "PARKS", "170+ sugas"],
-          "requiredReveal": 0.65
-        }
+        "title": "Atklāj Kanālu",
+        "desc": "Navigators redz kanāla koordinātes un norāda Operatoram virzienu, kur vērst lukturi, lai atklātu vēsturiskos faktus.",
+        "socketEvents": {
+          "start": "kanals_info_swap_start",
+          "clue": "kanals_info_swap_clue",
+          "progress": "kanals_info_swap_progress",
+          "complete": "kanals_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["TIRDZNIECĪBAS", "KANĀLS", "kopš 16. gs."],
+        "requiredReveal": 0.62
       },
       {
+        "id": "kanals_game_sync_task",
         "type": "coop_sync_task",
-        "data": {
-          "mini_game": "sequence",
-          "label": "Gadalaiku Ritms",
-          "description": "Abi spēlētāji vienlaicīgi izpilda gadalaiku maiņas secību. Socket.io: 'sync_task:ready'; 'sync_task:start'; 'sync_task:progress'.",
-          "elements": ["🌸", "🌿", "🍂", "❄️"],
-          "rounds": 3
-        }
+        "title": "Slūžu Kods",
+        "desc": "Abi spēlētāji vienlaicīgi ievada slūžu atvēršanas kodu, nospiežot simbolus pareizā secībā.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["🔵", "⚓", "🟩", "🔑"],
+        "rounds": 3
+      },
+      {
+        "id": "kanals_game_classic",
+        "type": "classic_challenge",
+        "title": "Kanāla Laiva",
+        "desc": "Solo spēle: vadi laivu pa kanālu, ķerot kuģu simbolus, izvairīties no šķēršļiem.",
+        "mini_game": "catcher",
+        "collect": ["⛵", "🚤", "🛶"],
+        "avoid": ["🪨", "🌊", "🔴"],
+        "required": 7
       }
     ],
     "questions": [
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Kā sauc parku pie Liepājas jūrmalas?",
-          "options": ["Jūrmalas parks", "Liepājas parks", "Piejūras parks"],
-          "answer": "Jūrmalas parks",
-          "points": [10, 5, 0],
-          "fact": "Jūrmalas parks — viens no lielākajiem parkiem Latvijā — atrodas starp pilsētu un jūru."
-        }
+        "text": "Kā sauc kanālu starp Liepājas ezeru un jūru?",
+        "options": ["Tirdzniecības kanāls", "Liepājas kanāls", "Ostas kanāls"],
+        "answer": "Tirdzniecības kanāls",
+        "points": [10, 5, 0],
+        "fact": "Tirdzniecības kanāls — vēsturisks ūdensceļš, kas savienoja ezeru ar jūru tirdzniecības vajadzībām."
       },
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Kurā gadsimtā ierīkots Jūrmalas parks?",
-          "options": ["17.", "19.", "20."],
-          "answer": "19.",
-          "points": [10, 5, 0],
-          "fact": "Parks ierīkots 19. gadsimta otrajā pusē kā rotaļu un atpūtas vieta Liepājas iedzīvotājiem."
-        }
+        "text": "Kopš kura gadsimta kalpo Tirdzniecības kanāls?",
+        "options": ["14.", "16.", "18."],
+        "answer": "16.",
+        "points": [10, 5, 0],
+        "fact": "Kanāls kalpo Liepājai jau kopš 16. gadsimta, kad pilsēta kļuva par nozīmīgu tirdzniecības centru."
       },
       {
         "type": "multiple_choice",
-        "data": {
-          "text": "Cik koku un krūmu sugu aug Jūrmalas parkā?",
-          "options": ["Ap 50", "170", "Ap 500"],
-          "answer": "170",
-          "points": [10, 5, 0],
-          "fact": "Parkā reģistrētas vairāk nekā 170 koku un krūmu sugas, tostarp daudzi reti eksotiski augi."
-        }
+        "text": "Ko savieno Tirdzniecības kanāls?",
+        "options": ["Ezeru un jūru", "Divus ezerus", "Jūru un ostu"],
+        "answer": "Ezeru un jūru",
+        "points": [10, 5, 0],
+        "fact": "Kanāls savieno Liepājas ezeru ar Baltijas jūru, nodrošinot kuģošanu caur pilsētu."
+      }
+    ]
+  },
+  "Dzintars": {
+    "info": "Liepājas koncertzāle 'Lielais Dzintars' atklāta 2015. gadā. Tās unikālais dizains atgādina milzīgu dzintara gabalu — Latvijas nacionālo dārgakmeni.",
+    "games": [
+      {
+        "id": "dzintars_game_info_swap",
+        "type": "coop_info_swap",
+        "title": "Atklāj Koncertzāli",
+        "desc": "Navigators redz, kurus apgabalos jāizceļ (gads, nosaukums). Operators pārvieto lukturi un atklāj fonā slēpto tekstu.",
+        "socketEvents": {
+          "start": "dzintars_info_swap_start",
+          "clue": "dzintars_info_swap_clue",
+          "progress": "dzintars_info_swap_progress",
+          "complete": "dzintars_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["LIELAIS", "DZINTARS", "2015"],
+        "requiredReveal": 0.65
+      },
+      {
+        "id": "dzintars_game_sync_task",
+        "type": "coop_sync_task",
+        "title": "Ritma Atmiņa",
+        "desc": "Abi spēlētāji vienlaicīgi atkārto vienu un to pašu melodisko secību, nospiežot pareizos simbolus.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["🟣", "🔵", "🟡", "🟢"],
+        "rounds": 3
+      },
+      {
+        "id": "dzintars_game_classic",
+        "type": "classic_challenge",
+        "title": "Mūzikas Nots",
+        "desc": "Solo spēle: ķer krītošās mūzikas notis, izvairīties no traucēkļiem.",
+        "mini_game": "catcher",
+        "collect": ["♩", "♪", "♫", "♬"],
+        "avoid": ["💤", "📵", "🔇"],
+        "required": 8
+      }
+    ],
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "text": "Kurā gadā atklāta koncertzāle 'Lielais Dzintars'?",
+        "options": ["2010", "2015", "2020"],
+        "answer": "2015",
+        "points": [10, 5, 0],
+        "fact": "Lielais Dzintars atklāts 2015. gadā un tā fasāde simbolizē Latvijas nacionālo dārgakmeni."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kura orķestra mājas zāle ir Lielais Dzintars?",
+        "options": ["Liepājas Simfoniskā orķestra", "Latvijas Nacionālais orķestris", "Rīgas Kamerorķestris"],
+        "answer": "Liepājas Simfoniskā orķestra",
+        "points": [10, 5, 0],
+        "fact": "Liepājas Simfoniskais orķestris — viens no vecākajiem Latvijā — regulāri uzstājas Lielajā Dzintarā."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Ko simbolizē Lielā Dzintara ēkas arhitektūras forma?",
+        "options": ["Dzintaru", "Jūras vilni", "Saullēktu"],
+        "answer": "Dzintaru",
+        "points": [10, 5, 0],
+        "fact": "Ēkas siluets atgādina milzīgu dzintara gabalu — tāpēc arī nosaukums 'Lielais Dzintars'."
+      }
+    ]
+  },
+  "RTU": {
+    "info": "RTU Liepājas akadēmija, dibināta 1954. gadā, ir viena no nozīmīgākajām augstskolām Kurzemē. Piedāvā IT, inženierzinātnes un ekonomiku.",
+    "games": [
+      {
+        "id": "rtu_game_info_swap",
+        "type": "coop_info_swap",
+        "title": "Koda Atmiņa",
+        "desc": "Dual-key: Navigators redz krāsu kodu secību un mutiski norāda Operatoram. Operators ievada kodu Phaser skatā.",
+        "socketEvents": {
+          "start": "rtu_info_swap_start",
+          "clue": "rtu_info_swap_clue",
+          "submit": "rtu_dual_key_submit",
+          "complete": "rtu_info_swap_complete"
+        },
+        "mini_game": "sequence",
+        "clues": [
+          "Iestāde dibināta pēc Otrā pasaules kara.",
+          "Gads beidzas ar ciparu '4'.",
+          "Piecdesmitie gadi.",
+          "Konkrēti — 1954. gads."
+        ],
+        "elements": ["⬛", "🟨", "🟦", "🟥"],
+        "rounds": 4
+      },
+      {
+        "id": "rtu_game_sync_task",
+        "type": "coop_sync_task",
+        "title": "Atklāj Akadēmiju",
+        "desc": "Abi spēlētāji vienlaicīgi apgaismo dažādas ekrāna daļas, lai atklātu slēpto tekstu.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["RTU", "LIEPĀJA", "1954"],
+        "requiredReveal": 0.62
+      },
+      {
+        "id": "rtu_game_classic",
+        "type": "classic_challenge",
+        "title": "Debug — Ķer kļūdas!",
+        "desc": "Solo spēle: ķer koda kļūdas (🐛🐞🦗), izvairīties no pareiziem rezultātiem.",
+        "mini_game": "catcher",
+        "collect": ["🐛", "🐞", "🦗"],
+        "avoid": ["✅", "💡", "⭐"],
+        "required": 7
+      }
+    ],
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "text": "Kurā gadā dibināta RTU Liepājas akadēmija?",
+        "options": ["1944", "1954", "1964"],
+        "answer": "1954",
+        "points": [10, 5, 0],
+        "fact": "RTU Liepājas akadēmija dibināta 1954. gadā kā Liepājas Politehniskais institūts."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kāda IT studiju programma ir populāra RTU Liepājā?",
+        "options": ["Datorika", "Ekonomika", "Arhitektūra"],
+        "answer": "Datorika",
+        "points": [10, 5, 0],
+        "fact": "Datorika ietver programmēšanu, datoru tīklus, datu bāzes un mākslīgo intelektu."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kurā pilsētas daļā atrodas RTU Liepājas akadēmija?",
+        "options": ["Centrā", "Karostā", "Ezerparkā"],
+        "answer": "Centrā",
+        "points": [10, 5, 0],
+        "fact": "Akadēmija atrodas Liepājas pilsētas centrā, viegli pieejama ar sabiedrisko transportu."
+      }
+    ]
+  },
+  "Teatris": {
+    "info": "Liepājas Teātris, dibināts 1907. gadā, ir vecākais profesionālais teātris Latvijā. Atrodas skaistā jūgendstila ēkā Liepājas centrā.",
+    "games": [
+      {
+        "id": "teatris_game_info_swap",
+        "type": "coop_info_swap",
+        "title": "Vēsturiskā Secība",
+        "desc": "Navigators redz pareizo simbolu secību un mutiski norāda to Operatoram. Operators ievada secību Phaser skatā.",
+        "socketEvents": {
+          "start": "teatris_info_swap_start",
+          "sequence": "teatris_info_swap_sequence",
+          "progress": "teatris_info_swap_progress",
+          "complete": "teatris_info_swap_complete"
+        },
+        "mini_game": "sequence",
+        "elements": ["🎭", "🎬", "🎪", "🎨"],
+        "rounds": 3
+      },
+      {
+        "id": "teatris_game_sync_task",
+        "type": "coop_sync_task",
+        "title": "Lomu Šķirošana",
+        "desc": "Abi spēlētāji vienlaicīgi šķiro teātra lomu simbolus, ķerot pareizos un izvairoties no traucēkļiem.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "catcher",
+        "collect": ["🎭", "🎬", "🎪"],
+        "avoid": ["🚫", "💤", "📵"],
+        "required": 7
+      },
+      {
+        "id": "teatris_game_classic",
+        "type": "classic_challenge",
+        "title": "Atklāj Teātri",
+        "desc": "Solo spēle: pārvieto lukturi pa tumšo ekrānu, lai atklātu slēptos vārdus par Liepājas Teātri.",
+        "mini_game": "flashlight",
+        "revealLines": ["LIEPĀJAS", "TEĀTRIS", "1907"],
+        "requiredReveal": 0.60
+      }
+    ],
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "text": "Kurā gadā dibināts Liepājas Teātris?",
+        "options": ["1888", "1907", "1925"],
+        "answer": "1907",
+        "points": [10, 5, 0],
+        "fact": "Dibināts 1907. gadā — tas ir vecākais profesionālais teātris Latvijā."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kādā arhitektūras stilā celta Liepājas Teātra ēka?",
+        "options": ["Jūgendstils", "Klasicisms", "Baroks"],
+        "answer": "Jūgendstils",
+        "points": [10, 5, 0],
+        "fact": "Jūgendstila ēka ar bagātīgu fasādes dekoru ir viens no Liepājas arhitektūras pērlēm."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Vai Liepājas Teātris ir vecākais profesionālais teātris Latvijā?",
+        "options": ["Jā", "Nē", "Nezinu"],
+        "answer": "Jā",
+        "points": [10, 5, 0],
+        "fact": "Jā — dibināts 1907. gadā, Liepājas Teātris ir vecākais profesionālais teātris Latvijā."
+      }
+    ]
+  },
+  "Osta": {
+    "info": "Liepājas osta — viena no lielākajām Latvijā — ir unikāla ar to, ka neaizsalst ziemā. Ostas teritorijā darbojas LSEZ.",
+    "games": [
+      {
+        "id": "osta_game_info_swap",
+        "type": "coop_info_swap",
+        "title": "Atklāj Ostu",
+        "desc": "Navigators redz kravas manifesta datus un norāda Operatoram, kur atrodas slēptā informācija par ostu.",
+        "socketEvents": {
+          "start": "osta_info_swap_start",
+          "clue": "osta_info_swap_clue",
+          "progress": "osta_info_swap_progress",
+          "complete": "osta_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["LIEPĀJAS", "OSTA", "neaizsalst"],
+        "requiredReveal": 0.60
+      },
+      {
+        "id": "osta_game_sync_task",
+        "type": "coop_sync_task",
+        "title": "Krāna Vadība",
+        "desc": "Abi spēlētāji vienlaicīgi vada krāna kustību ar gaismas signāliem, nospiežot pareizos simbolus.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["🔴", "🟠", "🟡", "🟢"],
+        "rounds": 4
+      },
+      {
+        "id": "osta_game_classic",
+        "type": "classic_challenge",
+        "title": "Kravas Šķirošana",
+        "desc": "Solo spēle: šķiro pareizos kravas elementus, izvairīties no bīstamiem simboliem.",
+        "mini_game": "catcher",
+        "collect": ["📦", "🗃️", "📫"],
+        "avoid": ["💥", "🚫", "⛔"],
+        "required": 8
+      }
+    ],
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "text": "Vai Liepājas osta aizsalst ziemā?",
+        "options": ["Nē", "Jā", "Dažreiz"],
+        "answer": "Nē",
+        "points": [10, 5, 0],
+        "fact": "Liepājas osta neaizsalst, pateicoties jūras strāvojumiem — tas padara to par vērtīgu ziemas ostu."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kā sauc Liepājas ostas speciālo ekonomisko zonu?",
+        "options": ["LSEZ", "LEZA", "LPEZ"],
+        "answer": "LSEZ",
+        "points": [10, 5, 0],
+        "fact": "LSEZ — Liepājas Speciālā ekonomiskā zona — piesaista starptautiskus uzņēmumus ar nodokļu atvieglojumiem."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kāds ir Liepājas ostas īpašums, kas to atšķir no citām ostām?",
+        "options": ["Neaizsalst", "Ir dziļākā osta", "Ir lielākā osta"],
+        "answer": "Neaizsalst",
+        "points": [10, 5, 0],
+        "fact": "Osta darbojas visu gadu, jo Baltijas jūras strāvas novērš sasalšanu pat bargākajās ziemās."
+      }
+    ]
+  },
+  "Parks": {
+    "info": "Jūrmalas parks — viens no lielākajiem parkiem Latvijā, ierīkots 19. gadsimtā. Tajā aug vairāk nekā 170 koku un krūmu sugas.",
+    "games": [
+      {
+        "id": "parks_game_info_swap",
+        "type": "coop_info_swap",
+        "title": "Atklāj Parku",
+        "desc": "Navigators redz botanisko ceļvedi un norāda Operatoram, kur atrodas sugu nosaukumi. Operators pārvieto lukturi.",
+        "socketEvents": {
+          "start": "parks_info_swap_start",
+          "clue": "parks_info_swap_clue",
+          "progress": "parks_info_swap_progress",
+          "complete": "parks_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["JŪRMALAS", "PARKS", "170+ sugas"],
+        "requiredReveal": 0.65
+      },
+      {
+        "id": "parks_game_sync_task",
+        "type": "coop_sync_task",
+        "title": "Gadalaiku Ritms",
+        "desc": "Abi spēlētāji vienlaicīgi izpilda gadalaiku maiņas secību, nospiežot pareizos simbolus.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["🌸", "🌿", "🍂", "❄️"],
+        "rounds": 3
+      },
+      {
+        "id": "parks_game_classic",
+        "type": "classic_challenge",
+        "title": "Dabas Kolekcija",
+        "desc": "Solo spēle: ķer krītošos dabas elementus, izvairīties no piesārņojuma.",
+        "mini_game": "catcher",
+        "collect": ["🍂", "🌸", "🍃", "🌿"],
+        "avoid": ["🗑️", "💨", "🚗"],
+        "required": 8
+      }
+    ],
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "text": "Kā sauc parku pie Liepājas jūrmalas?",
+        "options": ["Jūrmalas parks", "Liepājas parks", "Piejūras parks"],
+        "answer": "Jūrmalas parks",
+        "points": [10, 5, 0],
+        "fact": "Jūrmalas parks — viens no lielākajiem parkiem Latvijā — atrodas starp pilsētu un jūru."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kurā gadsimtā ierīkots Jūrmalas parks?",
+        "options": ["17.", "19.", "20."],
+        "answer": "19.",
+        "points": [10, 5, 0],
+        "fact": "Parks ierīkots 19. gadsimta otrajā pusē kā rotaļu un atpūtas vieta Liepājas iedzīvotājiem."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Cik koku un krūmu sugu aug Jūrmalas parkā?",
+        "options": ["Ap 50", "170", "Ap 500"],
+        "answer": "170",
+        "points": [10, 5, 0],
+        "fact": "Parkā reģistrētas vairāk nekā 170 koku un krūmu sugas, tostarp daudzi reti eksotiski augi."
+      }
+    ]
+  },
+  "LSEZ": {
+    "info": "LSEZ (Liepājas Speciālā ekonomiskā zona) dibināta 1997. gadā. Vairāk nekā 80 uzņēmumi, tostarp starptautisks būvniecības uzņēmums UPB.",
+    "games": [
+      {
+        "id": "lsez_game_info_swap",
+        "type": "coop_info_swap",
+        "title": "Atklāj LSEZ",
+        "desc": "Navigators redz ražotnes plānojumu un norāda Operatoram, kur ir slepenā informācija par LSEZ.",
+        "socketEvents": {
+          "start": "lsez_info_swap_start",
+          "clue": "lsez_info_swap_clue",
+          "progress": "lsez_info_swap_progress",
+          "complete": "lsez_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["LSEZ", "1997", "80+ uzņēmumi"],
+        "requiredReveal": 0.60
+      },
+      {
+        "id": "lsez_game_sync_task",
+        "type": "coop_sync_task",
+        "title": "Montāžas Kods",
+        "desc": "Abi spēlētāji vienlaicīgi montē detaļu secību, nospiežot simbolus pareizā secībā.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["⚙️", "🔶", "🟦", "🟩"],
+        "rounds": 3
+      },
+      {
+        "id": "lsez_game_classic",
+        "type": "classic_challenge",
+        "title": "Ražošanas Līnija",
+        "desc": "Solo spēle: ķer ražošanas elementus, izvairīties no defektiem.",
+        "mini_game": "catcher",
+        "collect": ["⚙️", "🔧", "🏭"],
+        "avoid": ["💥", "🔴", "⛔"],
+        "required": 8
+      }
+    ],
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "text": "Vai UPB ir Liepājas uzņēmums?",
+        "options": ["Jā", "Nē", "Daļēji"],
+        "answer": "Jā",
+        "points": [10, 5, 0],
+        "fact": "UPB ir starptautisks būvniecības uzņēmums no Liepājas, kas realizē projektus visā pasaulē."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kurā gadā izveidota LSEZ?",
+        "options": ["1987", "1997", "2007"],
+        "answer": "1997",
+        "points": [10, 5, 0],
+        "fact": "LSEZ izveidota 1997. gadā, lai veicinātu Liepājas reģiona ekonomisko attīstību."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Cik uzņēmumi darbojas LSEZ teritorijā?",
+        "options": ["Apmēram 20", "80", "Apmēram 200"],
+        "answer": "80",
+        "points": [10, 5, 0],
+        "fact": "Vairāk nekā 80 uzņēmumi darbojas LSEZ, nodarbinot tūkstošiem Liepājas iedzīvotāju."
+      }
+    ]
+  },
+  "Ezerkrasts": {
+    "info": "Ezerkrasta taka ved gar Liepājas ezeru — piektā lielākā Latvijā. Taka piedāvā skatu platformas un informatīvus stendus par vietējo dabu.",
+    "games": [
+      {
+        "id": "ezerkrasts_game_info_swap",
+        "type": "coop_info_swap",
+        "title": "Atklāj Ezeru",
+        "desc": "Navigators nolasa datus no ekrāna skata un norāda Operatoram, kur vērst gaismu, lai atklātu faktus par ezeru.",
+        "socketEvents": {
+          "start": "ezerkrasts_info_swap_start",
+          "clue": "ezerkrasts_info_swap_clue",
+          "progress": "ezerkrasts_info_swap_progress",
+          "complete": "ezerkrasts_info_swap_complete"
+        },
+        "mini_game": "flashlight",
+        "revealLines": ["LIEPĀJAS", "EZERS", "5. lielākais"],
+        "requiredReveal": 0.65
+      },
+      {
+        "id": "ezerkrasts_game_sync_task",
+        "type": "coop_sync_task",
+        "title": "Dabas Skaņas",
+        "desc": "Abi spēlētāji vienlaicīgi izpilda dabas skaņu secību, nospiežot simbolus pareizā secībā.",
+        "socketEvents": {
+          "ready": "sync_task:ready",
+          "start": "sync_task:start",
+          "progress": "sync_task:progress"
+        },
+        "mini_game": "sequence",
+        "elements": ["🦢", "🌿", "💧", "🌅"],
+        "rounds": 3
+      },
+      {
+        "id": "ezerkrasts_game_classic",
+        "type": "classic_challenge",
+        "title": "Putnu Vērošana",
+        "desc": "Solo spēle: ķer aizsargātās putnu sugas, izvairīties no rūpnieciskiem simboliem.",
+        "mini_game": "catcher",
+        "collect": ["🦢", "🦆", "🐦", "🦅"],
+        "avoid": ["🏭", "🚗", "📣"],
+        "required": 8
+      }
+    ],
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "text": "Kāda ezera krastā atrodas Ezerkrasta taka?",
+        "options": ["Liepājas ezers", "Papes ezers", "Engures ezers"],
+        "answer": "Liepājas ezers",
+        "points": [10, 5, 0],
+        "fact": "Liepājas ezers ir piektais lielākais Latvijā un mājo daudzām aizsargātām putnu sugām."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Kurš lielākais ezers Latvijā pēc platības ir Liepājas ezers?",
+        "options": ["3.", "5.", "8."],
+        "answer": "5.",
+        "points": [10, 5, 0],
+        "fact": "Liepājas ezers — piektais lielākais Latvijā — aizņem 37 km²."
+      },
+      {
+        "type": "multiple_choice",
+        "text": "Ko var vērot no Ezerkrasta takas skatu platformām?",
+        "options": ["Putnus", "Kuģus", "Zivis"],
+        "answer": "Putnus",
+        "points": [10, 5, 0],
+        "fact": "Taka piedāvā unikālu iespēju vērot ligzdojošos ūdensputnus ezera niedrājos."
       }
     ]
   }
