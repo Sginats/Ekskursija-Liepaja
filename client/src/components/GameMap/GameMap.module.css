@@ -113,8 +113,8 @@
 /* ---- Legend ---- */
 .legend {
   position: absolute;
-  bottom: 20px;
-  left: 18px;
+  top: 10px;
+  right: 8px;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(14px);
   border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
@@ -198,6 +198,11 @@
   .mapArea { height: 70vh; width: calc(70vh * 0.495); }
   .topBtn  { padding: 6px 10px; font-size: 11px; }
   .scoreDisplay { font-size: 17px; }
+  .legend { display: none; }
+}
+
+/* Hide legend on landscape phones (short viewport height) */
+@media (max-height: 500px) {
   .legend { display: none; }
 }
 
