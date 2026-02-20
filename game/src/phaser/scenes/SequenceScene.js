@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import EventBridge from '../../utils/EventBridge.js';
+import SpeedController from '../../utils/SpeedController.js';
 import { getDayNightState, getSkyColors } from '../../utils/DayNight.js';
 
 const BTN_SIZE = 80;
@@ -57,7 +58,34 @@ export default class SequenceScene extends Phaser.Scene {
       .setDepth(10);
 
     this._buttons = this._buildButtons(width, height);
-    this.time.delayedCall(400, () => this._nextRound());
+    this.time.delayedCall(SpeedController.scale(400), () => this._nextRound());
+
+    // ── Co-op Phaser bridge ────────────────────────────────────────────────
+    this._coopText = null;
+    this._coopUnsubs = [
+      EventBridge.on('COOP_SESSION_START', ({ partnerName }) => {
+        this._showCoopBanner(`🤝 Ko-op: ${partnerName}`, '#ffd700');
+      }),
+      EventBridge.on('COOP_CLUE_RECEIVED', ({ clue }) => {
+        this._showCoopBanner(`💡 ${clue}`, '#4caf50');
+      }),
+      EventBridge.on('COOP_MULTIPLIER', ({ multiplier }) => {
+        this._showCoopBanner(`✨ Ko-op ×${multiplier}!`, '#ffaa00');
+      }),
+    ];
+  }
+
+  _showCoopBanner(msg, color = '#ffd700') {
+    const { width } = this.scale;
+    if (this._coopText) this._coopText.destroy();
+    this._coopText = this.add.text(width / 2, 48, msg, {
+      fontSize: '13px', fontFamily: 'Poppins, Arial',
+      color, backgroundColor: 'rgba(0,0,0,0.65)',
+      padding: { x: 12, y: 5 },
+    }).setOrigin(0.5).setDepth(30);
+    this.time.delayedCall(SpeedController.scale(2800), () => {
+      if (this._coopText) { this._coopText.destroy(); this._coopText = null; }
+    });
   }
 
   _buildButtons(width, height) {
@@ -107,13 +135,15 @@ export default class SequenceScene extends Phaser.Scene {
 
   _playSequence() {
     this._seq.forEach((el, i) => {
-      const btnIdx = this._cfg.elements.indexOf(el);
-      const delay = this._cfg.showDuration * i + 300;
-      this.time.delayedCall(delay, () => this._flash(btnIdx, true));
-      this.time.delayedCall(delay + this._cfg.showDuration - this._cfg.gapDuration, () => this._flash(btnIdx, false));
+      const btnIdx   = this._cfg.elements.indexOf(el);
+      const show     = SpeedController.scale(this._cfg.showDuration);
+      const gap      = SpeedController.scale(this._cfg.gapDuration);
+      const delay    = show * i + SpeedController.scale(300);
+      this.time.delayedCall(delay,           () => this._flash(btnIdx, true));
+      this.time.delayedCall(delay + show - gap, () => this._flash(btnIdx, false));
     });
 
-    const totalDelay = this._cfg.showDuration * this._seq.length + 500;
+    const totalDelay = SpeedController.scale(this._cfg.showDuration) * this._seq.length + SpeedController.scale(500);
     this.time.delayedCall(totalDelay, () => {
       this._inputEnabled = true;
       this._statusText.setText('Tava kārta!').setColor('#4caf50');
@@ -136,11 +166,12 @@ export default class SequenceScene extends Phaser.Scene {
     if (!this._inputEnabled || !this._active) return;
     const expected = this._cfg.elements.indexOf(this._seq[this._playerIdx]);
     this._flash(btnIdx, true);
-    this.time.delayedCall(180, () => this._flash(btnIdx, false));
+    this.time.delayedCall(SpeedController.scale(180), () => this._flash(btnIdx, false));
 
     if (btnIdx !== expected) {
       this._inputEnabled = false;
       this._active = false;
+      this._coopUnsubs?.forEach(u => u());
       this._statusText.setText('Nepareizi!').setColor('#f44336');
       this.time.delayedCall(1200, () =>
         EventBridge.emit('MINIGAME_COMPLETE', { success: false, bonusPoints: 0 })
@@ -153,6 +184,7 @@ export default class SequenceScene extends Phaser.Scene {
 
     this._inputEnabled = false;
     if (this._round >= this._cfg.rounds) {
+      this._coopUnsubs?.forEach(u => u());
       this._statusText.setText('Lieliski! ✓').setColor('#4caf50');
       this.time.delayedCall(900, () =>
         EventBridge.emit('MINIGAME_COMPLETE', { success: true, bonusPoints: 5 })

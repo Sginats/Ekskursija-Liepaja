@@ -1,12 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { applyAnswerRestore } from '../utils/WindEnergy.js';
+import DynamicDifficulty from '../utils/DynamicDifficulty.js';
 
-export default function QuestionOverlay({ question, locationName, onComplete, windEnergy, onWindUpdate }) {
+export default function QuestionOverlay({ question, locationName, locationId, questionIdx, onComplete, windEnergy, onWindUpdate }) {
   const [input, setInput] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [done, setDone] = useState(false);
   const inputRef = useRef(null);
+
+  // Dynamically adjusted base points based on historical failure rate
+  const basePoints = useMemo(
+    () => DynamicDifficulty.getBasePoints(locationId, questionIdx ?? 0),
+    [locationId, questionIdx]
+  );
+  const secondAttemptPts = useMemo(() => Math.max(Math.round(basePoints * 0.5), 3), [basePoints]);
+  const diffLabel = useMemo(
+    () => DynamicDifficulty.getLabel(locationId, questionIdx ?? 0),
+    [locationId, questionIdx]
+  );
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -35,8 +47,11 @@ export default function QuestionOverlay({ question, locationName, onComplete, wi
     const correct = isMatch(input);
     const nextAttempts = attempts + 1;
 
+    // Record for dynamic difficulty tracking
+    DynamicDifficulty.record(locationId, questionIdx ?? 0, correct);
+
     if (correct) {
-      const pts = attempts === 0 ? 10 : 5;
+      const pts = attempts === 0 ? basePoints : secondAttemptPts;
       setFeedback({ type: 'success', pts });
       setDone(true);
       const newWind = applyAnswerRestore(windEnergy, nextAttempts);
@@ -64,8 +79,8 @@ export default function QuestionOverlay({ question, locationName, onComplete, wi
           <p className="question-text">{question.text}</p>
           <p className="question-attempts">
             {attempts === 0
-              ? '🎯 +10 punkti par pareizu atbildi'
-              : '💡 +5 punkti — vēl 1 mēģinājums'}
+              ? `🎯 +${basePoints} punkti par pareizu atbildi${diffLabel ? ` · ${diffLabel}` : ''}`
+              : `💡 +${secondAttemptPts} punkti — vēl 1 mēģinājums`}
           </p>
         </div>
 

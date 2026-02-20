@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import EventBridge from '../../utils/EventBridge.js';
+import SpeedController from '../../utils/SpeedController.js';
 
 export default class CatcherScene extends Phaser.Scene {
   constructor() {
@@ -7,11 +8,11 @@ export default class CatcherScene extends Phaser.Scene {
   }
 
   init(data) {
-    this._cfg = data;
-    this._caught = 0;
-    this._timeLeft = data.timeLimit;
-    this._active = true;
-    this._spawnTimer = null;
+    this._cfg           = data;
+    this._caught        = 0;
+    this._timeLeft      = data.timeLimit;
+    this._active        = true;
+    this._spawnTimer    = null;
     this._countdownTimer = null;
   }
 
@@ -48,18 +49,22 @@ export default class CatcherScene extends Phaser.Scene {
 
     this._items = this.add.group();
 
+    // Apply SpeedController: faster speed → shorter spawn/countdown intervals
+    const spawnDelay     = SpeedController.scale(cfg.spawnRate);
+    const countdownDelay = SpeedController.scale(1000);
+
     this._spawnTimer = this.time.addEvent({
-      delay: cfg.spawnRate,
-      callback: this._spawnItem,
+      delay:         spawnDelay,
+      callback:      this._spawnItem,
       callbackScope: this,
-      loop: true,
+      loop:          true,
     });
 
     this._countdownTimer = this.time.addEvent({
-      delay: 1000,
-      callback: this._tick,
+      delay:         countdownDelay,
+      callback:      this._tick,
       callbackScope: this,
-      loop: true,
+      loop:          true,
     });
 
     this.input.on('pointermove', (ptr) => {
@@ -67,6 +72,33 @@ export default class CatcherScene extends Phaser.Scene {
     });
 
     this._spawnItem();
+
+    // ── Co-op Phaser bridge ────────────────────────────────────────────────
+    this._coopText = null;
+    this._coopUnsubs = [
+      EventBridge.on('COOP_SESSION_START', ({ partnerName }) => {
+        this._showCoopBanner(`🤝 Ko-op: ${partnerName}`, '#ffd700');
+      }),
+      EventBridge.on('COOP_CLUE_RECEIVED', ({ clue }) => {
+        this._showCoopBanner(`💡 ${clue}`, '#4caf50');
+      }),
+      EventBridge.on('COOP_MULTIPLIER', ({ multiplier }) => {
+        this._showCoopBanner(`✨ Ko-op ×${multiplier}!`, '#ffaa00');
+      }),
+    ];
+  }
+
+  _showCoopBanner(msg, color = '#ffd700') {
+    const { width } = this.scale;
+    if (this._coopText) this._coopText.destroy();
+    this._coopText = this.add.text(width / 2, 48, msg, {
+      fontSize: '13px', fontFamily: 'Poppins, Arial',
+      color, backgroundColor: 'rgba(0,0,0,0.65)',
+      padding: { x: 12, y: 6 },
+    }).setOrigin(0.5).setDepth(30);
+    this.time.delayedCall(SpeedController.scale(2800), () => {
+      if (this._coopText) { this._coopText.destroy(); this._coopText = null; }
+    });
   }
 
   _spawnItem() {
@@ -74,9 +106,11 @@ export default class CatcherScene extends Phaser.Scene {
     const cfg = this._cfg;
     const { width } = this.scale;
     const allItems = [...cfg.collect, ...cfg.avoid];
-    const symbol = allItems[Math.floor(Math.random() * allItems.length)];
-    const isGood = cfg.collect.includes(symbol);
-    const speed = Phaser.Math.Between(cfg.fallSpeed.min, cfg.fallSpeed.max);
+    const symbol   = allItems[Math.floor(Math.random() * allItems.length)];
+    const isGood   = cfg.collect.includes(symbol);
+    // Scale fall speed by SpeedController (higher multiplier → faster falls)
+    const baseSpeed = Phaser.Math.Between(cfg.fallSpeed.min, cfg.fallSpeed.max);
+    const speed     = baseSpeed * SpeedController.value;
 
     const item = this.add.text(
       Phaser.Math.Between(20, width - 20),
@@ -122,12 +156,12 @@ export default class CatcherScene extends Phaser.Scene {
     if (this._timeLeft <= 0) this._finish(false);
   }
 
-  _flashBasket(color) {
+  _flashBasket() {
     this.tweens.add({
-      targets: this._basket,
-      alpha: 0.3,
-      duration: 80,
-      yoyo: true,
+      targets:  this._basket,
+      alpha:    0.3,
+      duration: SpeedController.scale(80),
+      yoyo:     true,
     });
   }
 
@@ -136,6 +170,8 @@ export default class CatcherScene extends Phaser.Scene {
     this._active = false;
     this._spawnTimer?.remove();
     this._countdownTimer?.remove();
+    // Unsubscribe co-op listeners
+    this._coopUnsubs?.forEach(u => u());
 
     const { width, height } = this.scale;
     const pts = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 5 : 3) : 0;
@@ -143,13 +179,13 @@ export default class CatcherScene extends Phaser.Scene {
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.6);
     this.add
       .text(width / 2, height / 2 - 20, success ? '✓ Labi padarīts!' : '✗ Laiks beidzās!', {
-        fontSize: '26px',
+        fontSize:   '26px',
         fontFamily: 'Poppins, Arial',
-        color: success ? '#4caf50' : '#f44336',
+        color:      success ? '#4caf50' : '#f44336',
       })
       .setOrigin(0.5);
 
-    this.time.delayedCall(1400, () => {
+    this.time.delayedCall(SpeedController.scale(1400), () => {
       EventBridge.emit('MINIGAME_COMPLETE', { success, bonusPoints: pts });
     });
   }
