@@ -1009,11 +1009,13 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     }
     
     .difficulty-legend {
-        top: auto;
-        bottom: 20px;
-        left: 10px;
+        position: fixed;
+        top: 70px;
+        bottom: auto;
+        right: 10px;
+        left: auto;
         width: auto;
-        max-width: 180px;
+        max-width: 160px;
         font-size: 11px;
         padding: 8px;
     }

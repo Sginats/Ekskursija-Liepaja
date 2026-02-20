@@ -23,6 +23,7 @@ $tasks      = isset($_REQUEST['tasks'])      ? intval($_REQUEST['tasks'])      :
 $violations = isset($_REQUEST['violations']) ? intval($_REQUEST['violations']) : 0;
 $mode       = isset($_REQUEST['mode'])       ? $_REQUEST['mode']              : 'single';
 $gameToken  = isset($_REQUEST['gameToken'])  ? $_REQUEST['gameToken']         : null;
+$testScore  = isset($_REQUEST['testScore'])  ? max(0, min(10, intval($_REQUEST['testScore']))) : 0;
 
 if ($name === null) {
     $json = file_get_contents('php://input');
@@ -35,6 +36,7 @@ if ($name === null) {
         $tasks      = isset($data['tasks'])      ? intval($data['tasks'])      : 0;
         $violations = isset($data['violations']) ? intval($data['violations']) : 0;
         $mode       = $data['mode']       ?? 'single';
+        $testScore  = isset($data['testScore']) ? max(0, min(10, intval($data['testScore']))) : 0;
         $gameToken  = $data['gameToken']  ?? null;
     }
 }
@@ -66,7 +68,7 @@ if ($serverScore !== null) {
 } else {
     $score = intval($score);
 }
-$score = max(0, min(100, $score));
+$score = max(0, min(110, $score + $testScore));
 
 // Compute time from server-side start time
 $serverStartTime = isset($_SESSION['game_start_time']) ? intval($_SESSION['game_start_time']) : null;

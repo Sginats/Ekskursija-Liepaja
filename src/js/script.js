@@ -26,7 +26,7 @@ const GameState = (function() {
             if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
             _score += points;
             if (_score < 0) _score = 0;
-            if (_score > 100) _score = 100;
+            if (_score > 110) _score = 110;
             _updateChecksum();
             return _score;
         },
@@ -277,11 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initBackground();
 
-    // Request a server-side game token for anti-cheat
-    fetch('src/php/start_game.php', { method: 'POST', credentials: 'include' })
-        .then(r => r.json())
-        .then(d => { if (d.token) _serverGameToken = d.token; })
-        .catch(() => {});
+    // Request a server-side game token for anti-cheat (skip on admin page)
+    if (!window.location.pathname.match(/admin\.php$/)) {
+        fetch('src/php/start_game.php', { method: 'POST', credentials: 'include' })
+            .then(r => r.json())
+            .then(d => { if (d.token) _serverGameToken = d.token; })
+            .catch(() => {});
+    }
     
     const pathname = window.location.pathname;
     const needsConnection = (pathname.endsWith('index.html') || pathname === '/' || pathname.endsWith('/')) || 
@@ -810,7 +812,7 @@ function showLocationThenStart(type, callback) {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
         <div class="location-info">
-            <h3>📍 ${info.name}</h3>
+            <h3>${info.name}</h3>
             <p>${info.desc}</p>
         </div>
         <button class="btn" id="btn-start-task">Turpināt uz uzdevumu →</button>
@@ -959,10 +961,9 @@ function closeBoatGame() {
     document.getElementById('game-modal').style.display = 'none'; 
     GameState.completeTask(); 
     updateMapState(); 
-    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame(); 
+    if(GameState.getCompleted() === TOTAL_TASKS) showFinalTest(); 
 }
 
-let antGameActive = false;
 let antsCaught = 0;
 let antGameTimer = null;
 const ANTS_REQUIRED = 5;
@@ -983,7 +984,7 @@ function initAntGame() {
     let timeLeft = ANT_GAME_TIME;
     
     document.querySelector('.task-section').innerHTML = `
-        <h2>🐛 Ķer kukaiņus!</h2>
+        <h2>Ķer kukaiņus!</h2>
         <p id="ant-timer" style="color: #ffaa00; font-size: 20px;">Laiks: ${timeLeft}s</p>
         <p id="ant-count" style="font-size: 18px;">Noķerti: 0/${ANTS_REQUIRED}</p>
         <div id="ant-field" style="position: relative; width: 100%; height: 250px; background: rgba(0,100,0,0.2); border: 2px solid #4CAF50; border-radius: 10px; overflow: hidden; cursor: crosshair;"></div>
@@ -1080,7 +1081,7 @@ function closeAntGame() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 const historyEvents = [
@@ -1170,9 +1171,8 @@ function closeHistoryGame() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
-
 
 function showMiniGame(type) {
     document.getElementById('game-modal').style.display = "block";
@@ -1250,7 +1250,7 @@ function showTheory(type) {
     if (!info) return;
     document.querySelector('.task-section').innerHTML = `
         <div class="location-info">
-            <h3>📍 ${info.name}</h3>
+            <h3>${info.name}</h3>
             <p>${info.desc}</p>
         </div>
         <button class="btn" id="btn-back-to-quiz">Atpakaļ uz jautājumu →</button>
@@ -1333,10 +1333,97 @@ function closeQuizAndContinue() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if(GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if(GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-function showEndGame() { 
+// ============================================================================
+// FINAL TEST (shown after all 10 tasks are complete)
+// ============================================================================
+
+const _finalTestQuestions = [
+    {
+        q: 'Kurā gadā dibināts Liepājas Teātris?',
+        options: ['1895', '1907', '1920', '1935'],
+        correct: 1
+    },
+    {
+        q: 'Kurā gadā atklāta koncertzāle "Lielais Dzintars"?',
+        options: ['2010', '2012', '2015', '2018'],
+        correct: 2
+    },
+    {
+        q: 'Cik metrus garš ir Ziemeļu mols?',
+        options: ['800 m', '1200 m', '1800 m', '2500 m'],
+        correct: 2
+    },
+    {
+        q: 'Kurā gadā dibināta RTU Liepājas akadēmija?',
+        options: ['1944', '1954', '1964', '1974'],
+        correct: 1
+    },
+    {
+        q: 'Kurš lielākais ezers Latvijā ir Liepājas ezers?',
+        options: ['3.', '5.', '7.', '10.'],
+        correct: 1
+    }
+];
+
+let _finalTestScore = 0;
+let _finalTestShown = false;
+
+function showFinalTest() {
+    if (_finalTestShown || GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) return;
+    _finalTestShown = true;
+
+    document.getElementById('game-modal').style.display = 'block';
+    const guideHint = document.getElementById('guide-hint');
+    if (guideHint) guideHint.textContent = 'Pēdējais izaicinājums — noslēguma tests!';
+
+    document.querySelector('.task-section').innerHTML = `
+        <div style="text-align:center;">
+            <h2 style="color:#ffaa00; font-size:22px;">Noslēguma tests</h2>
+            <p style="color:#ccc; font-size:13px; margin-bottom:12px;">Atbildi uz 5 jautājumiem par Liepāju! (Katra pareiza atbilde: +2 punkti)</p>
+            ${_finalTestQuestions.map((q, i) => `
+                <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,170,0,0.25);border-radius:10px;padding:12px;margin:8px 0;text-align:left;">
+                    <p style="color:#ffaa00;margin:0 0 8px;font-size:13px;font-weight:bold;">${i + 1}. ${q.q}</p>
+                    ${q.options.map((opt, j) => `
+                        <label style="display:block;color:#ccc;font-size:13px;padding:3px 0;cursor:pointer;">
+                            <input type="radio" name="ftq${i}" value="${j}" style="margin-right:7px;accent-color:#ffaa00;">
+                            ${opt}
+                        </label>
+                    `).join('')}
+                </div>
+            `).join('')}
+            <button class="btn btn-full" onclick="submitFinalTest()" style="margin-top:14px;">Iesniegt atbildes →</button>
+        </div>
+    `;
+}
+
+function submitFinalTest() {
+    let bonus = 0;
+    let answered = 0;
+    _finalTestQuestions.forEach((q, i) => {
+        const sel = document.querySelector(`input[name="ftq${i}"]:checked`);
+        if (sel !== null) {
+            answered++;
+            if (parseInt(sel.value) === q.correct) bonus += 2;
+        }
+    });
+    if (answered < _finalTestQuestions.length) {
+        showNotification('Lūdzu, atbildi uz visiem jautājumiem!', 'warning', 2000);
+        return;
+    }
+    _finalTestScore = bonus;
+    if (bonus > 0) {
+        GameState.addScore(bonus);
+        showNotification(`Tests pabeigts! +${bonus} bonusu punkti`, 'success', 2000);
+    } else {
+        showNotification('Tests pabeigts! Nav bonusu punktu.', 'error', 2000);
+    }
+    setTimeout(() => { showEndGame(); }, 1800);
+}
+
+function showEndGame() {
     if (GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) {
         _ac.addViolation();
         showNotification('Spēle nav pabeigta!', 'error', 3000);
@@ -1347,7 +1434,7 @@ function showEndGame() {
     const minutes = Math.floor(elapsedSeconds / 60);
     const seconds = elapsedSeconds % 60;
     const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    
+
     const finalScore = GameState.getScore();
     showEndGameScreen(finalScore, formattedTime);
 }
@@ -1361,17 +1448,29 @@ function showEndGameScreen(finalScore, formattedTime) {
     }
     _endGameShown = true;
     document.getElementById('game-modal').style.display = 'block';
-    
-    let medal = '🥉';
-    if (finalScore >= 80) medal = '🥇';
-    else if (finalScore >= 50) medal = '🥈';
-    
+
+    const gameScore = finalScore - _finalTestScore;
+    const totalScore = finalScore;
+    let medal = 'Bronza';
+    if (totalScore >= 88) medal = 'Zelts';
+    else if (totalScore >= 55) medal = 'Sudrabs';
+
+    const testLine = _finalTestShown
+        ? `<p style="font-size:17px;color:#ffaa00;margin:4px 0;">Bonusa punkti (tests): <strong>${_finalTestScore}</strong>/10</p>
+           <hr style="border-color:rgba(255,170,0,0.3);margin:10px 0;">`
+        : '';
+    const scoreLine = _finalTestShown
+        ? `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Kopā: <strong>${totalScore}</strong>/110</p>`
+        : `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Punkti: <strong>${totalScore}</strong>/100</p>`;
+
     document.querySelector('.task-section').innerHTML = `
         <div style="text-align: center;">
-            <h2 style="color: #ffaa00; font-size: 28px;">${medal} Apsveicam! ${medal}</h2>
+            <h2 style="color: #ffaa00; font-size: 28px;">${medal} — Apsveicam!</h2>
             <p style="font-size: 18px;">Tu esi pabeidzis ekskursiju pa Liepāju!</p>
             <div style="background: rgba(0,0,0,0.3); border: 2px solid #ffaa00; border-radius: 12px; padding: 20px; margin: 15px 0;">
-                <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">Punkti: <strong>${finalScore}</strong>/100</p>
+                <p style="font-size:17px;color:#ffaa00;margin:4px 0;">Spēles punkti: <strong>${gameScore}</strong>/100</p>
+                ${testLine}
+                ${scoreLine}
                 <p style="font-size: 22px; color: #ffaa00; margin: 5px 0;">Laiks: <strong>${formattedTime}</strong></p>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
@@ -1428,6 +1527,7 @@ function finishGame(name, finalScore, time) {
     formData.append('tasks', _taskCompletionLog.length);
     formData.append('violations', _ac.violations);
     formData.append('gameToken', _serverGameToken || '');
+    formData.append('testScore', _finalTestScore);
     
     fetch('src/php/save_score.php', {
         method: 'POST',
@@ -1739,6 +1839,7 @@ function initBackground() {
         bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.06)`;
         bgCtx.beginPath();
         bgCtx.moveTo(0, h);
+        bgCtx.lineTo(0, skylineY + 60);
         // Dzintars concert hall dome
         bgCtx.lineTo(w * 0.05, skylineY + 60);
         bgCtx.lineTo(w * 0.06, skylineY + 40);
@@ -1960,7 +2061,7 @@ function startFishingGame() {
 
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🎣 Makšķerēšana</h2>
+        <h2>Makšķerēšana</h2>
         <p>${instruction}</p>
         <p style="font-size: 13px; opacity: 0.7;">Sprieguma josla rāda auklas stāvokli — ja tā kļūst sarkana, aukla var pārtrūkt!</p>
         <button class="btn btn-full" onclick="initFishingLogic()">SĀKT</button>
@@ -2126,7 +2227,7 @@ function drawFishing(ctx, canvas, fishPulling) {
         ctx.fillStyle = `rgba(255, 170, 0, ${0.5 + Math.sin(Date.now() / 80) * 0.5})`;
         ctx.font = `bold ${Math.min(14, W * 0.035)}px Poppins, Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('🐟 Zivs velk!', W * 0.5, waterY - 15);
+        ctx.fillText('Zivs velk!', W * 0.5, waterY - 15);
         ctx.textAlign = 'start';
     }
 
@@ -2230,7 +2331,7 @@ function finishFishing(success) {
 
         container.innerHTML = `
             <div style="text-align:center;">
-                <h2 style="color:#44ff88;">🐟 Zivs noķerta!</h2>
+                <h2 style="color:#44ff88;">Zivs noķerta!</h2>
                 <p>Laiks: ${elapsed} s</p>
                 <p style="color:#ffaa00; font-size:20px; font-weight:bold;">+${points} punkti!</p>
                 <button class="btn btn-full" onclick="closeFishingGame()">Turpināt</button>
@@ -2238,7 +2339,7 @@ function finishFishing(success) {
     } else {
         container.innerHTML = `
             <div style="text-align:center;">
-                <h2 style="color:#ff6666;">💥 Aukla pārtrūka!</h2>
+                <h2 style="color:#ff6666;">Aukla pārtrūka!</h2>
                 <p style="opacity:0.7;">Centies kontrolēt spriegumu — netur pogu pārāk ilgi!</p>
                 <button class="btn btn-full" onclick="startFishingGame()">Mēģināt vēlreiz</button>
             </div>`;
@@ -2260,7 +2361,7 @@ function closeFishingGame() {
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask();
     updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2286,7 +2387,7 @@ const SIMON_TOTAL_ROUNDS = 3;
 function startSimonGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🎵 Mūzikas Atmiņa</h2>
+        <h2>Mūzikas Atmiņa</h2>
         <p>Atceries un atkārto krāsu secību!</p>
         <button class="btn btn-full" onclick="initSimonRounds()">SĀKT</button>`;
 }
@@ -2298,7 +2399,7 @@ function initSimonRounds() {
 
 function renderSimonGrid() {
     document.querySelector('.task-section').innerHTML = `
-        <h2>🎵 Kārta ${simonRound}/${SIMON_TOTAL_ROUNDS}</h2>
+        <h2>Kārta ${simonRound}/${SIMON_TOTAL_ROUNDS}</h2>
         <p id="simon-msg" style="color:#ffaa00;">Vēro secību...</p>
         <div class="simon-grid">
             ${SIMON_COLORS.map(function(c) { return `<div id="sg-${c}" class="simon-btn simon-${c}" onclick="simonClick('${c}')"></div>`; }).join('')}
@@ -2353,7 +2454,7 @@ function simonClick(color) {
         GameState.addScore(10);
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>Lieliski! 🎵</h2>
+            <h2>Lieliski!</h2>
             <p style="color:#4CAF50;">Visas kārtas pareizi! +10 punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Dzintars'].fact}</p>
             <button class="btn btn-full" onclick="closeSimonGame()">Turpināt →</button>`;
@@ -2372,7 +2473,7 @@ function closeSimonGame() {
     _taskCompletionLog.push({ task: 'Dzintars', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2393,7 +2494,7 @@ function startKanalGame() {
     document.getElementById('game-modal').style.display = 'block';
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     document.querySelector('.task-section').innerHTML = `
-        <h2>🚢 Kanāla Laiva</h2>
+        <h2>Kanāla Laiva</h2>
         <p>Izvairīties no akmeņiem kanālā!</p>
         <p style="font-size:13px;opacity:0.7;">${isTouch ? 'Spied kreisi/labi pogas.' : 'Lieto ← → taustiņus vai pogas.'}</p>
         <button class="btn btn-full" onclick="initKanalGame()">SĀKT</button>`;
@@ -2405,7 +2506,7 @@ function initKanalGame() {
     kanalTimeLeft = KANAL_GAME_TIME2;
     kanalKeys2 = { left: false, right: false };
     document.querySelector('.task-section').innerHTML = `
-        <p id="kanal-stats" style="color:#ffaa00;margin:0 0 4px;font-size:13px;">Izvairīšanās: 0/${KANAL_DODGES_NEEDED} | ❤ ${KANAL_MAX_HITS2} | ⏱ ${KANAL_GAME_TIME2}s</p>
+        <p id="kanal-stats" style="color:#ffaa00;margin:0 0 4px;font-size:13px;">Izvairīšanās: 0/${KANAL_DODGES_NEEDED} | Dzīvības: ${KANAL_MAX_HITS2} | ${KANAL_GAME_TIME2}s</p>
         <canvas id="kanalCanvas" style="width:100%;display:block;border:2px solid rgba(255,170,0,0.3);border-radius:8px;touch-action:none;"></canvas>
         <div style="display:flex;gap:8px;margin-top:6px;">
             <button class="boat-tap-btn" style="padding:12px 5px;"
@@ -2448,7 +2549,7 @@ function kanalKeyUp2(e) {
 
 function updateKanalStats() {
     const el = document.getElementById('kanal-stats');
-    if (el) el.textContent = `Izvairīšanās: ${kanalDodges}/${KANAL_DODGES_NEEDED} | ❤ ${Math.max(0, KANAL_MAX_HITS2 - kanalHits)} | ⏱ ${kanalTimeLeft}s`;
+    if (el) el.textContent = `Izvairīšanās: ${kanalDodges}/${KANAL_DODGES_NEEDED} | Dzīvības: ${Math.max(0, KANAL_MAX_HITS2 - kanalHits)} | ${kanalTimeLeft}s`;
 }
 
 function kanalLoop() {
@@ -2512,14 +2613,14 @@ function finishKanalGame() {
         GameState.addScore(pts);
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>Labi padarīts! 🚢</h2>
+            <h2>Labi padarīts!</h2>
             <p>Izvairīšanās: ${kanalDodges} | Trāpījumi: ${kanalHits}</p>
             <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Kanals'].fact}</p>
             <button class="btn btn-full" onclick="closeKanalGame()">Turpināt →</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
-            <h2>Neizdevās! 💥</h2>
+            <h2>Neizdevās!</h2>
             <p>Laiva saskārās ar ${kanalHits} akmeņiem vai laiks beidzās.</p>
             <button class="btn btn-full" onclick="initKanalGame()">Mēģināt vēlreiz</button>`;
     }
@@ -2535,7 +2636,7 @@ function closeKanalGame() {
     _taskCompletionLog.push({ task: 'Kanals', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2555,7 +2656,7 @@ const LSEZ_ICONS = ['📦', '🗃', '📫'];
 function startLSEZGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>📦 Kravas Šķirošana</h2>
+        <h2>Kravas Šķirošana</h2>
         <p>Šķiro kastes pēc krāsas atbilstošajā tvertnē!</p>
         <p style="font-size:13px;opacity:0.7;">Klikšķini uz pareizās tvertnes pirms laiks beidzas.</p>
         <button class="btn btn-full" onclick="initLSEZGame()">SĀKT</button>`;
@@ -2627,14 +2728,14 @@ function finishLSEZGame() {
         GameState.addScore(pts);
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>Lielisks darbs! 📦</h2>
+            <h2>Lielisks darbs!</h2>
             <p>Pareizi šķirots: ${lsezCorrect}/${LSEZ_TOTAL2}</p>
             <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['LSEZ'].fact}</p>
             <button class="btn btn-full" onclick="closeLSEZGame()">Turpināt →</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
-            <h2>Nepietiekami! 📦</h2>
+            <h2>Nepietiekami!</h2>
             <p>Pareizi šķirots: ${lsezCorrect}/${LSEZ_TOTAL2} (vajag vismaz 7)</p>
             <button class="btn btn-full" onclick="initLSEZGame()">Mēģināt vēlreiz</button>`;
     }
@@ -2649,7 +2750,7 @@ function closeLSEZGame() {
     _taskCompletionLog.push({ task: 'LSEZ', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2662,7 +2763,7 @@ const CIET_STEPS_NEEDED = 5;
 function startEscapeGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🔒 Izvairīšanās</h2>
+        <h2>Izvairīšanās</h2>
         <p>Sardze patruļo. Spied <strong>SPACE</strong> vai pogu, kad rādītājs ir <strong>zaļajā zonā</strong>!</p>
         <p style="font-size:13px;opacity:0.7;">Vajadzīgi ${CIET_STEPS_NEEDED} veiksmīgi soļi, lai aizbēgtu.</p>
         <button class="btn btn-full" onclick="initEscapeGame()">SĀKT</button>`;
@@ -2673,7 +2774,7 @@ function initEscapeGame() {
     document.querySelector('.task-section').innerHTML = `
         <p id="ciet-status" style="color:#ffaa00;margin:0 0 6px;">Soļi: 0/${CIET_STEPS_NEEDED}</p>
         <canvas id="cietCanvas" style="width:100%;display:block;border:2px solid rgba(255,170,0,0.3);border-radius:8px;"></canvas>
-        <button class="boat-tap-btn" onclick="cietMove()" style="margin-top:8px;">🏃 BĒG!</button>
+        <button class="boat-tap-btn" onclick="cietMove()" style="margin-top:8px;">BEG!</button>
         <p style="font-size:11px;opacity:0.5;text-align:center;margin-top:4px;">vai SPACE taustiņš</p>`;
     const canvas = document.getElementById('cietCanvas');
     const rect = canvas.getBoundingClientRect();
@@ -2732,7 +2833,7 @@ function cietDrawLoop() {
 
     ctx.fillStyle = isSafe ? '#00cc55' : '#ff4444';
     ctx.font = `bold ${Math.max(11, Math.floor(H * 0.20))}px Poppins,Arial`;
-    ctx.textAlign = 'center'; ctx.fillText(isSafe ? '🟢 DROŠS' : '🔴 UZMANĪBU!', W / 2, H * 0.52); ctx.textAlign = 'start';
+    ctx.textAlign = 'center'; ctx.fillText(isSafe ? 'DROŠS' : 'UZMANĪBU!', W / 2, H * 0.52); ctx.textAlign = 'start';
 
     cietAnimId3 = requestAnimationFrame(cietDrawLoop);
 }
@@ -2765,13 +2866,13 @@ function finishEscapeGame(success) {
         GameState.addScore(10);
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>Aizbēgi! 🏃</h2>
+            <h2>Aizbēgi!</h2>
             <p style="color:#4CAF50;">Tu veiksmīgi izvairījies no sardzēm! +10 punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Cietums'].fact}</p>
             <button class="btn btn-full" onclick="closeEscapeGame()">Turpināt →</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
-            <h2>Noķerts! 🚨</h2>
+            <h2>Noķerts!</h2>
             <p style="color:#f44336;">Sardze tevi pamanīja!</p>
             <button class="btn btn-full" onclick="initEscapeGame()">Mēģināt vēlreiz</button>`;
     }
@@ -2786,7 +2887,7 @@ function closeEscapeGame() {
     _taskCompletionLog.push({ task: 'Cietums', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2800,7 +2901,7 @@ const BIRD_EMOJIS = ['🦢', '🦆', '🐦', '🦅', '🦉'];
 function startBirdGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🦢 Putnu Vērošana</h2>
+        <h2>Putnu Vērošana</h2>
         <p>Nofotografē putnus pirms tie aizlido!</p>
         <p style="font-size:13px;opacity:0.7;">Klikšķini uz putniem. Vajadzīgi ${BIRDS_NEEDED} putni ${BIRD_GAME_TIME} sekundēs.</p>
         <button class="btn btn-full" onclick="initBirdGame()">SĀKT</button>`;
@@ -2809,14 +2910,14 @@ function startBirdGame() {
 function initBirdGame() {
     birdActive = true; birdCaught = 0; birdTimeLeft = BIRD_GAME_TIME;
     document.querySelector('.task-section').innerHTML = `
-        <p id="bird-stats" style="color:#ffaa00;margin:0 0 4px;font-size:13px;">📸 Putni: 0/${BIRDS_NEEDED} | ⏱ ${BIRD_GAME_TIME}s</p>
+        <p id="bird-stats" style="color:#ffaa00;margin:0 0 4px;font-size:13px;">Putni: 0/${BIRDS_NEEDED} | ${BIRD_GAME_TIME}s</p>
         <div id="bird-field" style="position:relative;width:100%;height:200px;background:linear-gradient(180deg,rgba(100,180,255,0.2),rgba(30,120,60,0.3));border:2px solid rgba(255,170,0,0.3);border-radius:8px;overflow:hidden;cursor:crosshair;"></div>`;
     if (birdTimer2) clearInterval(birdTimer2);
     birdTimer2 = setInterval(function() {
         if (!birdActive) return;
         birdTimeLeft--;
         const el = document.getElementById('bird-stats');
-        if (el) el.textContent = `📸 Putni: ${birdCaught}/${BIRDS_NEEDED} | ⏱ ${birdTimeLeft}s`;
+        if (el) el.textContent = `Putni: ${birdCaught}/${BIRDS_NEEDED} | ${birdTimeLeft}s`;
         if (birdTimeLeft <= 0) finishBirdGame();
     }, 1000);
     if (birdSpawnInt) clearInterval(birdSpawnInt);
@@ -2847,9 +2948,9 @@ function spawnBird() {
         if (!birdActive || !b.parentNode) return;
         clearTimeout(flyTimer);
         birdCaught++;
-        b.textContent = '📸'; b.style.transition = 'all 0.2s'; b.style.transform = 'scale(1.4)';
+        b.textContent = '*'; b.style.transition = 'all 0.2s'; b.style.transform = 'scale(1.4)';
         const el = document.getElementById('bird-stats');
-        if (el) el.textContent = `📸 Putni: ${birdCaught}/${BIRDS_NEEDED} | ⏱ ${birdTimeLeft}s`;
+        if (el) el.textContent = `Putni: ${birdCaught}/${BIRDS_NEEDED} | ${birdTimeLeft}s`;
         setTimeout(function() { if (b.parentNode) b.parentNode.removeChild(b); }, 200);
         if (birdCaught >= BIRDS_NEEDED) finishBirdGame();
     };
@@ -2870,14 +2971,14 @@ function finishBirdGame() {
         GameState.addScore(pts);
         document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
         document.querySelector('.task-section').innerHTML = `
-            <h2>Lielisks! 🦢</h2>
+            <h2>Lielisks!</h2>
             <p>Nofotografēti ${birdCaught} putni!</p>
             <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Ezerkrasts'].fact}</p>
             <button class="btn btn-full" onclick="closeBirdGame()">Turpināt →</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
-            <h2>Nepietiekami! 📷</h2>
+            <h2>Nepietiekami!</h2>
             <p>Nofotografēti ${birdCaught}/${BIRDS_NEEDED} putni.</p>
             <button class="btn btn-full" onclick="initBirdGame()">Mēģināt vēlreiz</button>`;
     }
@@ -2891,7 +2992,7 @@ function closeBirdGame() {
     _taskCompletionLog.push({ task: 'Ezerkrasts', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 // ============================================================================
@@ -2903,7 +3004,7 @@ const MEM_PAIRS2 = ['🌲', '🌳', '🌴', '🌿'];
 function startMemoryGame() {
     document.getElementById('game-modal').style.display = 'block';
     document.querySelector('.task-section').innerHTML = `
-        <h2>🌲 Koku Atmiņa</h2>
+        <h2>Koku Atmiņa</h2>
         <p>Atrodi visus koku pārus!</p>
         <p style="font-size:13px;opacity:0.7;">Apvērs divas kārtis – ja simboli sakrīt, tās paliek atklātas.</p>
         <button class="btn btn-full" onclick="initMemoryGame()">SĀKT</button>`;
@@ -2970,7 +3071,7 @@ function finishMemoryGame() {
     GameState.addScore(pts);
     document.getElementById('score-display').innerText = 'Punkti: ' + GameState.getScore();
     document.querySelector('.task-section').innerHTML = `
-        <h2>Apsveicam! 🌲</h2>
+        <h2>Apsveicam!</h2>
         <p>Atrasti visi pāri ${memMoves} soļos!</p>
         <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
         <p style="color:#ffaa00;font-style:italic;">${questions['Parks'].fact}</p>
@@ -2985,7 +3086,7 @@ function closeMemoryGame() {
     _taskCompletionLog.push({ task: 'Parks', time: Date.now() });
     document.getElementById('game-modal').style.display = 'none';
     GameState.completeTask(); updateMapState();
-    if (GameState.getCompleted() === TOTAL_TASKS) showEndGame();
+    if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
 window.startFishingGame = startFishingGame;
