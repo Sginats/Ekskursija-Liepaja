@@ -1708,3 +1708,78 @@ body[data-night='1']::after {
     font-size: 16px;
   }
 }
+
+/* ── Player Analytics Panel ──────────────────────────────────── */
+.analytics-panel {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 16px;
+  margin: 8px auto 0;
+  max-width: 420px;
+  background: rgba(10, 10, 30, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.analytics-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+}
+
+.analytics-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.analytics-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--amber);
+  line-height: 1.2;
+}
+
+.analytics-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Route Overlay (SVG inside map-area) ─────────────────────── */
+.route-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.route-line-animated {
+  animation: routeDash 12s linear infinite;
+}
+
+@keyframes routeDash {
+  to { stroke-dashoffset: -40; }
+}
+
+@media (max-width: 480px) {
+  .analytics-panel {
+    gap: 10px;
+    padding: 6px 12px;
+    max-width: 340px;
+  }
+
+  .analytics-value {
+    font-size: 13px;
+  }
+
+  .analytics-label {
+    font-size: 9px;
+  }
+}

@@ -300,6 +300,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
             windEnergy={windEnergy}
             ghostLocationId={GhostRun.getGhostLocation(mapElapsedMs)}
             ghostBestTime={GhostRun.getBestTimeLabel()}
+            startTime={startTime}
           />
         </>
       )}

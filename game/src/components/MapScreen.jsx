@@ -2,6 +2,8 @@ import { LOCATIONS } from '../data/LocationData.js';
 import WindEnergyBar from './WindEnergyBar.jsx';
 import { useCoopContext } from './CoopManager.jsx';
 import GlobalProgressBar from './GlobalProgressBar.jsx';
+import PlayerAnalytics from './PlayerAnalytics.jsx';
+import RouteOverlay from './RouteOverlay.jsx';
 
 const CATEGORY_COLORS = {
   culture:   { dot: '#2196f3', label: 'Kultūra & vēsture' },
@@ -10,7 +12,7 @@ const CATEGORY_COLORS = {
   industry:  { dot: '#f44336', label: 'Industrija & osta' },
 };
 
-export default function MapScreen({ completedLocations, onSelectLocation, score, windEnergy, ghostLocationId, ghostBestTime }) {
+export default function MapScreen({ completedLocations, onSelectLocation, score, windEnergy, ghostLocationId, ghostBestTime, startTime }) {
   const { otherPlayers, occupiedLocations } = useCoopContext();
 
   return (
@@ -24,8 +26,11 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
 
       <WindEnergyBar energy={windEnergy} />
 
+      <PlayerAnalytics completedLocations={completedLocations} score={score} startTime={startTime} />
+
       <div className="map-area-wrap">
         <div className="map-area">
+          <RouteOverlay completedLocations={completedLocations} />
           {/* Location pins */}
           {LOCATIONS.map(loc => {
             const done      = completedLocations.includes(loc.id);
