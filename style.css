@@ -1052,7 +1052,7 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
         gap: 10px;
         padding: 0 15px;
         width: 100%;
-    }s
+    }
     
     .btn {
         width: 100%;
@@ -1157,7 +1157,7 @@ body[data-theme="blue"] .tabulaLead tbody tr:hover {
     .modal-content {
         padding: 15px 10px;
     }
-
+}
 
 /* Tablet breakpoint */
 @media (min-width: 769px) and (max-width: 1024px) {
