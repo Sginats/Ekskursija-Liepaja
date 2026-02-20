@@ -109,6 +109,53 @@ document.addEventListener('contextmenu', function(e) {
     } catch(e) { /* Browser may block property override */ }
 })();
 
+// Bug logger — captures uncaught JS errors and unhandled promise rejections
+// and reports them to the server so they can be reviewed in the admin panel.
+(function() {
+    var _BL_SENT = 0;
+    var _BL_MAX  = 15;
+    var _BL_SEEN = {};
+    // Resolve endpoint relative to the current page's directory
+    var _BL_URL  = window.location.pathname.indexOf('/src/php/') !== -1
+        ? 'log_error.php'
+        : 'src/php/log_error.php';
+
+    function _blSend(message, source, line, col, stack) {
+        if (_BL_SENT >= _BL_MAX) return;
+        var key = String(message).substring(0, 80) + '|' + (line || 0);
+        if (_BL_SEEN[key]) return;
+        _BL_SEEN[key] = 1;
+        _BL_SENT++;
+        try {
+            fetch(_BL_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    page:    window.location.pathname + window.location.search,
+                    message: String(message).substring(0, 400),
+                    source:  String(source  || '').substring(0, 200),
+                    line:    line  || 0,
+                    col:     col   || 0,
+                    stack:   String(stack   || '').substring(0, 800),
+                }),
+                keepalive: true,
+            }).catch(function() {});
+        } catch(e) { /* never throw inside an error handler */ }
+    }
+
+    window.onerror = function(msg, src, line, col, err) {
+        _blSend(msg, src, line, col, err && err.stack ? err.stack : '');
+        return false;
+    };
+
+    window.addEventListener('unhandledrejection', function(e) {
+        var r   = e.reason;
+        var msg = r instanceof Error ? r.message : String(r);
+        _blSend('UnhandledRejection: ' + msg, '', 0, 0,
+                r instanceof Error && r.stack ? r.stack : '');
+    });
+})();
+
 let currentTask = "";
 let startTime; 
 let myRole = '';
@@ -319,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sfx = document.getElementById('hover-sound');
     if (sfx) {
         const savedSFXVolume = localStorage.getItem('sfxVolume');
-        sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.5;
+        sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.2;
     }
 
     // Background music setup
