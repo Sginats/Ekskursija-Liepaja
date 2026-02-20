@@ -384,6 +384,12 @@ gameNS.on('connection', (socket) => {
 
   // COOP_ACCEPT: target accepts the coop request
   socket.on('coop:accept', ({ requesterId, locationId }) => {
+    // Validate requester is still connected and at the same location
+    const requester = players.get(requesterId);
+    if (!requester || requester.currentLocation !== locationId) {
+      socket.emit('coop:request_expired', { locationId });
+      return;
+    }
     _startCoopSession(requesterId, socket.id, locationId);
   });
 

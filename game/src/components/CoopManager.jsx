@@ -117,6 +117,11 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
         CoopState.set({ inboundRequest: req });
       }),
 
+      // Coop request expired (requester left the location)
+      SocketManager.on('coop:request_expired', () => {
+        CoopState.set({ inboundRequest: null });
+      }),
+
       // Partner left mid-session
       SocketManager.on('coop:partner_left', () => {
         CoopState.set({ coopSession: null, coopMultiplier: 1.0 });

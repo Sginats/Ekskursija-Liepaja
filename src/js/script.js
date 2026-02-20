@@ -750,7 +750,15 @@ function checkBothPlayersDonePHP(code) {
             .catch(error => console.error('Error checking state:', error));
     }, 1000);
     
-    setTimeout(() => clearInterval(checkInterval), 30000);
+    setTimeout(() => {
+        clearInterval(checkInterval);
+        const taskEl = document.querySelector('.task-section');
+        if (taskEl && taskEl.innerHTML.includes('Gaidam')) {
+            taskEl.innerHTML = '<h2>Laiks beidzās</h2><p>Partneris neatbildēja laikā.</p><button class="btn btn-full" id="btn-timeout-continue">Turpināt →</button>';
+            const btn = document.getElementById('btn-timeout-continue');
+            if (btn) btn.addEventListener('click', function() { showQuiz(currentTask); });
+        }
+    }, 30000);
 }
 
 // Menu functions
