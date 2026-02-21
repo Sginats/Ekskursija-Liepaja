@@ -1,6 +1,7 @@
 require('dotenv').config();
 const http       = require('http');
 const { Server } = require('socket.io');
+const { WebSocketServer } = require('ws');
 
 // ── Optional Supabase client (server-side, uses service_role key) ─────────────
 let supabase = null;
@@ -865,6 +866,123 @@ setInterval(() => {
   }
 }, 60_000);
 
+// ── Legacy raw-WebSocket bridge (for script.js clients) ──────────────────────
+const wss = new WebSocketServer({ noServer: true });
+
+/** Map raw-WS clients to the lobby they belong to: ws → code */
+const wsClients = new Map();
+
+httpServer.on('upgrade', (req, socket, head) => {
+  // Let Socket.IO handle its own upgrade requests
+  if (req.url && req.url.startsWith('/socket.io')) return;
+
+  wss.handleUpgrade(req, socket, head, (wsConn) => {
+    wss.emit('connection', wsConn, req);
+  });
+});
+
+wss.on('connection', (wsConn) => {
+  function send(obj) {
+    if (wsConn.readyState === 1) wsConn.send(JSON.stringify(obj));
+  }
+
+  wsConn.on('message', (raw) => {
+    let msg;
+    try { msg = JSON.parse(raw); } catch { return; }
+
+    if (msg.action === 'create') {
+      const code = String(Math.floor(1000 + Math.random() * 9000));
+      lobbies.set(code, {
+        code, host: wsConn, guest: null,
+        hostReady: false, guestReady: false,
+        hostDone: false, guestDone: false,
+        lastActive: Date.now(), created: Date.now(),
+        hostTimeout: null, guestTimeout: null,
+        _isLegacy: true,
+      });
+      wsClients.set(wsConn, code);
+      send({ type: 'created', code });
+      pushLog('info', `[ws] Lobby izveidots: ${code}`);
+    }
+
+    else if (msg.action === 'join') {
+      const lobby = lobbies.get(msg.code);
+      if (!lobby || !lobby._isLegacy)    return send({ type: 'error', msg: 'Istaba nav atrasta.' });
+      if (lobby.guest)                   return send({ type: 'error', msg: 'Istaba jau ir pilna.' });
+      lobby.guest = wsConn;
+      lobby.lastActive = Date.now();
+      wsClients.set(wsConn, msg.code);
+      send({ type: 'joined_lobby', code: msg.code });
+      // Notify host
+      if (lobby.host && lobby.host.readyState === 1) {
+        lobby.host.send(JSON.stringify({ type: 'guest_joined' }));
+      }
+      pushLog('info', `[ws] Spēlētājs pievienojās lobby: ${msg.code}`);
+    }
+
+    else if (msg.action === 'ready') {
+      const lobby = lobbies.get(msg.code);
+      if (!lobby || !lobby._isLegacy) return send({ type: 'error', msg: 'Istaba nav atrasta.' });
+      if (msg.role === 'host')  lobby.hostReady  = true;
+      if (msg.role === 'guest') lobby.guestReady = true;
+      lobby.lastActive = Date.now();
+      if (lobby.hostReady && lobby.guestReady) {
+        const startMsg = JSON.stringify({ type: 'start_game', role: 'host' });
+        const startMsg2 = JSON.stringify({ type: 'start_game', role: 'guest' });
+        if (lobby.host && lobby.host.readyState === 1) lobby.host.send(startMsg);
+        if (lobby.guest && lobby.guest.readyState === 1) lobby.guest.send(startMsg2);
+      } else {
+        const other = (wsConn === lobby.host) ? lobby.guest : lobby.host;
+        if (other && other.readyState === 1) other.send(JSON.stringify({ type: 'player_ready' }));
+      }
+    }
+
+    else if (msg.action === 'update_task') {
+      const lobby = lobbies.get(msg.code);
+      if (!lobby || !lobby._isLegacy) return;
+      if (msg.role === 'host')  lobby.hostDone  = true;
+      if (msg.role === 'guest') lobby.guestDone = true;
+      lobby.lastActive = Date.now();
+      if (lobby.hostDone && lobby.guestDone) {
+        lobby.hostDone = false;
+        lobby.guestDone = false;
+        const syncMsg = JSON.stringify({ type: 'sync_complete' });
+        if (lobby.host && lobby.host.readyState === 1) lobby.host.send(syncMsg);
+        if (lobby.guest && lobby.guest.readyState === 1) lobby.guest.send(syncMsg);
+      }
+    }
+
+    else if (msg.action === 'rejoin') {
+      const lobby = lobbies.get(msg.code);
+      if (!lobby || !lobby._isLegacy) return send({ type: 'error', msg: 'Istaba nav atrasta.' });
+      if (msg.role === 'host')  lobby.host  = wsConn;
+      if (msg.role === 'guest') lobby.guest = wsConn;
+      wsClients.set(wsConn, msg.code);
+      send({ type: 'rejoined', role: msg.role });
+    }
+
+    else if (msg.action === 'ping') {
+      send({ type: 'pong' });
+    }
+  });
+
+  wsConn.on('close', () => {
+    const code = wsClients.get(wsConn);
+    wsClients.delete(wsConn);
+    if (!code) return;
+    const lobby = lobbies.get(code);
+    if (!lobby || !lobby._isLegacy) return;
+    const isHost = lobby.host === wsConn;
+    if (isHost)  lobby.host  = null;
+    else         lobby.guest = null;
+    const other = isHost ? lobby.guest : lobby.host;
+    if (other && other.readyState === 1) {
+      other.send(JSON.stringify({ type: 'player_disconnected', msg: 'Otrs spēlētājs atvienojās.' }));
+    }
+    if (!lobby.host && !lobby.guest) lobbies.delete(code);
+  });
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 httpServer.listen(PORT, () => {
   console.log(`[server] Ekskursija socket server on :${PORT}`);
@@ -873,6 +991,7 @@ httpServer.listen(PORT, () => {
   } else {
     console.log('[server] ✓ Admin namespace active.');
   }
+  console.log('[server] ✓ Legacy WebSocket bridge active.');
 });
 
 process.on('SIGTERM', () => io.close(() => httpServer.close(() => process.exit(0))));

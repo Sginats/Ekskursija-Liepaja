@@ -374,7 +374,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bgMusic) {
         const savedMusicVolume = localStorage.getItem('musicVolume');
         bgMusic.volume = savedMusicVolume ? savedMusicVolume / 100 : 0.3;
+        bgMusic.muted = true;
         const startMusic = () => {
+            bgMusic.muted = false;
             bgMusic.play().catch(() => {});
             document.removeEventListener('click', startMusic);
             document.removeEventListener('keydown', startMusic);
