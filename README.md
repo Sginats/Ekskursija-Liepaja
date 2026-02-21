@@ -59,9 +59,11 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 | Slānis | Rīki |
 |--------|------|
-| Frontend | HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.3.2 |
-| Backend | PHP (leaderboard, multiplayer lobby) |
-| Real-time | WebSocket (Node.js) + PHP polling fallback |
+| Frontend | React 18, Vite, HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.3.2 |
+| Spēļu dzinējs | Phaser 3 (mini-spēles) |
+| Backend | Node.js + PHP (leaderboard, multiplayer lobby) |
+| Real-time | Socket.IO 4.8 (WebSocket + polling fallback) |
+| Datubāze | Supabase (PostgreSQL) |
 | Cits | Google Fonts (Poppins), LocalStorage, AI: Gemini, Claude, Copilot |
 
 ---
@@ -70,17 +72,94 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ```
 Ekskursija-Liepaja/
-├── index.html          # Galvenā izvēlne
-├── map.html            # Spēles karte
-├── style.css           # Visi stili
-├── atteli/             # Attēli
-├── skana/              # Audio
-└── src/
-    ├── js/
-    │   ├── script.js   # Spēles loģika
-    │   └── server.js   # WebSocket serveris
-    ├── php/            # Backend (leaderboard, lobby, mini-spēles)
-    └── data/           # leaderboard.txt, lobbies.json
+├── index.html              # Galvenā izvēlne (legacy)
+├── map.html                # Spēles karte (legacy)
+├── style.css               # Globālie stili
+├── atteli/                 # Attēli
+├── skana/                  # Audio
+├── src/
+│   ├── js/
+│   │   ├── script.js       # Spēles loģika (legacy)
+│   │   └── server.js       # ★ Socket.IO serveris (Node.js)
+│   ├── php/                # Backend (leaderboard, lobby, anti-cheat)
+│   └── data/               # lobbies.json, questions.json, answers.json
+├── client/                 # React + Phaser — viena spēlētāja režīms
+│   └── src/
+│       ├── components/     # React UI (izvēlnes, modālie logi)
+│       ├── phaser/scenes/  # Phaser mini-spēles
+│       └── context/        # React konteksts (Game, Admin, Audio, Theme)
+└── game/                   # React + Phaser — multiplayer režīms
+    └── src/
+        ├── components/     # UI (leaderboard, coop, flash quiz)
+        ├── phaser/scenes/  # Phaser ainas (flashlight, keypad, catcher, sequence)
+        ├── utils/
+        │   ├── SocketManager.js  # ★ Socket.IO klients (singleton)
+        │   ├── CoopState.js      # Co-op stāvokļa pārvaldība
+        │   ├── AntiCheat.js      # Anti-cheat validācija
+        │   └── ...               # EventBridge, DayNight, Leaderboard u.c.
+        └── data/           # LocationData, CoopData
+```
+
+---
+
+## Socket.IO struktūra
+
+Reāllaika multiplayer funkcionalitāte izmanto **Socket.IO 4.8** (WebSocket ar polling fallback).
+
+### Galvenie faili
+
+| Fails | Apraksts |
+|-------|----------|
+| `src/js/server.js` | **Serveris** — Node.js Socket.IO serveris ar diviem namespace |
+| `game/src/utils/SocketManager.js` | **Klients** — Singleton Socket.IO klients (`/game` namespace) |
+| `game/src/components/CoopManager.jsx` | React komponents — klausās 15+ Socket.IO notikumus |
+| `game/src/components/AdminPanel.jsx` | Admin panelis — tieša savienošanās ar `/admin` namespace |
+
+### Namespace
+
+| Namespace | Mērķis |
+|-----------|--------|
+| `/game` | Spēlētāju savienojumi — spēles notikumi, co-op, flash quiz, loot |
+| `/admin` | Administrēšana (aizsargāts ar `ADMIN_SECRET`) — spēlētāju saraksts, logi, jautājumu maiņa |
+
+### Galvenie notikumi (serveris ↔ klients)
+
+**Klients → Serveris:**
+
+| Notikums | Apraksts |
+|----------|----------|
+| `player:join` | Reģistrē spēlētāja vārdu |
+| `player:location` | Ziņo pašreizējo lokāciju |
+| `player:complete` | Lokācija pabeigta + rezultāts |
+| `location:join` / `location:leave` | Ienāk/iziet no lokācijas |
+| `coop:request` / `coop:accept` | Co-op pieprasījums un pieņemšana |
+| `lobby:create` / `lobby:join` | Multiplayer lobby darbības |
+| `ping:req` | Latentuma mērījums |
+
+**Serveris → Klients:**
+
+| Notikums | Apraksts |
+|----------|----------|
+| `map:presence` | Visu spēlētāju lokācijas kartē |
+| `city:progress` | Pilsētas kopējais progress (%) |
+| `flash_quiz:start` / `flash_quiz:result` | Flash viktorīna (≥3 spēlētāji) |
+| `coop:session_start` | Co-op sesija sākas |
+| `loot:pool_update` | Kopīgo priekšmetu statuss |
+| `questions:override` / `questions:reset` | Jautājumu hot-swap no admin |
+| `session:refresh` | Admin piespiedu sesijas atjaunošana |
+
+### Datu plūsma
+
+```
+Klients (game/)  ──Socket.IO──▶  Node.js serveris (src/js/server.js)
+                                    │
+                           ┌────────┼────────┐
+                           ▼        ▼        ▼
+                    /game namespace  Supabase  /admin namespace
+                           │        (DB)      │
+                           ▼                  ▼
+                  Visi savienotie       Admin panelis
+                    klienti
 ```
 
 ---
