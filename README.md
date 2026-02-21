@@ -55,26 +55,26 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ```
 Ekskursija-Liepaja/
-├── index.html / map.html          # Galvenā izvēlne un karte (legacy)
+├── index.html / map.html          # Galvenā izvēlne un karte
 ├── style.css                      # Globālie stili
 ├── atteli/ / skana/               # Attēli un audio
 ├── src/
-│   ├── js/script.js               # Spēles loģika (legacy)
+│   ├── js/script.js               # Spēles loģika 
 │   ├── js/server.js               # Socket.IO + raw WS serveris
 │   ├── php/                       # Backend (leaderboard, lobby, anti-cheat)
 │   └── data/                      # JSON dati (jautājumi, atbildes, lobbies)
 ├── client/                        # React + Phaser — viena spēlētāja režīms
 └── game/                          # React + Phaser — multiplayer režīms
-    └── src/utils/SocketManager.js  # Socket.IO klients (singleton)
+    └── src/utils/SocketManager.js  # Socket.IO klients
 ```
 ---
 
 ## Resursi
 
-- **Karte:** OpenStreetMap (© OpenStreetMap contributors)
-- **Gida attēls (Kaija):** Autoru oriģinālzīmējums
+- **Karte:** https://maps.apple.com/
+- **Gida attēls (Kaija):** Autoru zīmējums (https://www.aseprite.org/)
 - **Informācija:** liepaja.lv, rtu.lv, Liepājas muzejs, wikipedia.org
-- **Audio:** Brīvās licences mūzika, autoru SFX ieraksti
+- **Audio:** https://pixabay.com/
 
 ---
 
