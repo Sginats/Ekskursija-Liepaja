@@ -43,10 +43,10 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 | Slānis | Rīki |
 |--------|------|
-| Frontend | React 18, Vite, HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.3.2 |
+| Frontend | React, Vite, HTML, CSS, JavaScript, Bootstrap 5.3.2 |
 | Spēļu dzinējs | Phaser 3 (mini-spēles) |
 | Backend | Node.js + PHP (leaderboard, multiplayer lobby) |
-| Real-time | Socket.IO 4.8 + raw WebSocket (legacy klientiem) |
+| Real-time | Socket.IO 4.8 + raw WebSocket |
 | Datubāze | Supabase (PostgreSQL) |
 
 ---
@@ -67,26 +67,6 @@ Ekskursija-Liepaja/
 └── game/                          # React + Phaser — multiplayer režīms
     └── src/utils/SocketManager.js  # Socket.IO klients (singleton)
 ```
-
----
-
-## Palaišana
-
-```bash
-# 1. Instalē dependencies
-npm install
-
-# 2. Palaid Socket serveri (multiplayer)
-node src/js/server.js
-
-# 3. Palaid PHP serveri (atsevišķā terminālī)
-php -S localhost:8000
-```
-
-Atver: **http://localhost:8000/index.html**
-
-> Sistēma automātiski izvēlas labāko savienojumu (WebSocket → PHP polling). Node.js serveris ir neobligāts — bez tā darbojas viena spēlētāja režīms ar PHP polling.
-
 ---
 
 ## Resursi
