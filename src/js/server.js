@@ -1,13 +1,4 @@
-/**
- * Ekskursija Liepāja — Game Server
- *
- * Socket.io namespaces:
- *   /game  – players (lobby, presence, coop, loot, flash-quiz, finale)
- *   /admin – authenticated Game Master (player tracking, anti-cheat, hot-swap, logs)
- *
- * Node ≥ 18 · socket.io ^4
- */
-
+require('dotenv').config();
 const http       = require('http');
 const { Server } = require('socket.io');
 
