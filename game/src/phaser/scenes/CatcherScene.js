@@ -3,18 +3,31 @@ import EventBridge from '../../utils/EventBridge.js';
 import SpeedController from '../../utils/SpeedController.js';
 import NoteSound from '../../utils/NoteSound.js';
 
+const COMBO_THRESHOLDS = [3, 5, 8];   // hits to reach combo ×2, ×3, ×4
+const SPEED_RAMP_RATE  = 0.07;        // speed boost per correct hit when speedRamp on
+const SPEED_RAMP_MAX   = 2.0;         // max fall-speed multiplier
+const MAX_COMBO_BONUS  = 2;           // max extra bonus points for combo (1 per tier, capped)
+// Green channel cap for speed-meter colour ramp: full-green at 0 speed, 0 at max speed
+const SPEED_METER_GREEN_MAX = 180;
+
 export default class CatcherScene extends Phaser.Scene {
   constructor() {
     super({ key: 'CatcherScene' });
   }
 
   init(data) {
-    this._cfg           = data;
-    this._caught        = 0;
-    this._timeLeft      = data.timeLimit;
-    this._active        = true;
-    this._spawnTimer    = null;
+    this._cfg            = data;
+    this._caught         = 0;
+    this._timeLeft       = data.timeLimit;
+    this._active         = true;
+    this._spawnTimer     = null;
     this._countdownTimer = null;
+    // Combo system
+    this._combo          = 0;
+    this._maxCombo       = 0;
+    this._comboMultiplier = 1;
+    // Progressive speed (when cfg.speedRamp is true)
+    this._catchSpeedMult = 1.0;
   }
 
   create() {
@@ -72,6 +85,31 @@ export default class CatcherScene extends Phaser.Scene {
       if (this._active) this._basket.x = Phaser.Math.Clamp(ptr.x, 24, width - 24);
     });
 
+    // ── Combo & speed HUD ─────────────────────────────────────────────────────
+    this._comboText = this.add
+      .text(width / 2, height - 36, '', {
+        fontSize: '16px',
+        fontFamily: 'Poppins, Arial',
+        color: '#ffaa00',
+        stroke: '#000000',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(15)
+      .setAlpha(0);
+
+    if (cfg.speedRamp) {
+      this._speedMeterBg = this.add.graphics().setDepth(14);
+      this._speedMeterFg = this.add.graphics().setDepth(15);
+      this._speedLabel   = this.add
+        .text(width - 12, height - 14, '⚡', {
+          fontSize: '11px', fontFamily: 'Poppins, Arial', color: '#ffaa00',
+        })
+        .setOrigin(1, 1)
+        .setDepth(15);
+      this._drawSpeedMeter();
+    }
+
     this._spawnItem();
 
     // ── Co-op Phaser bridge ────────────────────────────────────────────────
@@ -109,9 +147,9 @@ export default class CatcherScene extends Phaser.Scene {
     const allItems = [...cfg.collect, ...cfg.avoid];
     const symbol   = allItems[Math.floor(Math.random() * allItems.length)];
     const isGood   = cfg.collect.includes(symbol);
-    // Scale fall speed by SpeedController (higher multiplier → faster falls)
+    // Scale fall speed by SpeedController and progressive catch-speed multiplier
     const baseSpeed = Phaser.Math.Between(cfg.fallSpeed.min, cfg.fallSpeed.max);
-    const speed     = baseSpeed * SpeedController.value;
+    const speed     = baseSpeed * SpeedController.value * this._catchSpeedMult;
 
     const item = this.add.text(
       Phaser.Math.Between(20, width - 20),
@@ -139,13 +177,40 @@ export default class CatcherScene extends Phaser.Scene {
         if (item.getData('good')) {
           this._caught++;
           this._scoreText.setText(`${this._caught} / ${this._cfg.required}`);
+
+          // ── Combo system ─────────────────────────────────────────────────────
+          this._combo++;
+          if (this._combo > this._maxCombo) this._maxCombo = this._combo;
+          const comboIdx = COMBO_THRESHOLDS.findLastIndex(t => this._combo >= t);
+          this._comboMultiplier = comboIdx >= 0 ? comboIdx + 2 : 1;
+          this._updateComboHUD();
+
+          // ── Progressive speed ramp ────────────────────────────────────────
+          if (this._cfg.speedRamp) {
+            this._catchSpeedMult = Math.min(SPEED_RAMP_MAX,
+              this._catchSpeedMult + SPEED_RAMP_RATE);
+            this._drawSpeedMeter();
+          }
+
           this._flashBasket(0x00ff00);
-          if (this._cfg.locationId === 'dzintars') NoteSound.play(item.text);
+
+          // ── Note pulse animation (Dzintars) ───────────────────────────────
+          if (this._cfg.locationId === 'dzintars') {
+            NoteSound.play(item.text);
+            this._pulseNote(item);
+          } else {
+            item.destroy();
+          }
+
           if (this._caught >= this._cfg.required) this._finish(true);
         } else {
+          // ── Bad item: reset combo ─────────────────────────────────────────
+          this._combo = 0;
+          this._comboMultiplier = 1;
+          this._updateComboHUD();
           this._flashBasket(0xff0000);
+          item.destroy();
         }
-        item.destroy();
       } else if (item.y > height + 40) {
         item.destroy();
       }
@@ -171,6 +236,59 @@ export default class CatcherScene extends Phaser.Scene {
     });
   }
 
+  /** Animate the note item with a scale pulse before destroying it */
+  _pulseNote(item) {
+    this._items.remove(item, false, false);
+    this.tweens.add({
+      targets:  item,
+      scaleX:   1.8,
+      scaleY:   1.8,
+      alpha:    0,
+      duration: SpeedController.scale(220),
+      ease:     'Power2',
+      onComplete: () => item.destroy(),
+    });
+  }
+
+  /** Update the combo counter HUD text */
+  _updateComboHUD() {
+    if (!this._comboText) return;
+    if (this._combo >= COMBO_THRESHOLDS[0]) {
+      this._comboText
+        .setText(`🔥 ×${this._comboMultiplier} COMBO (${this._combo})`)
+        .setAlpha(1);
+    } else if (this._combo > 0) {
+      this._comboText.setText(`${this._combo} hit`).setAlpha(0.75);
+    } else {
+      this._comboText.setAlpha(0);
+    }
+  }
+
+  /** Draw/redraw the progressive speed meter (for speedRamp games) */
+  _drawSpeedMeter() {
+    if (!this._speedMeterBg || !this._speedMeterFg) return;
+    const { width, height } = this.scale;
+    const barW   = 80;
+    const barH   = 7;
+    const x      = width - barW - 12;
+    const y      = height - 26;
+    const fill   = Math.min(1, (this._catchSpeedMult - 1) / (SPEED_RAMP_MAX - 1));
+
+    this._speedMeterBg.clear();
+    this._speedMeterBg.fillStyle(0x333333, 0.8);
+    this._speedMeterBg.fillRoundedRect(x, y, barW, barH, 3);
+
+    this._speedMeterFg.clear();
+    if (fill > 0) {
+      // Colour shifts from green → red as speed increases (green capped at SPEED_METER_GREEN_MAX to avoid neon)
+      const r = Math.round(fill * 255);
+      const g = Math.round((1 - fill) * SPEED_METER_GREEN_MAX);
+      const colour = (r << 16) | (g << 8);
+      this._speedMeterFg.fillStyle(colour, 1);
+      this._speedMeterFg.fillRoundedRect(x, y, Math.max(4, barW * fill), barH, 3);
+    }
+  }
+
   _finish(success) {
     if (!this._active) return;
     this._active = false;
@@ -180,7 +298,10 @@ export default class CatcherScene extends Phaser.Scene {
     this._coopUnsubs?.forEach(u => u());
 
     const { width, height } = this.scale;
-    const pts = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 5 : 3) : 0;
+    // Bonus points: time bonus + combo bonus (1 extra pt per combo tier reached, max 2)
+    const timeBonus  = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 5 : 3) : 0;
+    const comboBonus = success ? Math.min(MAX_COMBO_BONUS, COMBO_THRESHOLDS.filter(t => this._maxCombo >= t).length) : 0;
+    const pts        = Math.min(5, timeBonus + comboBonus);
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.6);
     this.add
@@ -190,6 +311,15 @@ export default class CatcherScene extends Phaser.Scene {
         color:      success ? '#4caf50' : '#f44336',
       })
       .setOrigin(0.5);
+
+    if (success && this._maxCombo >= COMBO_THRESHOLDS[0]) {
+      // Calculate the highest multiplier tier achieved during the game
+      const maxComboIdx  = COMBO_THRESHOLDS.findLastIndex(t => this._maxCombo >= t);
+      const maxComboMult = maxComboIdx >= 0 ? maxComboIdx + 2 : 1;
+      this.add.text(width / 2, height / 2 + 18, `🔥 Labākais kombo: ×${maxComboMult}`, {
+        fontSize: '15px', fontFamily: 'Poppins, Arial', color: '#ffaa00',
+      }).setOrigin(0.5);
+    }
 
     this.time.delayedCall(SpeedController.scale(1400), () => {
       EventBridge.emit('MINIGAME_COMPLETE', { success, bonusPoints: pts });

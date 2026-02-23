@@ -1,3 +1,5 @@
+import NotoEmoji from './NotoEmoji.jsx';
+
 export default function AboutModal({ onClose }) {
   return (
     <div className="about-overlay" role="dialog" aria-modal="true">
@@ -31,8 +33,46 @@ export default function AboutModal({ onClose }) {
           <ul>
             <li>Liepājas karte — <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> (ODbL licence)</li>
             <li>Kaija attēls (kaija.png) — publiskā domēna attēls</li>
-            <li>Visi emoji — Unicode konsorcija standarts</li>
           </ul>
+        </section>
+
+        <section className="about-section">
+          <h3>
+            <NotoEmoji emoji="😀" size={20} style={{ marginRight: 8 }} />
+            Emoji resursi
+          </h3>
+          <p>
+            Spēlē izmantotie animētie emoji tiek ielādēti no{' '}
+            <a
+              href="https://googlefonts.github.io/noto-emoji-animation/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Google Noto Emoji Animation
+            </a>{' '}
+            CDN (<code>fonts.gstatic.com</code>).
+          </p>
+          <ul>
+            <li>
+              <strong>Projekts:</strong>{' '}
+              <a
+                href="https://github.com/googlefonts/noto-emoji"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                googlefonts/noto-emoji
+              </a>
+            </li>
+            <li><strong>Licence:</strong> Apache 2.0</li>
+            <li>
+              <strong>Autors:</strong> Google LLC
+            </li>
+          </ul>
+          <p className="about-emoji-preview">
+            {['🌊','🏆','🎉','⭐','🎯','💡','🃏','🗺️','💾','🔄'].map(e => (
+              <NotoEmoji key={e} emoji={e} size={28} style={{ margin: '0 4px' }} />
+            ))}
+          </p>
         </section>
 
         <section className="about-section">

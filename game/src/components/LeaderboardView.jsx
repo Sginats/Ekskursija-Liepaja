@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getTopTen } from '../utils/Leaderboard.js';
+import NotoEmoji from './NotoEmoji.jsx';
 
 export default function LeaderboardView({ mode = 'single', onClose }) {
   const [rows, setRows] = useState([]);
@@ -27,11 +28,13 @@ export default function LeaderboardView({ mode = 'single', onClose }) {
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 
+  const MEDALS = ['🥇', '🥈', '🥉'];
+
   return (
     <div className="lb-overlay" role="dialog" aria-modal="true">
       <div className="lb-panel">
         <div className="panel-header">
-          <h2>🏆 Top 10 Rezultāti</h2>
+          <h2><NotoEmoji emoji="🏆" size={22} style={{ marginRight: 8 }} />Top 10 Rezultāti</h2>
           <button className="close-btn" onClick={onClose} aria-label="Aizvērt">✕</button>
         </div>
 
@@ -64,7 +67,7 @@ export default function LeaderboardView({ mode = 'single', onClose }) {
               )}
               {rows.map((row, i) => (
                 <tr key={i} className={i < 3 ? `top-${i + 1}` : ''}>
-                  <td>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+                  <td>{i < 3 ? <NotoEmoji emoji={MEDALS[i]} size={20} /> : i + 1}</td>
                   <td>{row.name}</td>
                   <td>{fmtTime(row.time_seconds)}</td>
                   <td>{row.score}</td>

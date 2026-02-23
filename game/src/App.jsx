@@ -12,6 +12,7 @@ import IntroModal from './components/IntroModal.jsx';
 import PreFinalModal from './components/PreFinalModal.jsx';
 import CoopProvider, { useCoopContext } from './components/CoopManager.jsx';
 import Confetti from './components/Confetti.jsx';
+import NotoEmoji from './components/NotoEmoji.jsx';
 import { LOCATIONS } from './data/LocationData.js';
 import { getLocationConfig } from './utils/RandomizerEngine.js';
 import EventBridge from './utils/EventBridge.js';
@@ -40,6 +41,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [currentConfig, setCurrentConfig] = useState(null);
   const [newCardId, setNewCardId] = useState(null);
+  const [newCardPerfect, setNewCardPerfect] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -202,6 +204,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
     const locId = currentLocation.id;
     const elapsed = AntiCheat.finishLocation(locId, score + finalPoints);
+    // Perfect answer: first attempt, correct, full points (equal to question.points[0])
+    const isPerfect = correct && attempts === 1 && points === (currentConfig?.question?.points?.[0] ?? 10);
 
     // Build route entry for journal
     const cfg = currentConfig;
@@ -227,6 +231,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     onLocationChange?.(null);
     if (isNew) {
       setNewCardId(locId);
+      setNewCardPerfect(isPerfect);
       setPhase(PHASE.CARD);
     } else {
       setPhase(PHASE.MAP);
@@ -235,6 +240,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
   const handleCardDismiss = useCallback(() => {
     setNewCardId(null);
+    setNewCardPerfect(false);
     setPhase(PHASE.MAP);
     if (completedLocations.length >= LOCATIONS.length) {
       setShowPreFinal(true);
@@ -289,8 +295,12 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       {phase === PHASE.MAP && (
         <>
           <div className="map-nav-btns">
-            <button className="nav-btn" onClick={() => setShowCards(true)}>🃏 Kartītes</button>
-            <button className="nav-btn" onClick={() => setShowLeaderboard(true)}>🏆 TOP 10</button>
+            <button className="nav-btn" onClick={() => setShowCards(true)}>
+              <NotoEmoji emoji="🃏" size={18} style={{ marginRight: 5 }} />Kartītes
+            </button>
+            <button className="nav-btn" onClick={() => setShowLeaderboard(true)}>
+              <NotoEmoji emoji="🏆" size={18} style={{ marginRight: 5 }} />TOP 10
+            </button>
             <button className="nav-btn" onClick={() => setShowAbout(true)}>ℹ Par spēli</button>
             <button className="nav-btn admin-nav-btn" onClick={() => setShowAdmin(true)}>⚙ Admin</button>
           </div>
@@ -331,7 +341,16 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       {phase === PHASE.CARD && newCardId && (
         <div className="card-reveal-overlay">
           <div className="card-reveal-box">
-            <p className="card-reveal-label">🎉 Jaunā kartīte atbloķēta!</p>
+            {newCardPerfect && (
+              <div className="perfect-badge">
+                <NotoEmoji emoji="⭐" size={18} style={{ marginRight: 5 }} />
+                Perfekts! Max punkti!
+              </div>
+            )}
+            <p className="card-reveal-label">
+              <NotoEmoji emoji="🎉" size={22} style={{ marginRight: 6 }} />
+              Jaunā kartīte atbloķēta!
+            </p>
             <div className="card-reveal-card">
               <span style={{ fontSize: 56 }}>{CARD_META[newCardId]?.emoji}</span>
               <strong>{CARD_META[newCardId]?.title}</strong>
@@ -345,30 +364,34 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
         <div className="end-screen">
           <Confetti />
           <div className="end-card">
-            <h2>🎊 Ekskursija Pabeigta!</h2>
+            <h2>
+              <NotoEmoji emoji="🎊" size={36} style={{ marginRight: 8 }} />
+              Ekskursija Pabeigta!
+            </h2>
             <p className="end-name">{playerName}</p>
             <div className="end-stats">
-              <span>⭐ {score} punkti</span>
-              <span>⏱ {formattedTime}</span>
-              <span>🃏 {unlockedCards.length}/{LOCATIONS.length} kartītes</span>
+              <span><NotoEmoji emoji="⭐" size={20} style={{ marginRight: 4 }} />{score} punkti</span>
+              <span><NotoEmoji emoji="⏱️" size={20} style={{ marginRight: 4 }} />{formattedTime}</span>
+              <span><NotoEmoji emoji="🃏" size={20} style={{ marginRight: 4 }} />{unlockedCards.length}/{LOCATIONS.length} kartītes</span>
             </div>
             {finaleRank && (
               <p className="end-rank">
-                🏆 Tu esi <strong>{finaleRank}.</strong> vietā no visiem spēlētājiem!
+                <NotoEmoji emoji="🏆" size={20} style={{ marginRight: 5 }} />
+                Tu esi <strong>{finaleRank}.</strong> vietā no visiem spēlētājiem!
               </p>
             )}
             <div className="end-btns">
               <button className="menu-start-btn" onClick={handleSaveScore}>
-                💾 Saglabāt rezultātu
+                <NotoEmoji emoji="💾" size={18} style={{ marginRight: 6 }} />Saglabāt rezultātu
               </button>
               <button className="nav-btn" onClick={handleDownloadJournal}>
-                📄 Lejupielādēt žurnālu
+                <NotoEmoji emoji="📄" size={18} style={{ marginRight: 6 }} />Lejupielādēt žurnālu
               </button>
               <button className="nav-btn" onClick={() => setShowLeaderboard(true)}>
-                🏆 TOP 10
+                <NotoEmoji emoji="🏆" size={18} style={{ marginRight: 6 }} />TOP 10
               </button>
               <button className="nav-btn" onClick={() => handleStart(playerName)}>
-                🔄 Spēlēt vēlreiz
+                <NotoEmoji emoji="🔄" size={18} style={{ marginRight: 6 }} />Spēlēt vēlreiz
               </button>
             </div>
           </div>
