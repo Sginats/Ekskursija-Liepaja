@@ -20,7 +20,7 @@
 
 import { io } from 'socket.io-client';
 
-const SERVER_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8080';
+const SERVER_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
 
 let _socket = null;
 let _pingInterval = null;
@@ -46,18 +46,16 @@ const SocketManager = {
     if (_socket) return _socket;
 
     _socket = io(`${SERVER_URL}/game`, {
-      transports:           ['websocket', 'polling'],
+      transports:           ['websocket'],
       reconnectionAttempts: 10,
       reconnectionDelay:    2_000,
       timeout:              10_000,
     });
 
     _socket.on('connect', () => {
-      console.info('[SocketManager] connected', _socket.id);
       this._startPing();
       // ── Co-op reconnect: re-announce player and location ──────────────────
       if (_playerName) {
-        console.info('[SocketManager] reconnect: re-joining as', _playerName);
         _socket.emit('player:join', { name: _playerName });
       }
       if (_locationId) {
@@ -69,13 +67,11 @@ const SocketManager = {
       }
     });
 
-    _socket.on('disconnect', (reason) => {
-      console.info('[SocketManager] disconnected', reason);
+    _socket.on('disconnect', () => {
       this._stopPing();
     });
 
     _socket.on('session:refresh', () => {
-      console.info('[SocketManager] admin requested session refresh — reloading');
       window.location.reload();
     });
 
