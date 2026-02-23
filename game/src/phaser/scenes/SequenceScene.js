@@ -5,6 +5,8 @@ import { getDayNightState, getSkyColors } from '../../utils/DayNight.js';
 
 const BTN_SIZE = 80;
 const BTN_GAP = 14;
+const RAMP_MIN_FACTOR   = 0.5;
+const RAMP_PER_ROUND    = 0.12;
 
 export default class SequenceScene extends Phaser.Scene {
   constructor() {
@@ -129,7 +131,7 @@ export default class SequenceScene extends Phaser.Scene {
     this._playerIdx = 0;
     this._inputEnabled = false;
     if (this._speedRamp && this._round > 1) {
-      this._rampFactor = Math.max(0.5, this._rampFactor - 0.12);
+      this._rampFactor = Math.max(RAMP_MIN_FACTOR, this._rampFactor - RAMP_PER_ROUND);
     }
     const el = this._cfg.elements[Math.floor(Math.random() * this._cfg.elements.length)];
     this._seq.push(el);

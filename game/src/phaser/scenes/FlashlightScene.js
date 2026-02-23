@@ -3,6 +3,10 @@ import EventBridge from '../../utils/EventBridge.js';
 import SpeedController from '../../utils/SpeedController.js';
 import { getDayNightState, getSkyColors, getCityLights } from '../../utils/DayNight.js';
 
+const RAMP_MIN_FACTOR    = 0.55;
+const RAMP_PER_BUCKET    = 0.1;
+const RAMP_BUCKET_PCT    = 15;
+
 export default class FlashlightScene extends Phaser.Scene {
   constructor() {
     super({ key: 'FlashlightScene' });
@@ -184,10 +188,10 @@ export default class FlashlightScene extends Phaser.Scene {
 
       // Speed ramp: every 15% revealed, tick the countdown faster
       if (this._speedRamp) {
-        const bucket = Math.floor(pct * 100 / 15);
+        const bucket = Math.floor(pct * 100 / RAMP_BUCKET_PCT);
         if (bucket > this._lastRampPct) {
           this._lastRampPct = bucket;
-          const rampFactor = Math.max(0.55, 1.0 - bucket * 0.1);
+          const rampFactor = Math.max(RAMP_MIN_FACTOR, 1.0 - bucket * RAMP_PER_BUCKET);
           this._countdownTimer?.remove();
           this._countdownTimer = this.time.addEvent({
             delay: SpeedController.scale(1000 * rampFactor),
