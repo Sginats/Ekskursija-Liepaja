@@ -163,8 +163,8 @@ let _serverGameToken = null;
 
 
 // Network & multiplayer config
-const WS_PORT = 8080;
-const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const WS_HOST = window.location.host;
 const POLL_INTERVAL = 2000;
 const WS_TIMEOUT = 2000;
 
@@ -418,32 +418,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Connection manager (WebSocket + PHP polling) ---
 
 async function initSmartConnection() {
-    console.log("Initializing multiplayer connection...");
     updateConnectionStatus('reconnecting');
     
-    const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    
-    if (isLocalhost) {
-        console.log("Localhost detected, trying WebSocket first...");
-        const wsAvailable = await tryWebSocketConnection();
-        
-        if (wsAvailable) {
-            console.log("WebSocket detected");
-            connectionMode = CONNECTION_MODE_WS;
-            updateConnectionStatus('connected');
-            showNotification('WebSocket detected', 'success', 2000);
-            if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
-                console.log(`Rejoining lobby ${myLobbyCode} as ${myRole}`);
-            }
-            return;
-        } else {
-            console.log("WebSocket unavailable, using PHP polling");
+    const wsAvailable = await tryWebSocketConnection();
+
+    if (wsAvailable) {
+        connectionMode = CONNECTION_MODE_WS;
+        updateConnectionStatus('connected');
+        showNotification('WebSocket detected', 'success', 2000);
+        if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
         }
+        return;
     }
-    
-    console.log("PHP fallback mode no websocket detected");
+
     connectionMode = CONNECTION_MODE_PHP;
     initPHPPolling();
     showNotification('Multiplayer gatavs!', 'success', 2000);
@@ -459,7 +447,7 @@ function tryWebSocketConnection() {
         }, WS_TIMEOUT);
         
         try {
-            const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
+            const wsUrl = `${WS_PROTOCOL}://${WS_HOST}`;
             ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
@@ -475,7 +463,6 @@ function tryWebSocketConnection() {
             
             ws.onclose = () => {
                 if (connectionMode === CONNECTION_MODE_WS) {
-                    console.log("WebSocket disconnected, attempting reconnection...");
                     setTimeout(() => {
                         if (connectionMode === CONNECTION_MODE_WS) {
                             connectWebSocket();
@@ -485,7 +472,6 @@ function tryWebSocketConnection() {
             };
         } catch (error) {
             clearTimeout(timeout);
-            console.error("WebSocket connection failed:", error);
             resolve(false);
         }
     });
@@ -497,7 +483,6 @@ function setupWebSocketHandlers() {
             const data = JSON.parse(event.data);
             handleWebSocketMessage(data);
         } catch (e) {
-            console.error("Error parsing WebSocket message:", e);
         }
     };
 }
@@ -542,9 +527,6 @@ function handleWebSocketMessage(data) {
             location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
         }, 1500);
     }
-    else if (data.type === 'rejoined') {
-        console.log(`Successfully rejoined lobby as ${data.role}`);
-    }
     else if (data.type === 'sync_complete') {
         const statusEl = document.getElementById('partner-status');
         if (statusEl) statusEl.innerText = "Partneris gatavs!";
@@ -552,9 +534,6 @@ function handleWebSocketMessage(data) {
     }
     else if (data.type === 'error') {
         showNotification(data.msg, 'error');
-    }
-    else if (data.type === 'pong') {
-        console.log('WebSocket alive');
     }
     else if (data.type === 'player_disconnected') {
         showNotification(data.msg, 'warning');
@@ -572,12 +551,11 @@ function connectWebSocket() {
     }
 
     try {
-        const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
+        const wsUrl = `${WS_PROTOCOL}://${WS_HOST}`;
         
         ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
-            console.log("WebSocket savienots!");
             wsReconnectAttempts = 0;
             updateConnectionStatus('connected');
         };
@@ -586,36 +564,30 @@ function connectWebSocket() {
             try {
                 const data = JSON.parse(event.data);
                 handleWebSocketMessage(data);
-            } catch (e) {
-                console.error("Error parsing WebSocket message:", e);
+            } catch {
             }
         };
         
-        ws.onerror = (error) => {
-            console.error("WebSocket error:", error);
+        ws.onerror = () => {
             updateConnectionStatus('error');
         };
         
-        ws.onclose = (event) => {
-            console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
+        ws.onclose = () => {
             updateConnectionStatus('disconnected');
             if (wsReconnectAttempts < wsMaxReconnectAttempts) {
                 const delay = wsBaseReconnectDelay * Math.pow(2, wsReconnectAttempts);
                 wsReconnectAttempts++;
                 
-                console.log(`Reconnecting in ${delay}ms... (Attempt ${wsReconnectAttempts}/${wsMaxReconnectAttempts})`);
                 updateConnectionStatus('reconnecting');
                 
                 wsReconnectTimeout = setTimeout(() => {
                     connectWebSocket();
                 }, delay);
             } else {
-                console.log("Max reconnection attempts reached");
                 showNotification("Nav iespējams izveidot savienojumu ar serveri. Lūdzu, pārlādējiet lapu.", 'error');
             }
         };
-    } catch (error) {
-        console.error("Failed to create WebSocket connection:", error);
+    } catch {
         updateConnectionStatus('error');
     }
 }
@@ -643,7 +615,6 @@ let pollInterval = null;
 let phpPolling = false;
 
 function initPHPPolling() {
-    console.log("PHP fallback mode no websocket detected");
     phpPolling = true;
     updateConnectionStatus('connected');
 }
@@ -664,7 +635,6 @@ function createLobbyPHP() {
             }
         })
         .catch(error => {
-            console.error('Error creating lobby:', error);
             showNotification('Neizdevās izveidot lobby', 'error');
         });
 }
@@ -685,7 +655,6 @@ function joinLobbyPHP(code) {
             }
         })
         .catch(error => {
-            console.error('Error joining lobby:', error);
             showNotification('Neizdevās pievienoties', 'error');
         });
 }
@@ -715,7 +684,6 @@ function startLobbyPolling() {
                     }, 1500);
                 }
             })
-            .catch(error => console.error('Polling error:', error));
     }, POLL_INTERVAL);
 }
 
@@ -725,7 +693,6 @@ function notifyPartnerPHP(role, code) {
         .then(() => {
             checkBothPlayersDonePHP(code);
         })
-        .catch(error => console.error('Error notifying partner:', error));
 }
 
 function checkBothPlayersDonePHP(code) {
@@ -743,7 +710,6 @@ function checkBothPlayersDonePHP(code) {
                         });
                 }
             })
-            .catch(error => console.error('Error checking state:', error));
     }, 1000);
     
     setTimeout(() => {
@@ -1267,7 +1233,6 @@ function sendReady() {
         document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
     } else {
         showNotification("Savienojums nav pieejams!", 'error');
-        console.error("sendReady failed: No valid connection mode available");
     }
 }
 

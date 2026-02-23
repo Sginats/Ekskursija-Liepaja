@@ -29,7 +29,7 @@ import usePersistence from './hooks/usePersistence.js';
 
 const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', END: 'end' };
 const LAST_LOCATION_ID = 'parks';
-const SCORE_CAP = 10;
+const SCORE_CAP = 110;
 
 // ── Inner game wrapped inside CoopProvider ────────────────────────────────────
 function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {

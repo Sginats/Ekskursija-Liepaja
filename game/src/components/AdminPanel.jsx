@@ -16,7 +16,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { io }        from 'socket.io-client';
 import { LOCATIONS } from '../data/LocationData.js';
 
-const SERVER_URL    = import.meta.env.VITE_SOCKET_URL    || 'http://localhost:8080';
+const SERVER_URL    = import.meta.env.VITE_SOCKET_URL    || window.location.origin;
 const ADMIN_SECRET  = import.meta.env.VITE_ADMIN_SECRET  || 'admin1234';
 
 const TABS = ['Spēlētāji', 'Anti-Cheat', 'Žurnāls', 'Jautājumi', 'Resursi'];

@@ -37,14 +37,11 @@ export default function MainMenu() {
   const cleanupRef = useRef(null);
 
   useEffect(() => {
-    // Try WebSocket on localhost
-    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-      tryConnect().then((ok) => {
-        if (ok) {
-          dispatch({ type: 'SET_CONNECTION', mode: 'websocket', status: 'connected' });
-        }
-      });
-    }
+    tryConnect().then((ok) => {
+      if (ok) {
+        dispatch({ type: 'SET_CONNECTION', mode: 'websocket', status: 'connected' });
+      }
+    });
 
     cleanupRef.current = initParticles();
     return () => {

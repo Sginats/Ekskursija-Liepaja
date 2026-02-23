@@ -46,10 +46,6 @@ const AntiCheat = {
     // Report to server (server will do independent check & broadcast to admin)
     SocketManager.reportComplete(locationId, score, elapsedSecs);
 
-    if (flagged) {
-      console.warn(`[AntiCheat] Suspicious: ${locationId} completed in ${elapsedSecs}s`);
-    }
-
     return { elapsedSecs, flagged };
   },
 
