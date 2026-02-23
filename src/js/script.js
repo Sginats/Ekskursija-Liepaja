@@ -26,7 +26,7 @@ const GameState = (function() {
             if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
             _score += points;
             if (_score < 0) _score = 0;
-            if (_score > 110) _score = 110;
+            if (_score > 120) _score = 120;
             _updateChecksum();
             return _score;
         },
@@ -346,6 +346,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     if(document.querySelector('.point')) updateMapState();
+
+    // Show "Before Game" modal on map page load
+    const beforeGameModal = document.getElementById('before-game-modal');
+    if (beforeGameModal) {
+        beforeGameModal.style.display = 'block';
+        const continueBtn = document.getElementById('btn-before-game-continue');
+        if (continueBtn) {
+            continueBtn.addEventListener('click', function() {
+                beforeGameModal.style.display = 'none';
+            });
+        }
+    }
 
     const tooltip = document.getElementById('tooltip');
     if (tooltip) {
@@ -1397,6 +1409,7 @@ function closeQuizAndContinue() {
 
 // ============================================================================
 // FINAL TEST (shown after all 10 tasks are complete)
+// Kahoot-style quiz: 10 questions, 4 options, progress, score, feedback
 // ============================================================================
 
 const _finalTestQuestions = [
@@ -1424,11 +1437,51 @@ const _finalTestQuestions = [
         q: 'Kurš lielākais ezers Latvijā ir Liepājas ezers?',
         options: ['3.', '5.', '7.', '10.'],
         correct: 1
+    },
+    {
+        q: 'Kādā arhitektūras stilā celta Liepājas Teātra ēka?',
+        options: ['Baroks', 'Klasicisms', 'Jūgendstils', 'Gotikas'],
+        correct: 2
+    },
+    {
+        q: 'Vai Liepājas osta aizsalst ziemā?',
+        options: ['Jā, katru ziemu', 'Nē, nekad', 'Tikai bargās ziemās', 'Reizi 10 gados'],
+        correct: 1
+    },
+    {
+        q: 'Kurā gadā izveidota LSEZ (Liepājas Speciālā ekonomiskā zona)?',
+        options: ['1987', '1997', '2003', '2007'],
+        correct: 1
+    },
+    {
+        q: 'Cik koku un krūmu sugu aug Jūrmalas parkā?',
+        options: ['Ap 50', 'Ap 100', 'Vairāk nekā 170', 'Vairāk nekā 300'],
+        correct: 2
+    },
+    {
+        q: 'Kurā gadā celts Karostas cietums?',
+        options: ['1880', '1900', '1920', '1945'],
+        correct: 1
     }
 ];
 
 let _finalTestScore = 0;
 let _finalTestShown = false;
+let _kahootCurrentQ = 0;
+let _kahootScore = 0;
+let _kahootAnswers = [];
+
+function _collectGameHints() {
+    const hints = [];
+    for (const loc of taskSequence) {
+        const info = locationInfo[loc];
+        const q = questions[loc];
+        if (info) {
+            hints.push({ name: info.name, fact: q ? q.fact : '' });
+        }
+    }
+    return hints;
+}
 
 function showFinalTest() {
     if (_finalTestShown || GameState.getCompleted() !== TOTAL_TASKS || _taskCompletionLog.length < TOTAL_TASKS) return;
@@ -1436,50 +1489,182 @@ function showFinalTest() {
 
     document.getElementById('game-modal').style.display = 'block';
     const guideHint = document.getElementById('guide-hint');
-    if (guideHint) guideHint.textContent = 'Pēdējais izaicinājums — noslēguma tests!';
+    if (guideHint) guideHint.textContent = 'Ekskursija pabeigta! Laiks noslēguma testam!';
+
+    const hints = _collectGameHints();
 
     document.querySelector('.task-section').innerHTML = `
-        <div style="text-align:center;">
-            <h2 style="color:#ffaa00; font-size:22px;">Noslēguma tests</h2>
-            <p style="color:#ccc; font-size:13px; margin-bottom:12px;">Atbildi uz 5 jautājumiem par Liepāju! (Katra pareiza atbilde: +2 punkti)</p>
-            ${_finalTestQuestions.map((q, i) => `
-                <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,170,0,0.25);border-radius:10px;padding:12px;margin:8px 0;text-align:left;">
-                    <p style="color:#ffaa00;margin:0 0 8px;font-size:13px;font-weight:bold;">${i + 1}. ${q.q}</p>
-                    ${q.options.map((opt, j) => `
-                        <label style="display:block;color:#ccc;font-size:13px;padding:3px 0;cursor:pointer;">
-                            <input type="radio" name="ftq${i}" value="${j}" style="margin-right:7px;accent-color:#ffaa00;">
-                            ${opt}
-                        </label>
-                    `).join('')}
-                </div>
-            `).join('')}
-            <button class="btn btn-full" onclick="submitFinalTest()" style="margin-top:14px;">Iesniegt atbildes →</button>
+        <div class="before-final-test" style="text-align:center;">
+            <h2 style="color:#ffaa00; font-size:22px;">🎓 Vai esi gatavs noslēguma testam?</h2>
+            <p style="color:#ccc; font-size:14px; margin:15px 0;">Tests sastāv no <strong style="color:#ffaa00;">10 jautājumiem</strong> par Liepāju. Katra pareiza atbilde dod <strong style="color:#ffaa00;">+2 bonusa punktus</strong>.</p>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+                <button class="btn btn-full" id="btn-start-final-yes" style="background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">✅ Jā, sākt testu!</button>
+                <button class="btn btn-full" id="btn-start-final-no" style="font-size:16px;">📖 Nē, vēlos apskatīt padomus</button>
+            </div>
         </div>
     `;
+
+    document.getElementById('btn-start-final-yes').addEventListener('click', function() {
+        startKahootTest();
+    });
+    document.getElementById('btn-start-final-no').addEventListener('click', function() {
+        showHintsReview(hints);
+    });
 }
 
-function submitFinalTest() {
-    let bonus = 0;
-    let answered = 0;
-    _finalTestQuestions.forEach((q, i) => {
-        const sel = document.querySelector(`input[name="ftq${i}"]:checked`);
-        if (sel !== null) {
-            answered++;
-            if (parseInt(sel.value) === q.correct) bonus += 2;
+function showHintsReview(hints) {
+    document.querySelector('.task-section').innerHTML = `
+        <div style="text-align:center;">
+            <h2 style="color:#ffaa00; font-size:20px;">📖 Padomi un fakti</h2>
+            <p style="color:#ccc; font-size:13px; margin-bottom:12px;">Šeit ir svarīgākā informācija no mini-spēlēm:</p>
+            <div style="max-height:300px; overflow-y:auto; text-align:left; padding-right:5px;">
+                ${hints.map(h => `
+                    <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,170,0,0.25); border-radius:8px; padding:10px; margin:6px 0;">
+                        <p style="color:#ffaa00; margin:0 0 4px; font-size:13px; font-weight:bold;">📍 ${h.name}</p>
+                        <p style="color:#ccc; margin:0; font-size:12px;">${h.fact}</p>
+                    </div>
+                `).join('')}
+            </div>
+            <button class="btn btn-full" id="btn-hints-ready" style="margin-top:16px; background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">✅ Esmu gatavs — sākt testu!</button>
+        </div>
+    `;
+    document.getElementById('btn-hints-ready').addEventListener('click', function() {
+        startKahootTest();
+    });
+}
+
+function startKahootTest() {
+    _kahootCurrentQ = 0;
+    _kahootScore = 0;
+    _kahootAnswers = [];
+    showKahootQuestion();
+}
+
+function showKahootQuestion() {
+    const q = _finalTestQuestions[_kahootCurrentQ];
+    const total = _finalTestQuestions.length;
+    const progress = Math.round((_kahootCurrentQ / total) * 100);
+    const colors = ['#e21b3c', '#1368ce', '#d89e00', '#26890c'];
+    const shapes = ['▲', '◆', '●', '■'];
+
+    document.querySelector('.task-section').innerHTML = `
+        <div class="kahoot-quiz">
+            <div class="kahoot-header">
+                <span class="kahoot-counter">${_kahootCurrentQ + 1}/${total}</span>
+                <span class="kahoot-score">⭐ ${_kahootScore} p.</span>
+            </div>
+            <div class="kahoot-progress-bar">
+                <div class="kahoot-progress-fill" style="width:${progress}%"></div>
+            </div>
+            <div class="kahoot-question">
+                <p>${q.q}</p>
+            </div>
+            <div class="kahoot-options">
+                ${q.options.map((opt, j) => `
+                    <button class="kahoot-option" data-index="${j}" style="background:${colors[j]};">
+                        <span class="kahoot-shape">${shapes[j]}</span>
+                        <span class="kahoot-option-text">${opt}</span>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    document.querySelectorAll('.kahoot-option').forEach(btn => {
+        btn.addEventListener('click', function() {
+            handleKahootAnswer(parseInt(this.getAttribute('data-index')));
+        });
+    });
+}
+
+function handleKahootAnswer(selected) {
+    const q = _finalTestQuestions[_kahootCurrentQ];
+    const isCorrect = selected === q.correct;
+    const colors = ['#e21b3c', '#1368ce', '#d89e00', '#26890c'];
+
+    if (isCorrect) {
+        _kahootScore += 2;
+    }
+    _kahootAnswers.push({ question: _kahootCurrentQ, selected: selected, correct: q.correct, isCorrect: isCorrect });
+
+    document.querySelectorAll('.kahoot-option').forEach(btn => {
+        const idx = parseInt(btn.getAttribute('data-index'));
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        if (idx === q.correct) {
+            btn.classList.add('kahoot-correct');
+            btn.style.background = '#26890c';
+            btn.style.border = '3px solid #fff';
+            btn.style.transform = 'scale(1.05)';
+        } else if (idx === selected && !isCorrect) {
+            btn.classList.add('kahoot-wrong');
+            btn.style.opacity = '0.6';
+            btn.style.border = '3px solid #ff4444';
+        } else {
+            btn.style.opacity = '0.4';
         }
     });
-    if (answered < _finalTestQuestions.length) {
-        showNotification('Lūdzu, atbildi uz visiem jautājumiem!', 'warning', 2000);
-        return;
-    }
-    _finalTestScore = bonus;
-    if (bonus > 0) {
-        GameState.addScore(bonus);
-        showNotification(`Tests pabeigts! +${bonus} bonusu punkti`, 'success', 2000);
+
+    const feedbackEl = document.createElement('div');
+    feedbackEl.className = 'kahoot-feedback';
+    feedbackEl.innerHTML = isCorrect
+        ? '<span style="color:#26890c; font-size:22px; font-weight:bold;">✅ Pareizi! +2 punkti</span>'
+        : '<span style="color:#e21b3c; font-size:22px; font-weight:bold;">❌ Nepareizi!</span>';
+    const quizEl = document.querySelector('.kahoot-quiz');
+    if (quizEl) quizEl.appendChild(feedbackEl);
+
+    setTimeout(() => {
+        _kahootCurrentQ++;
+        if (_kahootCurrentQ < _finalTestQuestions.length) {
+            showKahootQuestion();
+        } else {
+            showKahootResults();
+        }
+    }, 1500);
+}
+
+function showKahootResults() {
+    _finalTestScore = _kahootScore;
+    const total = _finalTestQuestions.length;
+    const correctCount = _kahootAnswers.filter(a => a.isCorrect).length;
+    const maxBonus = total * 2;
+
+    let emoji = '🥉';
+    if (correctCount >= 9) emoji = '🏆';
+    else if (correctCount >= 7) emoji = '🥇';
+    else if (correctCount >= 5) emoji = '🥈';
+
+    document.querySelector('.task-section').innerHTML = `
+        <div class="kahoot-results" style="text-align:center;">
+            <h2 style="color:#ffaa00; font-size:28px; margin-bottom:10px;">${emoji} Noslēguma tests pabeigts!</h2>
+            <div style="background:rgba(0,0,0,0.3); border:2px solid #ffaa00; border-radius:12px; padding:20px; margin:15px 0;">
+                <p style="font-size:20px; color:#ffaa00; margin:5px 0;">Pareizas atbildes: <strong>${correctCount}</strong>/${total}</p>
+                <p style="font-size:22px; color:#ffaa00; margin:5px 0;">Bonusa punkti: <strong>${_kahootScore}</strong>/${maxBonus}</p>
+            </div>
+            <div style="text-align:left; max-height:200px; overflow-y:auto; margin:15px 0; padding-right:5px;">
+                ${_kahootAnswers.map((a, i) => {
+                    const q = _finalTestQuestions[i];
+                    return `<div style="background:rgba(0,0,0,0.2); border-left:3px solid ${a.isCorrect ? '#26890c' : '#e21b3c'}; border-radius:4px; padding:6px 10px; margin:4px 0; font-size:12px;">
+                        <span style="color:${a.isCorrect ? '#26890c' : '#e21b3c'}; font-weight:bold;">${a.isCorrect ? '✅' : '❌'} ${i+1}.</span>
+                        <span style="color:#ccc;">${q.q}</span>
+                        ${!a.isCorrect ? `<br><span style="color:#888; font-size:11px;">Pareizā: ${q.options[q.correct]}</span>` : ''}
+                    </div>`;
+                }).join('')}
+            </div>
+            <button class="btn btn-full" id="btn-kahoot-finish" style="background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">Turpināt →</button>
+        </div>
+    `;
+
+    if (_kahootScore > 0) {
+        GameState.addScore(_kahootScore);
+        showNotification(`Tests pabeigts! +${_kahootScore} bonusu punkti`, 'success', 2000);
     } else {
         showNotification('Tests pabeigts! Nav bonusu punktu.', 'error', 2000);
     }
-    setTimeout(() => { showEndGame(); }, 1800);
+
+    document.getElementById('btn-kahoot-finish').addEventListener('click', function() {
+        showEndGame();
+    });
 }
 
 function showEndGame() {
@@ -1511,15 +1696,15 @@ function showEndGameScreen(finalScore, formattedTime) {
     const gameScore = finalScore - _finalTestScore;
     const totalScore = finalScore;
     let medal = 'Bronza';
-    if (totalScore >= 88) medal = 'Zelts';
-    else if (totalScore >= 55) medal = 'Sudrabs';
+    if (totalScore >= 96) medal = 'Zelts';
+    else if (totalScore >= 60) medal = 'Sudrabs';
 
     const testLine = _finalTestShown
-        ? `<p style="font-size:17px;color:#ffaa00;margin:4px 0;">Bonusa punkti (tests): <strong>${_finalTestScore}</strong>/10</p>
+        ? `<p style="font-size:17px;color:#ffaa00;margin:4px 0;">Bonusa punkti (tests): <strong>${_finalTestScore}</strong>/20</p>
            <hr style="border-color:rgba(255,170,0,0.3);margin:10px 0;">`
         : '';
     const scoreLine = _finalTestShown
-        ? `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Kopā: <strong>${totalScore}</strong>/110</p>`
+        ? `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Kopā: <strong>${totalScore}</strong>/120</p>`
         : `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Punkti: <strong>${totalScore}</strong>/100</p>`;
 
     document.querySelector('.task-section').innerHTML = `
@@ -3199,5 +3384,4 @@ window.sendReady = sendReady;
 window.sendLobbyReady = sendLobbyReady;
 window.checkMini = checkMini;
 window.toggleAnimations = toggleAnimations;
-window.submitFinalTest = submitFinalTest;
 })(); 
