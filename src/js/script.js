@@ -420,30 +420,22 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initSmartConnection() {
     console.log("Initializing multiplayer connection...");
     updateConnectionStatus('reconnecting');
-    
-    const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    
-    if (isLocalhost) {
-        console.log("Localhost detected, trying WebSocket first...");
-        const wsAvailable = await tryWebSocketConnection();
-        
-        if (wsAvailable) {
-            console.log("WebSocket detected");
-            connectionMode = CONNECTION_MODE_WS;
-            updateConnectionStatus('connected');
-            showNotification('WebSocket detected', 'success', 2000);
-            if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
-                console.log(`Rejoining lobby ${myLobbyCode} as ${myRole}`);
-            }
-            return;
-        } else {
-            console.log("WebSocket unavailable, using PHP polling");
+
+    const wsAvailable = await tryWebSocketConnection();
+
+    if (wsAvailable) {
+        console.log("WebSocket connected");
+        connectionMode = CONNECTION_MODE_WS;
+        updateConnectionStatus('connected');
+        showNotification('WebSocket detected', 'success', 2000);
+        if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
+            console.log(`Rejoining lobby ${myLobbyCode} as ${myRole}`);
         }
+        return;
     }
-    
-    console.log("PHP fallback mode no websocket detected");
+
+    console.log("WebSocket unavailable, using PHP polling");
     connectionMode = CONNECTION_MODE_PHP;
     initPHPPolling();
     showNotification('Multiplayer gatavs!', 'success', 2000);
@@ -459,7 +451,7 @@ function tryWebSocketConnection() {
         }, WS_TIMEOUT);
         
         try {
-            const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
+            const wsUrl = `${WS_PROTOCOL}//${window.location.hostname}:${WS_PORT}`;
             ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
@@ -572,7 +564,7 @@ function connectWebSocket() {
     }
 
     try {
-        const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
+        const wsUrl = `${WS_PROTOCOL}//${window.location.hostname}:${WS_PORT}`;
         
         ws = new WebSocket(wsUrl);
         

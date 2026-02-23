@@ -20,7 +20,10 @@
 
 import { io } from 'socket.io-client';
 
-const SERVER_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8080';
+const SERVER_URL = import.meta.env.VITE_SOCKET_URL ||
+  (typeof window !== 'undefined' && /^https?:/.test(window.location.protocol)
+    ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`
+    : 'http://localhost:8080');
 
 let _socket = null;
 let _pingInterval = null;
