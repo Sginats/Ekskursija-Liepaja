@@ -63,6 +63,18 @@
 
     <div id="tooltip" class="tooltip"></div>
 
+    <div id="before-game-modal" class="modal" style="z-index: 4000;">
+        <div class="modal-content" style="text-align: center;">
+            <h2 style="color: #ffaa00; font-size: 24px; margin-bottom: 15px;">🗺️ Pirms spēles sākuma</h2>
+            <div class="info-box" style="text-align: left;">
+                <p style="font-size: 15px; margin-bottom: 12px;">⚠️ Pēc visu vietu apmeklēšanas tevi sagaida <strong style="color: #ffaa00;">noslēguma tests</strong> — 10 jautājumi par Liepāju!</p>
+                <p style="font-size: 15px; margin-bottom: 12px;">📖 Pēc katra mini-spēles uzdevuma tu saņemsi <strong style="color: #ffaa00;">padomus un faktus</strong>. Lasi tos uzmanīgi — tie palīdzēs noslēguma testā!</p>
+                <p style="font-size: 15px; color: #ffaa00; font-weight: bold;">🎯 Iegaumē svarīgāko informāciju, lai iegūtu maksimālo rezultātu!</p>
+            </div>
+            <button class="btn btn-full" id="btn-before-game-continue" style="margin-top: 20px; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold; font-size: 18px;">Sākt ekskursiju →</button>
+        </div>
+    </div>
+
     <div id="game-modal" class="modal">
         <div class="modal-content quiz-layout">
             <div class="guide-wrapper">
@@ -127,30 +139,28 @@
             
             <div class="info-box">
                 <p><strong id="about-game-label">Spēle:</strong> "Mācību ekskursija Liepājā"</p>
-                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju, veicot interaktīvus uzdevumus un sacensties par labākajiem rezultātiem.</span></p>
+                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīstināt lietotājus ar Liepājas kultūrvēsturiskajām vietām, uzņēmumiem un izglītības iespējām, pildot dažādus uzdevumus.</span></p>
+                <p>Šis projekts tika izstrādāts kā mācību darbs. Spēle piedāvā virtuālu ekskursiju pa Liepāju, kurā spēlētājam jāatrod objekti kartē, jāatbild uz jautājumiem un jāsacenšas par labāko rezultātu.</p>
             </div>
 
-            <h3 class="section-title">Spēles noteikumi</h3>
+            <h3 class="section-title">Funkcionalitāte</h3>
             <div class="info-box">
-                <ol style="margin: 5px 0 0 20px; font-size: 14px; line-height: 1.8;">
-                    <li>Ekskursija ietver <strong>10 apmeklējuma vietas</strong> Liepājā, kas jāapmeklē noteiktā secībā.</li>
-                    <li>Katrā vietā saņemsi <strong>informāciju par vietu</strong> un <strong>uzdevumu</strong> (jautājums, mini-spēle vai secības uzdevums).</li>
-                    <li>Par <strong>pareizu atbildi</strong> pirmajā mēģinājumā saņemsi <strong>+10 punktus</strong>.</li>
-                    <li>Par <strong>pareizu atbildi</strong> pēc 1 nepareizas — <strong>+5 punkti</strong>. Pēc 2 nepareizām — <strong>0 punkti</strong>, atbilde tiek parādīta.</li>
-                    <li>Katru vietu var apmeklēt <strong>tikai vienu reizi</strong>.</li>
-                    <li>Pēdējā apmeklējuma vieta vienmēr ir <strong>atpūtas vieta</strong>.</li>
-                    <li>Pēc visu vietu apmeklēšanas seko <strong>noslēguma tests</strong> — 5 jautājumi par Liepāju (katra pareiza atbilde: <strong>+2 bonusa punkti</strong>, maks. +10).</li>
-                    <li>Spēles beigās tiek parādīts tavs <strong>rezultāts</strong> un <strong>laiks</strong>. Maksimālais rezultāts: <strong>110 punkti</strong>.</li>
-                    <li>Vari saglabāt rezultātu un iekļūt <strong>Top 10 tabulā</strong>!</li>
-                </ol>
+                <ul style="margin: 5px 0 0 20px; font-size: 14px; line-height: 1.8;">
+                    <li><strong>Interaktīva karte:</strong> Liepājas karte ar aktīviem punktiem.</li>
+                    <li><strong>Uzdevumu sistēma:</strong> Katrā vietā ir unikāls uzdevums.</li>
+                    <li><strong>Punktu skaitīšana:</strong> Pareiza atbilde: <strong>+10 punkti</strong>, kļūdaina: <strong>-5 punkti</strong>.</li>
+                    <li><strong>Laika uzskaite:</strong> Tiek fiksēts laiks, cik ilgi spēlētājs pavada spēlē.</li>
+                    <li><strong>Top 10 Rezultāti:</strong> Rezultāts tiek saglabāts un attēlots "Leaderboard" tabulā.</li>
+                    <li><strong>Iestatījumi:</strong> Iespēja mainīt mūzikas un skaņas efektu skaļumu.</li>
+                </ul>
             </div>
 
             <h3 id="legend-title" class="section-title">Objektu nozīme kartē</h3>
             <ul class="legend-list">
-                <li id="legend-green"><span class="dot point-green"></span> Zaļš: Daba un atpūta</li>
-                <li id="legend-blue"><span class="dot point-blue"></span> Zils: Kultūra un vēsture</li>
-                <li id="legend-yellow"><span class="dot point-yellow"></span> Dzeltens: RTU Liepājas akadēmija</li>
-                <li id="legend-red"><span class="dot point-red"></span> Sarkans: Industrija un osta</li>
+                <li id="legend-green"><span class="dot point-green"></span> Zaļš: Daba un atpūta (Viegli)</li>
+                <li id="legend-blue"><span class="dot point-blue"></span> Zils: Kultūra un vēsture (Vidēji)</li>
+                <li id="legend-yellow"><span class="dot point-yellow"></span> Dzeltens: RTU Liepājas akadēmija (Eksperts)</li>
+                <li id="legend-red"><span class="dot point-red"></span> Sarkans: Industrija un osta (Izaicinājums)</li>
             </ul>
 
             <div class="two-columns">
@@ -161,8 +171,7 @@
                         <li>JavaScript (ES6+)</li>
                         <li>PHP (Backend)</li>
                         <li>WebSocket (Real-time)</li>
-                        <li>Node.js (Server)</li>
-                        <li>AI: Gemini, Claude, Copilot</li>
+                        <li><a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node.js</a> (Server)</li>
                     </ul>
                 </div>
                 <div>
@@ -178,9 +187,9 @@
             <div class="resources-list">
                 <p><strong>Attēli:</strong></p>
                 <ul>
-                    <li>Karte: OpenStreetMap (© OpenStreetMap contributors)</li>
+                    <li>Karte: <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> (© OpenStreetMap contributors)</li>
                     <li>Kaija (Gids): Autoru zīmējums</li>
-                    <li>Fons: Freepik (freepik.com)</li>
+                    <li>Fons: <a href="https://www.freepik.com" target="_blank" rel="noopener noreferrer">Freepik</a></li>
                 </ul>
                 <p><strong>Audio:</strong></p>
                 <ul>
@@ -189,15 +198,17 @@
                 </ul>
                 <p><strong>Informācija:</strong></p>
                 <ul>
-                    <li>Fakti par Liepāju: liepaja.lv, rtu.lv</li>
-                    <li>Vēsturiskie dati: Liepājas muzejs, wikipedia.org</li>
+                    <li>Fakti par Liepāju: <a href="https://www.liepaja.lv" target="_blank" rel="noopener noreferrer">liepaja.lv</a>, <a href="https://www.rtu.lv" target="_blank" rel="noopener noreferrer">rtu.lv</a></li>
+                    <li>Vēsturiskie dati: Liepājas muzejs, <a href="https://lv.wikipedia.org" target="_blank" rel="noopener noreferrer">wikipedia.org</a></li>
                 </ul>
                 <p><strong>Tehnoloģijas un bibliotēkas:</strong></p>
                 <ul>
-                    <li>Bootstrap 5.3.2 (getbootstrap.com)</li>
-                    <li>Node.js, WebSocket (nodejs.org)</li>
+                    <li><a href="https://getbootstrap.com" target="_blank" rel="noopener noreferrer">Bootstrap 5.3.2</a></li>
+                    <li><a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node.js</a>, WebSocket</li>
                 </ul>
             </div>
+
+            <p style="text-align: center; font-size: 12px; color: #777; margin-top: 15px;">© 2026 Niks Šenvalds, Dans Bitenieks.</p>
 
             <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
         </div>
