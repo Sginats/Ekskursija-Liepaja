@@ -28,6 +28,7 @@ import usePersistence from './hooks/usePersistence.js';
 
 const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', END: 'end' };
 const LAST_LOCATION_ID = 'parks';
+const SCORE_CAP = 10;
 
 // ── Inner game wrapped inside CoopProvider ────────────────────────────────────
 function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
@@ -118,7 +119,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   // ── Minigame → question transition ───────────────────────────────────────
   useEffect(() => {
     const unsub = EventBridge.on('MINIGAME_COMPLETE', ({ bonusPoints }) => {
-      setScore(s => s + (bonusPoints || 0));
+      setScore(s => Math.min(SCORE_CAP, s + (bonusPoints || 0)));
       setPhase(PHASE.QUESTION);
     });
     return unsub;
@@ -196,7 +197,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const handleQuestionComplete = useCallback(({ points, correct, attempts }) => {
     // Apply coop multiplier if active
     const finalPoints = Math.round(points * (coopMultiplier > 1 ? coopMultiplier : 1));
-    setScore(s => s + finalPoints);
+    setScore(s => Math.min(SCORE_CAP, s + finalPoints));
     onScoreChange?.(score + finalPoints);
 
     const locId = currentLocation.id;

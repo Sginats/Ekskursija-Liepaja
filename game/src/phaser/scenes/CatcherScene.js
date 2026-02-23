@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import EventBridge from '../../utils/EventBridge.js';
 import SpeedController from '../../utils/SpeedController.js';
+import NoteSound from '../../utils/NoteSound.js';
 
 export default class CatcherScene extends Phaser.Scene {
   constructor() {
@@ -139,6 +140,7 @@ export default class CatcherScene extends Phaser.Scene {
           this._caught++;
           this._scoreText.setText(`${this._caught} / ${this._cfg.required}`);
           this._flashBasket(0x00ff00);
+          if (this._cfg.locationId === 'dzintars') NoteSound.play(item.text);
           if (this._caught >= this._cfg.required) this._finish(true);
         } else {
           this._flashBasket(0xff0000);

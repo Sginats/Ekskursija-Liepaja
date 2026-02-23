@@ -5,6 +5,8 @@ import { getDayNightState, getSkyColors } from '../../utils/DayNight.js';
 
 const BTN_SIZE = 80;
 const BTN_GAP = 14;
+const RAMP_MIN_FACTOR   = 0.5;
+const RAMP_PER_ROUND    = 0.12;
 
 export default class SequenceScene extends Phaser.Scene {
   constructor() {
@@ -18,6 +20,8 @@ export default class SequenceScene extends Phaser.Scene {
     this._round = 0;
     this._active = false;
     this._inputEnabled = false;
+    this._speedRamp = data.speedRamp || false;
+    this._rampFactor = 1.0;
     const dn = getDayNightState();
     this._sky = getSkyColors(dn.isNight, dn.isGoldenHour);
     this._nightMode = dn.isNight;
@@ -126,6 +130,9 @@ export default class SequenceScene extends Phaser.Scene {
     this._round++;
     this._playerIdx = 0;
     this._inputEnabled = false;
+    if (this._speedRamp && this._round > 1) {
+      this._rampFactor = Math.max(RAMP_MIN_FACTOR, this._rampFactor - RAMP_PER_ROUND);
+    }
     const el = this._cfg.elements[Math.floor(Math.random() * this._cfg.elements.length)];
     this._seq.push(el);
     this._roundText.setText(`Kārta ${this._round}/${this._cfg.rounds}`);
@@ -134,16 +141,17 @@ export default class SequenceScene extends Phaser.Scene {
   }
 
   _playSequence() {
+    const rf = this._speedRamp ? this._rampFactor : 1.0;
     this._seq.forEach((el, i) => {
       const btnIdx   = this._cfg.elements.indexOf(el);
-      const show     = SpeedController.scale(this._cfg.showDuration);
-      const gap      = SpeedController.scale(this._cfg.gapDuration);
-      const delay    = show * i + SpeedController.scale(300);
+      const show     = SpeedController.scale(this._cfg.showDuration * rf);
+      const gap      = SpeedController.scale(this._cfg.gapDuration * rf);
+      const delay    = show * i + SpeedController.scale(300 * rf);
       this.time.delayedCall(delay,           () => this._flash(btnIdx, true));
       this.time.delayedCall(delay + show - gap, () => this._flash(btnIdx, false));
     });
 
-    const totalDelay = SpeedController.scale(this._cfg.showDuration) * this._seq.length + SpeedController.scale(500);
+    const totalDelay = SpeedController.scale(this._cfg.showDuration * rf) * this._seq.length + SpeedController.scale(500 * rf);
     this.time.delayedCall(totalDelay, () => {
       this._inputEnabled = true;
       this._statusText.setText('Tava kārta!').setColor('#4caf50');
