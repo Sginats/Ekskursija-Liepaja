@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ScorePop from './ScorePop.jsx';
 import EventBridge from '../utils/EventBridge.js';
+import NotoEmoji from './NotoEmoji.jsx';
 
 /**
  * ScoreBar
@@ -38,7 +39,7 @@ export default function ScoreBar({ score, locationName, phase }) {
     <div className={`score-bar${shake ? ' score-bar-shake' : ''}`}>
       <span className="score-bar-phase">{locationName}</span>
       <span className={`score-bar-score${shake ? ' score-bar-score-wrong' : ''}`}>
-        ⭐ {score} punkti
+        <NotoEmoji emoji="⭐" size={18} style={{ marginRight: 4 }} />{score} punkti
         {popDelta !== 0 && <ScorePop key={popKey} delta={popDelta} />}
       </span>
       {phase && <span className="score-bar-hint">{phase}</span>}

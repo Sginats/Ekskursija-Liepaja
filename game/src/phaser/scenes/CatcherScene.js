@@ -6,6 +6,9 @@ import NoteSound from '../../utils/NoteSound.js';
 const COMBO_THRESHOLDS = [3, 5, 8];   // hits to reach combo ×2, ×3, ×4
 const SPEED_RAMP_RATE  = 0.07;        // speed boost per correct hit when speedRamp on
 const SPEED_RAMP_MAX   = 2.0;         // max fall-speed multiplier
+const MAX_COMBO_BONUS  = 2;           // max extra bonus points for combo (1 per tier, capped)
+// Green channel cap for speed-meter colour ramp: full-green at 0 speed, 0 at max speed
+const SPEED_METER_GREEN_MAX = 180;
 
 export default class CatcherScene extends Phaser.Scene {
   constructor() {
@@ -277,9 +280,9 @@ export default class CatcherScene extends Phaser.Scene {
 
     this._speedMeterFg.clear();
     if (fill > 0) {
-      // Colour shifts from green → red as speed increases
+      // Colour shifts from green → red as speed increases (green capped at SPEED_METER_GREEN_MAX to avoid neon)
       const r = Math.round(fill * 255);
-      const g = Math.round((1 - fill) * 180);
+      const g = Math.round((1 - fill) * SPEED_METER_GREEN_MAX);
       const colour = (r << 16) | (g << 8);
       this._speedMeterFg.fillStyle(colour, 1);
       this._speedMeterFg.fillRoundedRect(x, y, Math.max(4, barW * fill), barH, 3);
@@ -297,7 +300,7 @@ export default class CatcherScene extends Phaser.Scene {
     const { width, height } = this.scale;
     // Bonus points: time bonus + combo bonus (1 extra pt per combo tier reached, max 2)
     const timeBonus  = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 5 : 3) : 0;
-    const comboBonus = success ? Math.min(2, COMBO_THRESHOLDS.filter(t => this._maxCombo >= t).length) : 0;
+    const comboBonus = success ? Math.min(MAX_COMBO_BONUS, COMBO_THRESHOLDS.filter(t => this._maxCombo >= t).length) : 0;
     const pts        = Math.min(5, timeBonus + comboBonus);
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.6);

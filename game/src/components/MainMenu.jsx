@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import NotoEmoji from './NotoEmoji.jsx';
 
 export default function MainMenu({ onStart }) {
   const [name, setName] = useState('');
@@ -13,14 +14,17 @@ export default function MainMenu({ onStart }) {
   return (
     <div className="main-menu">
       <div className="menu-card">
-        <h1 className="menu-title">🌊 Liepājas<br />Ekskursija</h1>
+        <h1 className="menu-title">
+          <NotoEmoji emoji="🌊" size={44} style={{ marginBottom: 4 }} /><br />
+          Liepājas<br />Ekskursija
+        </h1>
         <p className="menu-sub">Iepazīsti 10 Liepājas nozīmīgākās vietas</p>
 
         <div className="menu-features">
-          <span>💨 Vēja enerģijas sistēma</span>
-          <span>🎮 3 mini-spēļu veidi</span>
-          <span>🃏 Kolekcionējamās kartītes</span>
-          <span>🏆 Top 10 tabula</span>
+          <span><NotoEmoji emoji="💨" size={18} style={{ marginRight: 6 }} />Vēja enerģijas sistēma</span>
+          <span><NotoEmoji emoji="🎮" size={18} style={{ marginRight: 6 }} />3 mini-spēļu veidi</span>
+          <span><NotoEmoji emoji="🃏" size={18} style={{ marginRight: 6 }} />Kolekcionējamās kartītes</span>
+          <span><NotoEmoji emoji="🏆" size={18} style={{ marginRight: 6 }} />Top 10 tabula</span>
         </div>
 
         <div className="input-wrap">

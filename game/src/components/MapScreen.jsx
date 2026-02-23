@@ -4,6 +4,7 @@ import { useCoopContext } from './CoopManager.jsx';
 import GlobalProgressBar from './GlobalProgressBar.jsx';
 import PlayerAnalytics from './PlayerAnalytics.jsx';
 import RouteOverlay from './RouteOverlay.jsx';
+import NotoEmoji from './NotoEmoji.jsx';
 
 const CATEGORY_COLORS = {
   culture:   { dot: '#2196f3', label: 'Kultūra & vēsture' },
@@ -18,8 +19,12 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
   return (
     <div className="map-screen">
       <div className="map-topbar">
-        <span className="map-title">🗺 Liepājas Ekskursija</span>
-        <span className="map-score">⭐ {score}</span>
+        <span className="map-title">
+          <NotoEmoji emoji="🗺️" size={20} style={{ marginRight: 6 }} />Liepājas Ekskursija
+        </span>
+        <span className="map-score">
+          <NotoEmoji emoji="⭐" size={18} style={{ marginRight: 4 }} />{score}
+        </span>
       </div>
 
       <GlobalProgressBar />

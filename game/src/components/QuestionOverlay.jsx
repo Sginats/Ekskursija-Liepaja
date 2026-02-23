@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { applyAnswerRestore } from '../utils/WindEnergy.js';
 import DynamicDifficulty from '../utils/DynamicDifficulty.js';
 import EventBridge from '../utils/EventBridge.js';
+import NotoEmoji from './NotoEmoji.jsx';
 
 export default function QuestionOverlay({ question, locationName, locationId, questionIdx, onComplete, windEnergy, onWindUpdate }) {
   const [input, setInput] = useState('');
@@ -110,8 +111,8 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
           <p className="question-text">{question.text}</p>
           <p className="question-attempts">
             {attempts === 0
-              ? `🎯 +${basePoints} punkti par pareizu atbildi${diffLabel ? ` · ${diffLabel}` : ''}`
-              : `💡 +${secondAttemptPts} punkti — vēl 1 mēģinājums`}
+              ? <><NotoEmoji emoji="🎯" size={16} style={{ marginRight: 4 }} />+{basePoints} punkti par pareizu atbildi{diffLabel ? ` · ${diffLabel}` : ''}</>
+              : <><NotoEmoji emoji="💡" size={16} style={{ marginRight: 4 }} />+{secondAttemptPts} punkti — vēl 1 mēģinājums</>}
           </p>
         </div>
 
