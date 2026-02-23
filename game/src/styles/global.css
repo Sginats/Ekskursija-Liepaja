@@ -784,11 +784,24 @@ body[data-night='1']::after {
 }
 
 .about-section { margin-bottom: 20px; }
-.about-section h3 { font-size: 15px; color: var(--amber); margin-bottom: 8px; }
+.about-section h3 { font-size: 15px; color: var(--amber); margin-bottom: 8px; display: flex; align-items: center; }
 .about-section p, .about-section li { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
 .about-section ul { padding-left: 18px; }
 .about-section a { color: var(--amber); text-decoration: none; }
 .about-section a:hover { text-decoration: underline; }
+.about-section code { font-family: monospace; font-size: 12px; background: rgba(255,255,255,0.07); padding: 1px 5px; border-radius: 4px; }
+
+.about-emoji-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 170, 0, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
 
 /* ── End Screen ──────────────────────────────────────────────── */
 .end-screen {
