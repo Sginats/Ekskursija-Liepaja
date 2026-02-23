@@ -37,6 +37,8 @@ export default class KeypadScene extends Phaser.Scene {
     this._codeVisible = false;
     this._coopUnsubs  = [];
     this._autoSubmitTimer = null;
+    this._speedRamp       = data.speedRamp || false;
+    this._rampFactor      = 1.0;
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -224,8 +226,21 @@ export default class KeypadScene extends Phaser.Scene {
 
     // Digit
     if (this._entered.length >= this._codeLength) return;
+    const digitIdx = this._entered.length;
     this._entered += lbl;
     this._updateDisplay();
+
+    // Speed ramp: each correct digit press increases countdown speed
+    if (this._speedRamp && lbl === this._targetCode[digitIdx]) {
+      this._rampFactor = Math.max(0.55, this._rampFactor - 0.1);
+      this._countdownTimer?.remove();
+      this._countdownTimer = this.time.addEvent({
+        delay: SpeedController.scale(1000 * this._rampFactor),
+        callback: this._tick,
+        callbackScope: this,
+        loop: true,
+      });
+    }
 
     // Auto-submit when full length reached
     if (this._entered.length === this._codeLength) {

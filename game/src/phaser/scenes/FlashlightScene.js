@@ -15,6 +15,8 @@ export default class FlashlightScene extends Phaser.Scene {
     this._active = true;
     this._timeLeft = data.timeLimit;
     this._countdownTimer = null;
+    this._speedRamp = data.speedRamp || false;
+    this._lastRampPct = 0;
     const dn = getDayNightState();
     this._sky = getSkyColors(dn.isNight, dn.isGoldenHour);
     this._cityLights = getCityLights(dn.isNight);
@@ -179,6 +181,23 @@ export default class FlashlightScene extends Phaser.Scene {
       this._revealed = this._grid.reduce((s, v) => s + v, 0);
       const pct = this._revealed / this._totalCells;
       this._progressText.setText(`${Math.round(pct * 100)}%`);
+
+      // Speed ramp: every 15% revealed, tick the countdown faster
+      if (this._speedRamp) {
+        const bucket = Math.floor(pct * 100 / 15);
+        if (bucket > this._lastRampPct) {
+          this._lastRampPct = bucket;
+          const rampFactor = Math.max(0.55, 1.0 - bucket * 0.1);
+          this._countdownTimer?.remove();
+          this._countdownTimer = this.time.addEvent({
+            delay: SpeedController.scale(1000 * rampFactor),
+            callback: this._tick,
+            callbackScope: this,
+            loop: true,
+          });
+        }
+      }
+
       if (pct >= this._cfg.requiredReveal) this._finish(true);
     }
   }
