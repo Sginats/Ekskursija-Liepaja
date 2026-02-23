@@ -1,7 +1,7 @@
 (function() {
 'use strict';
 
-// Protected game state
+// Game state, anti-cheat & integrity
 const GameState = (function() {
     let _score = 0;
     let _completedTasks = 0;
@@ -67,7 +67,7 @@ const _ac = (function() {
 
 const TOTAL_TASKS = 10;
 
-// DevTools detection
+// DevTools & context-menu protection
 (function _detectDevTools() {
     const threshold = 160;
     const check = function() {
@@ -89,14 +89,13 @@ const TOTAL_TASKS = 10;
     window.addEventListener('resize', check);
 })();
 
-// Disable right-click context menu on game elements
 document.addEventListener('contextmenu', function(e) {
     if (e.target.closest('.modal-content, .map-area, .task-section, .quiz-form')) {
         e.preventDefault();
     }
 });
 
-// Suppress console methods to reduce info leaks
+// Console suppression & error logging
 (function() {
     const _noop = function() {};
     try {
@@ -109,13 +108,10 @@ document.addEventListener('contextmenu', function(e) {
     } catch(e) { /* Browser may block property override */ }
 })();
 
-// Bug logger — captures uncaught JS errors and unhandled promise rejections
-// and reports them to the server so they can be reviewed in the admin panel.
 (function() {
     var _BL_SENT = 0;
     var _BL_MAX  = 15;
     var _BL_SEEN = {};
-    // Resolve endpoint relative to the current page's directory
     var _BL_URL  = window.location.pathname.indexOf('/src/php/') !== -1
         ? 'log_error.php'
         : 'src/php/log_error.php';
@@ -166,7 +162,7 @@ let quizWrongCount = 0;
 let _serverGameToken = null;
 
 
-// Configuration
+// Network & multiplayer config
 const WS_PORT = 8080;
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const POLL_INTERVAL = 2000;
@@ -181,7 +177,7 @@ const taskSequence = [
     'LSEZ', 'Mols', 'RTU', 'Cietums', 'Ezerkrasts'
 ];
 
-// Answer verification system — answers stored as pre-computed hashes only
+// Answer verification (hashed answers)
 const _k = [76,105,101,112,196,129,106,97];
 function _v(hex) {
     const b = [];
@@ -189,7 +185,7 @@ function _v(hex) {
     return new TextDecoder().decode(new Uint8Array(b.map((c, i) => c ^ _k[i % _k.length])));
 }
 
-// Anti-cheat: Session integrity token for score submission
+// Score submission integrity token
 const _sessionNonce = (function() {
     const arr = new Uint32Array(2);
     if (window.crypto && window.crypto.getRandomValues) {
@@ -314,9 +310,7 @@ const locationInfo = {
     }
 };
 
-// ============================================================================
-// INITIALIZATION & EVENT LISTENERS
-// ============================================================================
+// --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
@@ -324,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initBackground();
 
-    // Request a server-side game token for anti-cheat (skip on admin page)
     if (!window.location.pathname.match(/admin\.php$/)) {
         fetch('src/php/start_game.php', { method: 'POST', credentials: 'include' })
             .then(r => r.json())
@@ -347,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if(document.querySelector('.point')) updateMapState();
 
-    // Show "Before Game" modal on map page load
+    // Before-game intro modal
     const beforeGameModal = document.getElementById('before-game-modal');
     if (beforeGameModal) {
         beforeGameModal.style.display = 'block';
@@ -381,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sfx.volume = savedSFXVolume ? savedSFXVolume / 100 : 0.2;
     }
 
-    // Background music setup
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) {
         const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -397,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('keydown', startMusic);
     }
 
-    // Hover sound on buttons
     document.querySelectorAll('.btn, .btnMini, .theme-btn').forEach(btn => {
         btn.addEventListener('mouseenter', () => {
             if (sfx && sfx.volume > 0) {
@@ -424,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Connection manager
+// --- Connection manager (WebSocket + PHP polling) ---
 
 async function initSmartConnection() {
     console.log("Initializing multiplayer connection...");
@@ -570,8 +561,6 @@ function handleWebSocketMessage(data) {
     }
 }
 
-// Legacy WebSocket functions
-
 let wsReconnectAttempts = 0;
 const wsMaxReconnectAttempts = 5;
 const wsBaseReconnectDelay = 1000;
@@ -631,10 +620,6 @@ function connectWebSocket() {
     }
 }
 
-/**
- * Update connection status indicator
- * @param {string} status - Connection status: 'connected', 'disconnected', 'reconnecting', 'error'
- */
 function updateConnectionStatus(status) {
     const indicator = document.getElementById('connection-status');
     if (!indicator) return;
@@ -652,7 +637,7 @@ function updateConnectionStatus(status) {
     indicator.title = statusText[status] || '';
 }
 
-// PHP polling alternative
+// --- PHP polling fallback ---
 
 let pollInterval = null;
 let phpPolling = false;
@@ -734,9 +719,6 @@ function startLobbyPolling() {
     }, POLL_INTERVAL);
 }
 
-/**
- * Notify partner about task completion (PHP version)
- */
 function notifyPartnerPHP(role, code) {
     fetch(`src/php/lobby.php?action=update_game&code=${code}&role=${role}`)
         .then(response => response.json())
@@ -775,7 +757,7 @@ function checkBothPlayersDonePHP(code) {
     }, 30000);
 }
 
-// Menu functions
+// --- Menu & navigation ---
 
 function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
@@ -834,7 +816,7 @@ function joinGame() {
     }
 }
 
-// Game logic
+// --- Map state & game flow ---
 
 function updateMapState() {
     const points = document.querySelectorAll('.point');
@@ -892,7 +874,7 @@ function showLocationThenStart(type, callback) {
     });
 }
 
-// Mini games & quiz
+// --- Mini-games & quiz ---
 
 const BOAT_RACE_CONFIG = {
     REQUIRED_PRESSES: 10,
@@ -1407,10 +1389,7 @@ function closeQuizAndContinue() {
     if(GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// ============================================================================
-// FINAL TEST (shown after all 10 tasks are complete)
-// Kahoot-style quiz: 10 questions, 4 options, progress, score, feedback
-// ============================================================================
+// --- Kahoot-style final test (10 questions, shown after all tasks) ---
 
 const _finalTestQuestions = [
     {
@@ -1803,7 +1782,7 @@ function setSFXVolume(v) {
     }
 }
 
-// Cursor trail effect
+// --- Visual effects (cursor trail, theme, background) ---
 function getTrailColor() {
     const theme = document.body.getAttribute('data-theme') || 'default';
     const colors = {
@@ -1911,7 +1890,6 @@ function initCursorTrail() {
     cursorTrailAnimId = window.requestAnimationFrame(update);
 }
 
-// Theme system
 function setTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('theme', themeName);
@@ -2078,54 +2056,46 @@ function initBackground() {
             }
         }
 
-        // City skyline silhouette at the bottom
+        // Skyline silhouette & sea waves
         const skylineY = h * 0.72;
         bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.06)`;
         bgCtx.beginPath();
         bgCtx.moveTo(0, h);
         bgCtx.lineTo(0, skylineY + 60);
-        // Dzintars concert hall dome
         bgCtx.lineTo(w * 0.05, skylineY + 60);
         bgCtx.lineTo(w * 0.06, skylineY + 40);
         bgCtx.lineTo(w * 0.065, skylineY + 20);
         bgCtx.arc(w * 0.075, skylineY + 20, w * 0.01, Math.PI, 0, false);
         bgCtx.lineTo(w * 0.09, skylineY + 40);
         bgCtx.lineTo(w * 0.10, skylineY + 60);
-        // City block
         bgCtx.lineTo(w * 0.15, skylineY + 60);
         bgCtx.lineTo(w * 0.15, skylineY + 30);
         bgCtx.lineTo(w * 0.22, skylineY + 30);
         bgCtx.lineTo(w * 0.22, skylineY + 60);
-        // Theatre spire
         bgCtx.lineTo(w * 0.28, skylineY + 60);
         bgCtx.lineTo(w * 0.28, skylineY + 10);
         bgCtx.lineTo(w * 0.285, skylineY);
         bgCtx.lineTo(w * 0.29, skylineY + 10);
         bgCtx.lineTo(w * 0.29, skylineY + 60);
-        // Lighthouse / tower
         bgCtx.lineTo(w * 0.35, skylineY + 60);
         bgCtx.lineTo(w * 0.35, skylineY + 5);
         bgCtx.lineTo(w * 0.355, skylineY + 2);
         bgCtx.lineTo(w * 0.36, skylineY + 5);
         bgCtx.lineTo(w * 0.36, skylineY + 60);
-        // Port crane
         bgCtx.lineTo(w * 0.42, skylineY + 60);
         bgCtx.lineTo(w * 0.42, skylineY + 25);
         bgCtx.lineTo(w * 0.50, skylineY + 10);
         bgCtx.lineTo(w * 0.50, skylineY + 25);
         bgCtx.lineTo(w * 0.44, skylineY + 25);
         bgCtx.lineTo(w * 0.44, skylineY + 60);
-        // Low blocks
         bgCtx.lineTo(w * 0.55, skylineY + 60);
         bgCtx.lineTo(w * 0.55, skylineY + 45);
         bgCtx.lineTo(w * 0.65, skylineY + 45);
         bgCtx.lineTo(w * 0.65, skylineY + 60);
-        // RTU building
         bgCtx.lineTo(w * 0.70, skylineY + 60);
         bgCtx.lineTo(w * 0.70, skylineY + 20);
         bgCtx.lineTo(w * 0.78, skylineY + 20);
         bgCtx.lineTo(w * 0.78, skylineY + 60);
-        // Mols pier / lighthouse
         bgCtx.lineTo(w * 0.88, skylineY + 60);
         bgCtx.lineTo(w * 0.88, skylineY + 35);
         bgCtx.lineTo(w * 0.90, skylineY + 15);
@@ -2136,7 +2106,6 @@ function initBackground() {
         bgCtx.closePath();
         bgCtx.fill();
 
-        // Sea waves at the very bottom
         const waveT = animationsEnabled ? Date.now() / 2000 : 0;
         const waveY = h * 0.88;
         bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.08)`;
@@ -2247,7 +2216,7 @@ function showNotification(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-// Fishing mini-game
+// --- Fishing mini-game ---
 const FISHING_CONFIG = {
     TENSION_INCREASE: 0.6,
     TENSION_DECREASE: 0.4,
@@ -2386,7 +2355,7 @@ function drawFishing(ctx, canvas, fishPulling) {
     const H = canvas.height;
     ctx.clearRect(0, 0, W, H);
 
-    // Water waves
+    // Scene rendering: water, rod, fish, HUD
     const waterY = H * 0.45;
     ctx.fillStyle = 'rgba(30, 80, 140, 0.3)';
     ctx.beginPath();
@@ -2410,7 +2379,6 @@ function drawFishing(ctx, canvas, fishPulling) {
     ctx.closePath();
     ctx.fill();
 
-    // Fishing rod
     ctx.strokeStyle = '#6b3a1f';
     ctx.lineWidth = Math.min(6, W * 0.015);
     ctx.beginPath();
@@ -2421,7 +2389,6 @@ function drawFishing(ctx, canvas, fishPulling) {
     ctx.quadraticCurveTo(W * 0.1, H * 0.5 - curveOffset, tipX, tipY);
     ctx.stroke();
 
-    // Fishing line
     const progress = 1 - (distance / FISHING_CONFIG.START_DISTANCE);
     const bobberX = tipX + (W * 0.55 - tipX) * (0.3 + progress * 0.5);
     const bobberY = waterY + 5 + Math.sin(waveOffset * 2) * 3;
@@ -2433,7 +2400,6 @@ function drawFishing(ctx, canvas, fishPulling) {
     ctx.quadraticCurveTo(bobberX, tipY + (bobberY - tipY) * 0.3, bobberX, bobberY);
     ctx.stroke();
 
-    // Bobber
     ctx.fillStyle = '#ff3333';
     ctx.beginPath();
     ctx.arc(bobberX, bobberY - 4, Math.min(6, W * 0.015), 0, Math.PI * 2);
@@ -2443,7 +2409,6 @@ function drawFishing(ctx, canvas, fishPulling) {
     ctx.arc(bobberX, bobberY + 2, Math.min(5, W * 0.012), 0, Math.PI * 2);
     ctx.fill();
 
-    // Fish silhouette
     const fishDist = distance / FISHING_CONFIG.START_DISTANCE;
     const fishX = bobberX + fishDist * W * 0.3;
     const fishY = waterY + 30 + Math.sin(waveOffset * 3 + 1) * 8;
@@ -2453,20 +2418,17 @@ function drawFishing(ctx, canvas, fishPulling) {
     ctx.beginPath();
     ctx.ellipse(fishX, fishY, fishSize, fishSize * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
-    // Tail
     ctx.beginPath();
     ctx.moveTo(fishX + fishSize, fishY);
     ctx.lineTo(fishX + fishSize + fishSize * 0.5, fishY - fishSize * 0.4);
     ctx.lineTo(fishX + fishSize + fishSize * 0.5, fishY + fishSize * 0.4);
     ctx.closePath();
     ctx.fill();
-    // Eye
     ctx.fillStyle = '#111';
     ctx.beginPath();
     ctx.arc(fishX - fishSize * 0.4, fishY - fishSize * 0.1, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Fish pull indicator
     if (fishPulling) {
         ctx.fillStyle = `rgba(255, 170, 0, ${0.5 + Math.sin(Date.now() / 80) * 0.5})`;
         ctx.font = `bold ${Math.min(14, W * 0.035)}px Poppins, Arial`;
@@ -2475,7 +2437,6 @@ function drawFishing(ctx, canvas, fishPulling) {
         ctx.textAlign = 'start';
     }
 
-    // Tension bar
     const barW = Math.min(200, W * 0.5);
     const barH = Math.min(18, H * 0.045);
     const barX = (W - barW) / 2;
@@ -2498,20 +2459,17 @@ function drawFishing(ctx, canvas, fishPulling) {
     roundRect(ctx, barX, barY, tensionW, barH, 4);
     ctx.fill();
 
-    // Tension label
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
     ctx.font = `bold ${Math.min(11, W * 0.028)}px Poppins, Arial`;
     ctx.textAlign = 'center';
     ctx.fillText('Spriegums', W * 0.5, barY + barH + 14);
 
-    // Warning text
     if (tension > FISHING_CONFIG.DEADLINE_THRESHOLD) {
         ctx.fillStyle = `rgba(255, 50, 50, ${0.5 + Math.abs(Math.sin(Date.now() / 100)) * 0.5})`;
         ctx.font = `bold ${Math.min(16, W * 0.04)}px Poppins, Arial`;
         ctx.fillText('⚠ UZMANĪBU!', W * 0.5, barY + barH + 32);
     }
 
-    // Distance display
     const distBarW = Math.min(160, W * 0.4);
     const distBarH = Math.min(10, H * 0.025);
     const distBarX = (W - distBarW) / 2;
@@ -2609,9 +2567,7 @@ function closeFishingGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// ============================================================================
-// recordMiniScore — report a minigame score to the server-side session
-// ============================================================================
+// --- Server-side score recording ---
 function recordMiniScore(taskId, points) {
     if (!_serverGameToken) return;
     fetch('src/php/record_task_score.php', {
@@ -2622,9 +2578,7 @@ function recordMiniScore(taskId, points) {
     }).catch(function() {});
 }
 
-// ============================================================================
-// DZINTARS — Simon Says (Mūzikas Atmiņa)
-// ============================================================================
+// --- Mini-game: Simon Says (Dzintars) ---
 const SIMON_COLORS = ['red', 'blue', 'green', 'yellow'];
 let simonSeq = [], simonIdx = 0, simonRound = 0;
 const SIMON_TOTAL_ROUNDS = 3;
@@ -2721,9 +2675,7 @@ function closeSimonGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// ============================================================================
-// KANALS — Boat Dodge (Laivas Vairīšanās)
-// ============================================================================
+// --- Mini-game: Boat Dodge (Kanals) ---
 let kanalGameActive = false, kanalAnimId2 = null;
 let kanalPlayerX = 160, kanalHits = 0, kanalDodges = 0;
 let kanalFrames = 0, kanalTimeLeft = 0, kanalTimer2 = null;
@@ -2884,9 +2836,7 @@ function closeKanalGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// ============================================================================
-// LSEZ — Cargo Sort (Kravas Šķirošana)
-// ============================================================================
+// --- Mini-game: Cargo Sort (LSEZ) ---
 let lsezActive = false, lsezCorrect = 0, lsezWrong = 0, lsezRound2 = 0;
 let lsezCurrentBin = -1, lsezItemTimer = null;
 const LSEZ_TOTAL2 = 10;
@@ -2998,9 +2948,7 @@ function closeLSEZGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// ============================================================================
-// CIETUMS — Guard Escape (single-player timing game)
-// ============================================================================
+// --- Mini-game: Guard Escape (Cietums) ---
 let cietActive = false, cietSteps = 0, cietGuardPos = 0, cietGuardDir = 0.5;
 let cietGuardSpd = 1.2, cietAnimId3 = null;
 const CIET_STEPS_NEEDED = 5;
@@ -3088,8 +3036,7 @@ function cietMove() {
     const isSafe = cietGuardPos >= 60 && cietGuardPos <= 80;
     if (isSafe) {
         cietSteps++;
-        //speed
-        cietGuardSpd = Math.min(1 /* max */, 0.6 /* min */ + cietSteps * 0.35);
+        cietGuardSpd = Math.min(1, 0.6 + cietSteps * 0.35);
         const st = document.getElementById('ciet-status');
         if (st) st.textContent = `Soļi: ${cietSteps}/${CIET_STEPS_NEEDED}`;
         if (cietSteps >= CIET_STEPS_NEEDED) { finishEscapeGame(true); } else { showNotification('✓ Labi!', 'success', 700); }
@@ -3136,9 +3083,7 @@ function closeEscapeGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// ============================================================================
-// EZERKRASTS — Bird Spotting (Putnu Vērošana)
-// ============================================================================
+// --- Mini-game: Bird Spotting (Ezerkrasts) ---
 let birdActive = false, birdCaught = 0, birdTimeLeft = 0, birdTimer2 = null, birdSpawnInt = null;
 const BIRDS_NEEDED = 8;
 const BIRD_GAME_TIME = 22;
@@ -3241,9 +3186,7 @@ function closeBirdGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// ============================================================================
-// PARKS — Memory Cards (Atmiņas Kārtis)
-// ============================================================================
+// --- Mini-game: Memory Cards (Parks) ---
 let memActive = false, memCards = [], memFlipped2 = [], memMatched2 = 0, memMoves = 0, memLock = false;
 const MEM_PAIRS2 = ['🌲', '🌳', '🌴', '🌿'];
 

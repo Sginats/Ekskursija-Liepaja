@@ -1881,9 +1881,7 @@ body[data-theme="blue"] #tabulaiTR {
     background: rgba(255,136,0,0.15);
 }
 
-/* ============================================================================
-   Kahoot-style Final Test
-   ============================================================================ */
+/* Kahoot-style final test */
 
 .kahoot-quiz {
     text-align: center;
@@ -1981,7 +1979,7 @@ body[data-theme="blue"] #tabulaiTR {
     animation: fadeInUp 0.3s ease;
 }
 
-/* About modal link styles */
+/* About modal links */
 .about-layout a {
     color: #ffaa00;
     text-decoration: underline;
