@@ -40,6 +40,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [currentConfig, setCurrentConfig] = useState(null);
   const [newCardId, setNewCardId] = useState(null);
+  const [newCardPerfect, setNewCardPerfect] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -202,6 +203,8 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
     const locId = currentLocation.id;
     const elapsed = AntiCheat.finishLocation(locId, score + finalPoints);
+    // Perfect answer: first attempt, correct, full points (equal to question.points[0])
+    const isPerfect = correct && attempts === 1 && points === (currentConfig?.question?.points?.[0] ?? 10);
 
     // Build route entry for journal
     const cfg = currentConfig;
@@ -227,6 +230,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     onLocationChange?.(null);
     if (isNew) {
       setNewCardId(locId);
+      setNewCardPerfect(isPerfect);
       setPhase(PHASE.CARD);
     } else {
       setPhase(PHASE.MAP);
@@ -235,6 +239,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
   const handleCardDismiss = useCallback(() => {
     setNewCardId(null);
+    setNewCardPerfect(false);
     setPhase(PHASE.MAP);
     if (completedLocations.length >= LOCATIONS.length) {
       setShowPreFinal(true);
@@ -331,6 +336,9 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       {phase === PHASE.CARD && newCardId && (
         <div className="card-reveal-overlay">
           <div className="card-reveal-box">
+            {newCardPerfect && (
+              <div className="perfect-badge">⭐ Perfekts! Max punkti!</div>
+            )}
             <p className="card-reveal-label">🎉 Jaunā kartīte atbloķēta!</p>
             <div className="card-reveal-card">
               <span style={{ fontSize: 56 }}>{CARD_META[newCardId]?.emoji}</span>

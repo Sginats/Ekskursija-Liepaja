@@ -151,7 +151,7 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
 
         {feedback?.type === 'wrong' && (
           <div className="feedback feedback-wrong">
-            ✗ Nepareizi — vēl {feedback.remaining} mēģinājums
+            ✗ Nepareizi — mēģini vēlreiz! Vēl {feedback.remaining} iespēja
           </div>
         )}
 

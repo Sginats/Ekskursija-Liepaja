@@ -593,6 +593,25 @@ body[data-night='1']::after {
   margin-bottom: 20px;
 }
 
+.perfect-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffd700, #ff9800);
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 18px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  animation: perfectPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes perfectPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
 .card-reveal-card {
   display: flex;
   flex-direction: column;
