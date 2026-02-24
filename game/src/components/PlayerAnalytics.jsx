@@ -1,4 +1,5 @@
 import { LOCATIONS } from '../data/LocationData.js';
+import NotoEmoji from './NotoEmoji.jsx';
 
 const MAX_POINTS_PER_LOCATION = 10;
 
@@ -23,17 +24,17 @@ export default function PlayerAnalytics({ completedLocations, score, startTime }
   return (
     <div className="analytics-panel">
       <div className="analytics-item">
-        <span className="analytics-icon">📍</span>
+        <span className="analytics-icon"><NotoEmoji emoji="📍" size={16} /></span>
         <span className="analytics-value">{completed}/{total}</span>
         <span className="analytics-label">Vietas</span>
       </div>
       <div className="analytics-item">
-        <span className="analytics-icon">🎯</span>
+        <span className="analytics-icon"><NotoEmoji emoji="🎯" size={16} /></span>
         <span className="analytics-value">{clampedAccuracy}%</span>
         <span className="analytics-label">Precizitāte</span>
       </div>
       <div className="analytics-item">
-        <span className="analytics-icon">⏱</span>
+        <span className="analytics-icon"><NotoEmoji emoji="⏱️" size={16} /></span>
         <span className="analytics-value">{avgTimeLabel}</span>
         <span className="analytics-label">Vid. laiks</span>
       </div>

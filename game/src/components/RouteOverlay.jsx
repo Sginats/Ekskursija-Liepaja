@@ -1,21 +1,24 @@
 import { LOCATIONS } from '../data/LocationData.js';
 
-export default function RouteOverlay({ completedLocations }) {
-  if (completedLocations.length < 2) return null;
+export default function RouteOverlay({ completedLocations, routePlan }) {
+  // If we have a routePlan, use it to draw the projected route line too? 
+  // The issue asks for an "Animated route line on the map for progress tracking".
+  // Let's first draw the completed route.
 
-  // Build ordered coordinate array from completion order
   const coords = completedLocations
     .map(id => LOCATIONS.find(l => l.id === id))
     .filter(Boolean)
     .map(loc => ({ x: loc.mapPosition.x, y: loc.mapPosition.y }));
 
-  if (coords.length < 2) return null;
+  // Draw projected route if routePlan exists
+  const projectedCoords = (routePlan || [])
+    .map(id => LOCATIONS.find(l => l.id === id))
+    .filter(Boolean)
+    .map(loc => ({ x: loc.mapPosition.x, y: loc.mapPosition.y }));
 
-  // Build SVG path
-  const pathParts = coords.map((c, i) =>
-    `${i === 0 ? 'M' : 'L'} ${c.x} ${c.y}`
-  );
-  const pathD = pathParts.join(' ');
+  const buildPath = (pts) => pts.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x} ${c.y}`).join(' ');
+  const completedPathD = buildPath(coords);
+  const projectedPathD = buildPath(projectedCoords);
 
   return (
     <svg
@@ -30,26 +33,43 @@ export default function RouteOverlay({ completedLocations }) {
           <stop offset="100%" stopColor="#2c6fa8" stopOpacity="0.9" />
         </linearGradient>
       </defs>
-      {/* Glow layer */}
-      <path
-        d={pathD}
-        fill="none"
-        stroke="rgba(255,170,0,0.3)"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+
+      {/* Projected (dimmed) route */}
+      {projectedPathD && (
+        <path
+          d={projectedPathD}
+          fill="none"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="0.4"
+          strokeDasharray="1 1.5"
+        />
+      )}
+
+      {/* Completed route glow */}
+      {completedPathD && (
+        <path
+          d={completedPathD}
+          fill="none"
+          stroke="rgba(255,170,0,0.3)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+
       {/* Main route line with dash animation */}
-      <path
-        className="route-line-animated"
-        d={pathD}
-        fill="none"
-        stroke="url(#routeGrad)"
-        strokeWidth="0.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray="2 1.5"
-      />
+      {completedPathD && (
+        <path
+          className="route-line-animated"
+          d={completedPathD}
+          fill="none"
+          stroke="url(#routeGrad)"
+          strokeWidth="0.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="2 1.5"
+        />
+      )}
     </svg>
   );
 }

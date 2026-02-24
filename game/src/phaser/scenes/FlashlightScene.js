@@ -244,7 +244,7 @@ export default class FlashlightScene extends Phaser.Scene {
     this._coopUnsubs?.forEach(u => u());
 
     const { width, height } = this.scale;
-    const pts = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 5 : 3) : 0;
+    const pts = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 10 : 5) : 0;
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.55).setDepth(30);
     this.add

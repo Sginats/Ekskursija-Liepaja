@@ -1,4 +1,5 @@
 import { getWindLevel } from '../utils/WindEnergy.js';
+import NotoEmoji from './NotoEmoji.jsx';
 
 export default function WindEnergyBar({ energy }) {
   const level = getWindLevel(energy);
@@ -6,7 +7,10 @@ export default function WindEnergyBar({ energy }) {
 
   return (
     <div className="wind-bar-wrap">
-      <span className="wind-label">💨 Vēja enerģija</span>
+      <span className="wind-label">
+        <NotoEmoji emoji="💨" size={16} style={{ marginRight: 5 }} />
+        Vēja enerģija
+      </span>
       <div className="wind-track">
         <div
           className="wind-fill"

@@ -164,9 +164,11 @@ let _serverGameToken = null;
 
 // Network & multiplayer config
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
-const WS_HOST = window.location.host;
+const WS_HOST = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+    ? '127.0.0.1:8080' 
+    : window.location.host;
 const POLL_INTERVAL = 2000;
-const WS_TIMEOUT = 2000;
+const WS_TIMEOUT = 3000;
 
 const CONNECTION_MODE_PHP = 'php-polling';
 const CONNECTION_MODE_WS = 'websocket';
@@ -439,8 +441,12 @@ async function initSmartConnection() {
 
 function tryWebSocketConnection() {
     return new Promise((resolve) => {
+        let finished = false;
         const timeout = setTimeout(() => {
+            if (finished) return;
+            finished = true;
             if (ws) {
+                ws.onopen = ws.onerror = ws.onclose = null;
                 ws.close();
             }
             resolve(false);
@@ -451,17 +457,22 @@ function tryWebSocketConnection() {
             ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
+                if (finished) return;
+                finished = true;
                 clearTimeout(timeout);
                 setupWebSocketHandlers();
                 resolve(true);
             };
             
             ws.onerror = () => {
+                if (finished) return;
+                finished = true;
                 clearTimeout(timeout);
                 resolve(false);
             };
             
             ws.onclose = () => {
+                if (finished) return;
                 if (connectionMode === CONNECTION_MODE_WS) {
                     setTimeout(() => {
                         if (connectionMode === CONNECTION_MODE_WS) {
@@ -471,6 +482,8 @@ function tryWebSocketConnection() {
                 }
             };
         } catch (error) {
+            if (finished) return;
+            finished = true;
             clearTimeout(timeout);
             resolve(false);
         }

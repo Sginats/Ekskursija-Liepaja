@@ -1,6 +1,6 @@
 import NotoEmoji from './NotoEmoji.jsx';
 
-export default function AboutModal({ onClose }) {
+export default function AboutModal({ onClose, onStart }) {
   return (
     <div className="about-overlay" role="dialog" aria-modal="true">
       <div className="about-panel">
@@ -17,25 +17,44 @@ export default function AboutModal({ onClose }) {
           </p>
         </section>
 
-
         <section className="about-section">
           <h3>🎮 Spēles gaita</h3>
           <ul>
-            <li>10 lokācijas Liepājā jāizpilda secīgi.</li>
-            <li>Katrā lokācijā: mini-spēle + jautājums.</li>
-            <li>Punkti: +10 (1. mēģinājums), +5 (2. mēģinājums), pēc tam 0.</li>
-            <li>Noslēgumā: fināla tests ar 5 jautājumiem (+2 par katru pareizu atbildi).</li>
-            <li>Maksimālais rezultāts: 110 punkti.</li>
+            <li>10 lokācijas Liepājā — apmeklē tās brīvā secībā (izņemot pēdējo — Jūrmalas parks).</li>
+            <li>Katrā lokācijā: mini-spēle (bonusa punkti) + jautājums.</li>
+            <li>Punkti: +10 (1. mēģinājums), +5 (2. mēģinājums), pēc 2 kļūdām — 0.</li>
+            <li>Noslēgumā: 5 jautājumu tests (+2 par katru pareizu atbildi, maks. +10).</li>
+            <li>Maksimālais rezultāts: <strong>110 punkti</strong>.</li>
+          </ul>
+        </section>
+
+        <section className="about-section">
+          <h3>🗺️ Krāsu leģenda (karte)</h3>
+          <ul>
+            <li><span style={{ color: '#2196f3' }}>●</span> Kultūra &amp; vēsture</li>
+            <li><span style={{ color: '#4caf50' }}>●</span> Daba &amp; atpūta</li>
+            <li><span style={{ color: '#ffd700' }}>●</span> Izglītība</li>
+            <li><span style={{ color: '#f44336' }}>●</span> Industrija &amp; osta</li>
           </ul>
         </section>
 
         <section className="about-section">
           <h3>🌐 Multiplayer</h3>
           <p>
-            Reāllaika režīms izmanto Socket.IO un WebSocket savienojumu.
+            Reāllaika ko-op režīms izmanto Socket.IO un WebSocket savienojumu.
             Ir automātiska atjaunošana un savienojuma statusa pārvaldība.
+            Ko-op spēle dod bonusa punktu reizinātāju abiem spēlētājiem.
           </p>
         </section>
+
+        <section className="about-section">
+          <h3>👥 Izstrādes komanda</h3>
+          <ul>
+            <li><strong>Niks Šenvalds</strong> — Grupa 2PT</li>
+            <li><strong>Dans Bitenieks</strong> — Grupa 2PT</li>
+          </ul>
+        </section>
+
         <section className="about-section">
           <h3>🛠 Izmantotās tehnoloģijas</h3>
           <ul>
@@ -83,9 +102,7 @@ export default function AboutModal({ onClose }) {
               </a>
             </li>
             <li><strong>Licence:</strong> Apache 2.0</li>
-            <li>
-              <strong>Autors:</strong> Google LLC
-            </li>
+            <li><strong>Autors:</strong> Google LLC</li>
           </ul>
           <p className="about-emoji-preview">
             {['🌊','🏆','🎉','⭐','🎯','💡','🃏','🗺️','💾','🔄'].map(e => (
@@ -95,21 +112,35 @@ export default function AboutModal({ onClose }) {
         </section>
 
         <section className="about-section">
-          <h3>📍 Obligātās vietas (V10, V12c, V17)</h3>
-          <ul>
-            <li>✓ <strong>RTU Liepājas akadēmija</strong> (V10)</li>
-            <li>✓ <strong>LSEZ / UPB</strong> — Liepājas uzņēmums (V12c)</li>
-            <li>✓ <strong>Jūrmalas parks</strong> — atpūtas vieta, spēle beidzas šeit (V17)</li>
-          </ul>
-        </section>
-
-        <section className="about-section">
           <h3>🎵 Audio avoti</h3>
           <ul>
             <li>Hover skaņa — oriģināls, izveidots projektā</li>
             <li>Fona mūzika — oriģināls, izveidots projektā</li>
           </ul>
         </section>
+
+        <section className="about-section">
+          <h3>📍 Obligātās vietas</h3>
+          <ul>
+            <li>✓ <strong>RTU Liepājas akadēmija</strong> (V10 — RTU aktivitāte)</li>
+            <li>✓ <strong>LSEZ / UPB</strong> — Liepājas uzņēmums (V12c)</li>
+            <li>✓ <strong>Jūrmalas parks</strong> — atpūtas vieta, spēle beidzas šeit (V17)</li>
+          </ul>
+        </section>
+
+        <div className="about-footer-btns">
+          {onStart && (
+            <button
+              className="menu-start-btn"
+              onClick={() => { onClose(); onStart(); }}
+            >
+              Sākt spēli →
+            </button>
+          )}
+          <button className="nav-btn" onClick={onClose}>
+            Aizvērt
+          </button>
+        </div>
       </div>
     </div>
   );

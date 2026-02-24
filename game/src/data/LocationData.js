@@ -92,7 +92,7 @@ export const LOCATIONS = [
           { symbol: '🎭', color: 0xff9800 },
           { symbol: '🎬', color: 0xe65100 },
           { symbol: '🎪', color: 0xffcc02 },
-          { symbol: '��', color: 0xff6f00 },
+          { symbol: '🎵', color: 0xff6f00 },
         ],
         rounds: 3,
         showDuration: 780,
@@ -127,7 +127,7 @@ export const LOCATIONS = [
         answer: '1907',
         aliases: [],
         options: ['1888', '1907', '1925'],
-        points: [10, 10, 0],
+        points: [10, 10, 10],
         fact: 'Dibināts 1907. gadā — tas ir vecākais profesionālais teātris Latvijā.',
       },
       {
@@ -135,7 +135,7 @@ export const LOCATIONS = [
         answer: 'jūgendstils',
         aliases: ['jugendstils', 'jūgendstila', 'art nouveau'],
         options: ['Jūgendstils', 'Klasicisms', 'Baroks'],
-        points: [10, 10, 0],
+        points: [10, 10, 10],
         fact: 'Jūgendstila ēka ar bagātīgu fasādes dekoru ir viens no Liepājas arhitektūras pērlēm.',
       },
       {
@@ -143,7 +143,7 @@ export const LOCATIONS = [
         answer: 'jā',
         aliases: ['ja'],
         options: ['Jā', 'Nē', 'Nezinu'],
-        points: [10, 10, 0],
+        points: [10, 10, 10],
         fact: 'Jā — dibināts 1907. gadā, Liepājas Teātris ir vecākais profesionālais teātris Latvijā.',
       },
     ],
@@ -461,10 +461,8 @@ export const LOCATIONS = [
     miniGames: [
       {
         role: 'classic',
-        type: 'keypad',
-        label: 'Ostas Navigācija',
-        codeLength: 4,
-        showTime: 3500,
+        type: 'regatta',
+        label: 'Ostas Regate',
         timeLimit: 30,
       },
       {
@@ -533,14 +531,8 @@ export const LOCATIONS = [
     miniGames: [
       {
         role: 'classic',
-        type: 'catcher',
-        label: 'Ražošanas Līnija',
-        collect: ['⚙️', '🔧', '🏭'],
-        avoid: ['💥', '🔴', '⛔'],
-        spawnRate: 1180,
-        fallSpeed: { min: 64, max: 115 },
-        required: 8,
-        timeLimit: 26,
+        type: 'tower',
+        label: 'Būvējam Liepāju!',
       },
       {
         role: 'info_swap',

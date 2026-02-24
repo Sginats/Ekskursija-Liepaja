@@ -43,6 +43,7 @@ const CoopContext = createContext({
   submitDualKey:    () => {},
   useLootItem:      () => {},
   joinFinale:       () => {},
+  changeName:       () => {},
   dismissFlashQuiz: () => {},
 });
 
@@ -55,7 +56,12 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
   const [state, setState] = useState(() => CoopState.get());
   const playerNameRef = useRef(playerName);
 
-  useEffect(() => { playerNameRef.current = playerName; }, [playerName]);
+  useEffect(() => { 
+    if (playerName !== playerNameRef.current && playerName) {
+      SocketManager.connect().emit('player:name_change', { name: playerName });
+    }
+    playerNameRef.current = playerName; 
+  }, [playerName]);
 
   // Sync CoopState → local React state
   useEffect(() => {
@@ -175,9 +181,32 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
       }),
 
       // Finale lobby
-      SocketManager.on('finale:lobby_update', (players) => {
-        CoopState.set({ finaleLobby: players });
-      }),
+    SocketManager.on('finale:lobby_update', (players) => {
+      CoopState.set({ finaleLobby: players });
+    }),
+
+    SocketManager.on('lobby:joined', ({ code }) => {
+      CoopState.set({ activeLobbyCode: code });
+    }),
+
+    SocketManager.on('lobby:created', ({ code }) => {
+      CoopState.set({ activeLobbyCode: code });
+    }),
+
+    SocketManager.on('lobby:guest_joined', ({ code }) => {
+      CoopState.set({ activeLobbyCode: code });
+    }),
+
+    SocketManager.on('lobby:timeout', () => {
+      CoopState.set({ activeLobbyCode: null });
+    }),
+
+    SocketManager.on('player:name_changed', ({ socketId, name }) => {
+      const others = CoopState.get().otherPlayers.map(p => 
+        p.socketId === socketId ? { ...p, name } : p
+      );
+      CoopState.set({ otherPlayers: others });
+    }),
 
       // Admin force-refresh is handled inside SocketManager
     ];
@@ -242,6 +271,12 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
 
   const joinFinale = useCallback((finalScore, timeSeconds) => {
     SocketManager.connect().emit('finale:join', { score: finalScore, timeSeconds });
+    // Also broadcast that we are ready if we want lobby logic to wait
+    SocketManager.connect().emit('finale:ready', { score: finalScore });
+  }, []);
+
+  const changeName = useCallback((newName) => {
+    SocketManager.connect().emit('player:name_change', { name: newName });
   }, []);
 
   const dismissFlashQuiz = useCallback(() => {
@@ -256,6 +291,7 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
     flashQuiz:         state.flashQuiz         || null,
     flashQuizResult:   state.flashQuizResult   || null,
     finaleLobby:       state.finaleLobby       || [],
+    activeLobbyCode:   state.activeLobbyCode   || null,
     cityProgress:      state.cityProgress      || { completed: 0, total: 0, pct: 0 },
     inboundRequest:    state.inboundRequest    || null,
     coopMultiplier:    state.coopMultiplier    || 1.0,
@@ -268,6 +304,7 @@ export default function CoopProvider({ children, playerName, currentLocationId, 
     submitDualKey,
     useLootItem,
     joinFinale,
+    changeName,
     dismissFlashQuiz,
   };
 

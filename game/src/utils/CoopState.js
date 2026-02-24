@@ -60,6 +60,8 @@ const _state = {
   flashQuiz:       null,
   /** @type {FinalePlayer[]} */
   finaleLobby:     [],
+  /** @type {string|null} */
+  activeLobbyCode: null,
   /** @type {{ completed: number, total: number, pct: number }} */
   cityProgress:    { completed: 0, total: 0, pct: 0 },
   /** @type {string|null} - pending coop request */

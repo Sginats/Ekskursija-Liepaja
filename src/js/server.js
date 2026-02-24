@@ -275,6 +275,7 @@ gameNS.on('connection', (socket) => {
       socketId: socket.id, name: safeNm, score: 0, currentLocation: null,
       locationsCompleted: 0, joinedAt: Date.now(), lastActive: Date.now(),
       latencyMs: null, flagged: false, coopSessionId: null,
+      ready: false,
     });
     pushLog('info', `Spēlētājs pievienojās: ${safeNm}`, { player: safeNm });
     broadcastPlayerList();
@@ -283,6 +284,17 @@ gameNS.on('connection', (socket) => {
     socket.emit('loot:pool_update', Array.from(lootPool.values()));
     broadcastGlobalProgress();
     maybeStartFlashQuiz();
+  });
+
+  socket.on('player:name_change', ({ name }) => {
+    const p = players.get(socket.id);
+    if (!p) return;
+    const oldName = p.name;
+    p.name = safeName(name);
+    pushLog('info', `Spēlētājs mainīja vārdu: ${oldName} -> ${p.name}`);
+    broadcastPlayerList();
+    broadcastMapPresence();
+    gameNS.emit('player:name_changed', { socketId: socket.id, name: p.name });
   });
 
   // ── Location presence ──────────────────────────────────────────────────────
@@ -567,6 +579,7 @@ gameNS.on('connection', (socket) => {
       score,
       timeSeconds,
       completedAt: Date.now(),
+      ready:       false,
     });
     broadcastFinaleLobby();
     pushLog('info', `${p.name} pievienojās fināla lobijam (${score} pts, ${timeSeconds}s)`);
@@ -574,6 +587,15 @@ gameNS.on('connection', (socket) => {
       session_key: `${new Date().toISOString().slice(0, 10)}_${Date.now()}`,
       players:     JSON.stringify(Array.from(finalePlayers.values())),
     });
+  });
+
+  socket.on('finale:ready', () => {
+    const fp = finalePlayers.get(socket.id);
+    if (fp) {
+      fp.ready = true;
+      pushLog('info', `Spēlētājs gatavs: ${fp.name}`);
+      broadcastFinaleLobby();
+    }
   });
 
   // ── Ping ──────────────────────────────────────────────────────────────────
@@ -594,6 +616,7 @@ gameNS.on('connection', (socket) => {
       code, host: socket.id, guest: null,
       hostReady: false, guestReady: false,
       hostDone: false,  guestDone: false,
+      hostTasks: 0, guestTasks: 0,
       lastActive: Date.now(), created: Date.now(),
       hostTimeout: null, guestTimeout: null,
     });
@@ -630,13 +653,22 @@ gameNS.on('connection', (socket) => {
   socket.on('lobby:task_done', ({ code, role }) => {
     const lobby = lobbies.get(code);
     if (!lobby) return;
-    if (role === 'host')  lobby.hostDone  = true;
-    if (role === 'guest') lobby.guestDone = true;
+    if (role === 'host')  {
+      lobby.hostTasks++;
+      lobby.hostDone = true;
+    }
+    if (role === 'guest') {
+      lobby.guestTasks++;
+      lobby.guestDone = true;
+    }
     lobby.lastActive = Date.now();
     if (lobby.hostDone && lobby.guestDone) {
       lobby.hostDone = false;
       lobby.guestDone = false;
-      gameNS.to(`lobby:${code}`).emit('lobby:sync_complete', {});
+      gameNS.to(`lobby:${code}`).emit('lobby:sync_complete', { 
+        hostTasks: lobby.hostTasks, 
+        guestTasks: lobby.guestTasks 
+      });
     }
   });
 
@@ -979,8 +1011,8 @@ wss.on('connection', (wsConn) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-httpServer.listen(PORT, () => {
-  console.log(`[server] Ekskursija socket server on :${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`[server] Ekskursija socket server on 0.0.0.0:${PORT}`);
   if (!ADMIN_SECRET) {
     console.warn('[server] ⚠  Admin panel is DISABLED — set ADMIN_SECRET env var to enable it.');
   } else {

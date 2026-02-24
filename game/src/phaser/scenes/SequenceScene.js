@@ -22,6 +22,7 @@ export default class SequenceScene extends Phaser.Scene {
     this._inputEnabled = false;
     this._speedRamp = data.speedRamp || false;
     this._rampFactor = 1.0;
+    this._hasMistake = false; // persistent flag for the whole game
     const dn = getDayNightState();
     this._sky = getSkyColors(dn.isNight, dn.isGoldenHour);
     this._nightMode = dn.isNight;
@@ -178,12 +179,18 @@ export default class SequenceScene extends Phaser.Scene {
 
     if (btnIdx !== expected) {
       this._inputEnabled = false;
-      this._active = false;
-      this._coopUnsubs?.forEach(u => u());
-      this._statusText.setText('Nepareizi!').setColor('#f44336');
-      this.time.delayedCall(SpeedController.scale(1200), () =>
-        EventBridge.emit('MINIGAME_COMPLETE', { success: false, bonusPoints: 0 })
-      );
+      this._hasMistake = true;
+      // Show feedback, replay sequence (infinite retries but points capped)
+      this._statusText.setText('Nepareizi — mēģini vēlreiz!').setColor('#ff9800');
+      this.time.delayedCall(SpeedController.scale(900), () => {
+        if (!this._active) return;
+        this._playerIdx = 0;
+        this._statusText.setText('Vēro secību vēlreiz...').setColor('#ffaa00');
+        this.time.delayedCall(SpeedController.scale(400), () => {
+          if (!this._active) return;
+          this._playSequence();
+        });
+      });
       return;
     }
 
@@ -194,8 +201,9 @@ export default class SequenceScene extends Phaser.Scene {
     if (this._round >= this._cfg.rounds) {
       this._coopUnsubs?.forEach(u => u());
       this._statusText.setText('Lieliski! ✓').setColor('#4caf50');
+      const pts = this._hasMistake ? 5 : 10;
       this.time.delayedCall(SpeedController.scale(900), () =>
-        EventBridge.emit('MINIGAME_COMPLETE', { success: true, bonusPoints: 5 })
+        EventBridge.emit('MINIGAME_COMPLETE', { success: true, bonusPoints: pts })
       );
     } else {
       this._statusText.setText('Pareizi! Nākamā kārta...').setColor('#4caf50');
