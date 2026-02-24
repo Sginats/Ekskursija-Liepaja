@@ -83,7 +83,7 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
         <div className={styles.scoreBox}>
           <div className={styles.scoreRow}>
             <span className={styles.scoreLabel}>Punkti</span>
-            <span className={styles.scoreValue}>{score} / 100</span>
+    <span className={styles.scoreValue}>{score} / 110</span>
           </div>
           <div className={styles.scoreRow}>
             <span className={styles.scoreLabel}>Laiks</span>

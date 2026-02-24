@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import Modal from '../common/Modal.jsx';
 import { useGame } from '../../context/GameContext.jsx';
-import { AntScene        } from '../../phaser/scenes/AntScene.js';
+import { TowerBlocksScene } from '../../phaser/scenes/TowerBlocksScene.js';
 import { BoatScene       } from '../../phaser/scenes/BoatScene.js';
 import { FishingScene    } from '../../phaser/scenes/FishingScene.js';
 import { DzintarsScene   } from '../../phaser/scenes/DzintarsScene.js';
@@ -16,7 +16,7 @@ import { locationInfo } from '../../game/locationInfo.js';
 import styles from './MiniGameModal.module.css';
 
 const SCENE_MAP = {
-  RTU:        AntScene,
+  RTU:        TowerBlocksScene,
   Osta:       BoatScene,
   Mols:       FishingScene,
   Dzintars:   DzintarsScene,
@@ -173,7 +173,7 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
 // ---------------------------------------------------------------------------
 function buildSuccessText(location, pts, extra) {
   switch (location) {
-    case 'RTU':        return `Visi kukaiņi noķerti! +${pts} punkti`;
+    case 'RTU':        return `Tornis uzbūvēts! +${pts} punkti`;
     case 'Osta':       return `Finiēja laikā ${extra}s. +${pts} punkti`;
     case 'Mols':       return `Zivs noķerta ${extra}s laikā! +${pts} punkti`;
     case 'Dzintars':   return `Visi dzintari savākti! +${pts} punkti`;
@@ -189,7 +189,7 @@ function buildSuccessText(location, pts, extra) {
 
 function buildFailText(location) {
   switch (location) {
-    case 'RTU':        return 'Laiks beidzās! Mēģini velreiz.';
+    case 'RTU':        return 'Tornis sabruka! Mēģini vēlreiz.';
     case 'Osta':       return 'Diemžēl neizdevās. Mēģini velreiz.';
     case 'Mols':       return 'Aukla pārtrūka! Mēģini velreiz.';
     case 'Dzintars':   return 'Laiks beidzās! Mēģini vēlreiz.';

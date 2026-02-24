@@ -40,7 +40,7 @@ class GameStateManager {
 
   addScore(points) {
     if (!this._verify()) this._fix();
-    this._score = Math.max(0, Math.min(100, this._score + points));
+    this._score = Math.max(0, Math.min(110, this._score + points));
     this._checksum = checksum(this._score, this._completedTasks);
     this._persist();
     return this._score;
@@ -118,7 +118,7 @@ class GameStateManager {
   }
 
   restore(score, tasks, lives, combo, maxLives) {
-    this._score = Math.max(0, Math.min(100, score));
+    this._score = Math.max(0, Math.min(110, score));
     this._completedTasks = Math.max(0, Math.min(TOTAL_TASKS, tasks));
     this._checksum = checksum(this._score, this._completedTasks);
     // maxLives is null (Normal) or a number (Hard)

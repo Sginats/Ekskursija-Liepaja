@@ -1,128 +1,73 @@
 import Phaser from 'phaser';
 
-const ROUNDS_NEEDED = 3;
-const HIGHLIGHT_TIME = 1800; // ms the correct key glows
+const TARGET_HITS = 12;
 
 export class CietumScene extends Phaser.Scene {
-  constructor() { super({ key: 'CietumScene' }); }
+  constructor() { super({ key: 'Cietums' }); }
 
   init(data) {
     this.onComplete = data.onComplete || (() => {});
-    this.onFail     = data.onFail     || (() => {});
-    this.isMobile   = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    this.onFail = data.onFail || (() => {});
   }
 
   create() {
     const { width, height } = this.scale;
-    this.roundsPassed = 0;
-    this.gameActive   = true;
+    this.active = true;
+    this.hits = 0;
+    this.combo = 0;
+    this.speed = 1;
+    this.timeLimit = 1500;
 
-    // Dark cell background
-    const bg = this.add.graphics();
-    bg.fillStyle(0x111111, 1).fillRect(0, 0, width, height);
-    bg.lineStyle(3, 0x444444, 1).strokeRect(2, 2, width - 4, height - 4);
-    // Horizontal brick lines
-    for (let y = 20; y < height; y += 22) {
-      bg.lineStyle(1, 0x1e1e1e, 1).lineBetween(0, y, width, y);
-    }
+    this.add.rectangle(width / 2, height / 2, width, height, 0x111111);
+    this.add.text(width / 2, 12, 'Atrodi un nospied atslēgu', { color: '#f59e0b', fontSize: '14px' }).setOrigin(0.5, 0);
+    this.hitText = this.add.text(12, 12, `Trāpījumi: 0/${TARGET_HITS}`, { color: '#fff', fontSize: '13px' });
+    this.comboText = this.add.text(width - 12, 12, 'Kombo: 0', { color: '#a7f3d0', fontSize: '13px' }).setOrigin(1, 0);
 
-    this.add.text(width / 2, 12, 'Atceries pareizo atslēgu!', {
-      fontFamily: 'Poppins, Arial', fontSize: '14px', color: '#ffaa44',
-    }).setOrigin(0.5, 0);
+    this.speedBarBg = this.add.rectangle(width / 2, height - 16, width - 28, 8, 0x1f2937);
+    this.speedBar = this.add.rectangle(14, height - 16, 0, 8, 0x22c55e).setOrigin(0, 0.5);
 
-    this.roundText = this.add.text(width - 12, 12, `${this.roundsPassed}/${ROUNDS_NEEDED}`, {
-      fontFamily: 'Poppins, Arial', fontSize: '14px', color: '#ffffff',
-    }).setOrigin(1, 0);
-
-    this.hintText = this.add.text(width / 2, height - 18, 'Skatīties…', {
-      fontFamily: 'Poppins, Arial', fontSize: '13px', color: '#aaaaaa',
-    }).setOrigin(0.5, 1);
-
-    this._startRound();
+    this.spawnTarget();
   }
 
-  _startRound() {
-    if (!this.gameActive) return;
-
-    // Clear old keys
-    if (this.keyObjects) this.keyObjects.forEach(k => k.destroy());
-    this.keyObjects = [];
-
+  spawnTarget() {
+    if (!this.active) return;
     const { width, height } = this.scale;
-    const KEY_SHAPES = ['🗝', '🔑', '⬡', '⬢', '✦', '⬤', '▲', '◆'];
-    const correctIdx = Phaser.Math.Between(0, KEY_SHAPES.length - 1);
-    this.correctShape = KEY_SHAPES[correctIdx];
-    this.revealed = false;
+    if (this.target) this.target.destroy();
 
-    const cols = 4, rows = 2;
-    const cellW = (width - 24) / cols;
-    const cellH = 80;
-    const startY = height / 2 - cellH * rows / 2 + 8;
+    const x = Phaser.Math.Between(28, width - 28);
+    const y = Phaser.Math.Between(42, height - 42);
+    this.target = this.add.rectangle(x, y, 34, 34, 0xfacc15).setStrokeStyle(2, 0x111, 0.8).setInteractive({ useHandCursor: true });
 
-    KEY_SHAPES.forEach((shape, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const x   = 12 + col * cellW + cellW / 2;
-      const y   = startY + row * cellH;
+    const ttl = this.timeLimit / this.speed;
+    this.target.on('pointerdown', () => {
+      if (!this.active) return;
+      this.hits += 1;
+      this.combo += 1;
+      this.speed = Math.min(3, this.speed + 0.12);
+      this.timeLimit = Math.max(650, this.timeLimit - 35);
+      this.updateHud();
+      if (this.hits >= TARGET_HITS) {
+        const pts = Math.max(5, Math.min(10, Math.round(6 + this.combo * 0.25)));
+        this.active = false;
+        this.onComplete(pts);
+      } else {
+        this.spawnTarget();
+      }
+    });
 
-      const box = this.add.graphics();
-      const isCorrect = i === correctIdx;
-
-      // Draw key box (highlighted briefly at start)
-      const drawBox = (highlight) => {
-        box.clear();
-        box.lineStyle(2, highlight ? 0xffd700 : 0x444444, 1);
-        box.fillStyle(highlight ? 0x3a2a00 : 0x1a1a1a, 1);
-        box.fillRoundedRect(-cellW / 2 + 4, -cellH / 2 + 4, cellW - 8, cellH - 8, 6);
-        box.strokeRoundedRect(-cellW / 2 + 4, -cellH / 2 + 4, cellW - 8, cellH - 8, 6);
-      };
-      drawBox(isCorrect);
-      box.x = x; box.y = y;
-
-      const label = this.add.text(x, y, shape, {
-        fontFamily: 'Poppins, Arial', fontSize: this.isMobile ? '26px' : '22px',
-        color: isCorrect ? '#ffd700' : '#888888',
-      }).setOrigin(0.5);
-
-      const hitW = cellW - 8, hitH = cellH - 8;
-      box.setInteractive(new Phaser.Geom.Rectangle(-hitW / 2, -hitH / 2, hitW, hitH), Phaser.Geom.Rectangle.Contains);
-
-      box.on('pointerdown', () => {
-        if (!this.gameActive || !this.revealed) return;
-        if (shape === this.correctShape) {
-          this.roundsPassed++;
-          this.roundText.setText(`${this.roundsPassed}/${ROUNDS_NEEDED}`);
-          this.hintText.setText('Pareizi! ✓').setColor('#4caf50');
-          if (this.roundsPassed >= ROUNDS_NEEDED) {
-            this.time.delayedCall(600, () => this._endGame(true));
-          } else {
-            this.time.delayedCall(700, () => this._startRound());
-          }
-        } else {
-          this.hintText.setText('Nepareizi! Spēle beigusies.').setColor('#f44336');
-          this._endGame(false);
-        }
-      });
-
-      this.keyObjects.push(box, label);
-
-      // Remove highlight after HIGHLIGHT_TIME
-      this.time.delayedCall(HIGHLIGHT_TIME, () => {
-        if (!this.gameActive) return;
-        drawBox(false);
-        label.setColor('#888888');
-        if (i === correctIdx) {
-          // All revealed — player can now click
-          this.revealed = true;
-          this.hintText.setText('Kurā bija zelta atslēga?').setColor('#ffaa44');
-        }
-      });
+    if (this.timeoutEvent) this.timeoutEvent.remove();
+    this.timeoutEvent = this.time.delayedCall(ttl, () => {
+      this.combo = 0;
+      this.speed = Math.max(1, this.speed - 0.15);
+      this.updateHud();
+      this.spawnTarget();
     });
   }
 
-  _endGame(success) {
-    if (!this.gameActive) return;
-    this.gameActive = false;
-    if (success) this.onComplete(10); else this.onFail();
+  updateHud() {
+    this.hitText.setText(`Trāpījumi: ${this.hits}/${TARGET_HITS}`);
+    this.comboText.setText(`Kombo: ${this.combo}`);
+    const pct = (this.speed - 1) / 2;
+    this.speedBar.width = (this.scale.width - 28) * pct;
   }
 }

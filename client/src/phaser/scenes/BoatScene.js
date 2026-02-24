@@ -1,154 +1,95 @@
 import Phaser from 'phaser';
 
-const CONFIG = {
-  REQUIRED_PRESSES: 10,
-  EXCELLENT_TIME: 3,
-  GOOD_TIME: 5,
-  SLOW_TIME: 10,
-  EXCELLENT_POINTS: 15,
-  GOOD_POINTS: 12,
-  NORMAL_POINTS: 10,
-  SLOW_POINTS: 5,
-};
+const GAME_TIME = 25;
+const TARGET_POINTS = 14;
 
 export class BoatScene extends Phaser.Scene {
-  constructor() {
-    super({ key: 'BoatScene' });
-  }
+  constructor() { super({ key: 'OstasRegate' }); }
 
   init(data) {
     this.onComplete = data.onComplete || (() => {});
+    this.onFail = data.onFail || (() => {});
   }
 
   create() {
     const { width, height } = this.scale;
-    this.pressCount = 0;
-    this.raceActive = false;
-    this.startTime = 0;
-    this.isMobile = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    this.active = true;
+    this.points = 0;
+    this.timeLeft = GAME_TIME;
 
-    // Water background
-    const grad = this.add.graphics();
-    grad.fillGradientStyle(0x1e5a8a, 0x1e5a8a, 0x0e3d5e, 0x0e3d5e, 1);
-    grad.fillRect(0, 0, width, height);
+    this.add.rectangle(width / 2, height / 2, width, height, 0x0b2942);
+    this.add.rectangle(width / 2, height - 18, width, 36, 0x1f2937);
 
-    // Title
-    this.add
-      .text(width / 2, 20, 'Ostas Regate', {
-        fontFamily: 'Poppins, Arial',
-        fontSize: '22px',
-        color: '#ffaa00',
-        fontStyle: 'bold',
-      })
-      .setOrigin(0.5, 0);
+    this.info = this.add.text(width / 2, 10, 'Savāc kravu, izvairies no šķēršļiem', { color: '#e5e7eb', fontSize: '13px' }).setOrigin(0.5, 0);
+    this.scoreText = this.add.text(12, 12, `Krava: 0/${TARGET_POINTS}`, { color: '#fff', fontSize: '14px' });
+    this.timerText = this.add.text(width - 12, 12, `${GAME_TIME}s`, { color: '#fff', fontSize: '14px' }).setOrigin(1, 0);
 
-    // Instruction
-    const instruction = this.isMobile
-      ? `Spied pogu ${CONFIG.REQUIRED_PRESSES} reizes pec iespeja atraki!`
-      : `Spied SPACE ${CONFIG.REQUIRED_PRESSES} reizes pec iespeja atraki!`;
+    this.boat = this.add.rectangle(width / 2, height - 54, 46, 18, 0xf59e0b).setStrokeStyle(2, 0x111827, 0.8);
+    this.physics.add.existing(this.boat);
+    this.boat.body.setCollideWorldBounds(true);
 
-    this.instructionText = this.add
-      .text(width / 2, 55, instruction, {
-        fontFamily: 'Poppins, Arial',
-        fontSize: '13px',
-        color: '#cccccc',
-        wordWrap: { width: width - 40 },
-        align: 'center',
-      })
-      .setOrigin(0.5, 0);
+    this.cargo = this.physics.add.group();
+    this.rocks = this.physics.add.group();
 
-    // Timer
-    this.timerText = this.add
-      .text(width / 2, height / 2 - 40, '0.00 s', {
-        fontFamily: 'Poppins, Arial',
-        fontSize: '36px',
-        color: '#ffffff',
-        fontStyle: 'bold',
-      })
-      .setOrigin(0.5);
-
-    // Progress
-    this.progressText = this.add
-      .text(width / 2, height / 2 + 10, `Spiedienu skaits: 0/${CONFIG.REQUIRED_PRESSES}`, {
-        fontFamily: 'Poppins, Arial',
-        fontSize: '16px',
-        color: '#cccccc',
-      })
-      .setOrigin(0.5);
-
-    // Start / tap button
-    const btnBg = this.add
-      .rectangle(width / 2, height - 60, 200, 50, 0x332222)
-      .setInteractive({ useHandCursor: true });
-    btnBg.setStrokeStyle(2, 0xffaa00);
-
-    this.btnText = this.add
-      .text(width / 2, height - 60, 'SAKT', {
-        fontFamily: 'Poppins, Arial',
-        fontSize: '18px',
-        color: '#ffaa00',
-        fontStyle: 'bold',
-      })
-      .setOrigin(0.5);
-
-    btnBg.on('pointerdown', () => this.handlePress());
-    btnBg.on('pointerover', () => btnBg.setFillColor(0x4a3333));
-    btnBg.on('pointerout', () => btnBg.setFillColor(0x332222));
-    this.btnBg = btnBg;
-
-    // Keyboard
-    this.input.keyboard.on('keydown-SPACE', () => this.handlePress());
-  }
-
-  handlePress() {
-    if (!this.raceActive) {
-      this.startRace();
-      return;
-    }
-    this.pressCount++;
-    this.progressText.setText(
-      `Spiedienu skaits: ${this.pressCount}/${CONFIG.REQUIRED_PRESSES}`
-    );
-    // Visual feedback
-    this.tweens.add({
-      targets: this.btnBg,
-      scaleX: 0.92,
-      scaleY: 0.92,
-      duration: 60,
-      yoyo: true,
+    this.input.on('pointermove', p => {
+      if (!this.active) return;
+      this.boat.x = Phaser.Math.Clamp(p.x, 24, width - 24);
     });
-    if (this.pressCount >= CONFIG.REQUIRED_PRESSES) {
-      this.finishRace();
-    }
-  }
 
-  startRace() {
-    this.raceActive = true;
-    this.pressCount = 0;
-    this.startTime = this.time.now;
-    this.btnText.setText('SPIED!');
+    this.keys = this.input.keyboard.createCursorKeys();
 
-    this.timerUpdater = this.time.addEvent({
-      delay: 50,
-      loop: true,
-      callback: () => {
-        if (!this.raceActive) return;
-        const elapsed = ((this.time.now - this.startTime) / 1000).toFixed(2);
-        if (this.timerText) this.timerText.setText(`${elapsed} s`);
-      },
+    this.spawnEvent = this.time.addEvent({ delay: 700, loop: true, callback: () => this.spawnItem() });
+    this.timerEvent = this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tick() });
+
+    this.physics.add.overlap(this.boat, this.cargo, (_, item) => {
+      item.destroy();
+      this.points += 1;
+      this.scoreText.setText(`Krava: ${this.points}/${TARGET_POINTS}`);
+      if (this.points >= TARGET_POINTS) this.finish(true);
     });
+
+    this.physics.add.overlap(this.boat, this.rocks, () => this.finish(false));
   }
 
-  finishRace() {
-    this.raceActive = false;
-    if (this.timerUpdater) this.timerUpdater.remove();
+  spawnItem() {
+    if (!this.active) return;
+    const { width } = this.scale;
+    const isCargo = Math.random() > 0.35;
+    const x = Phaser.Math.Between(24, width - 24);
+    const y = -16;
+    const color = isCargo ? 0x22c55e : 0xef4444;
+    const w = isCargo ? 22 : 26;
+    const h = isCargo ? 18 : 20;
+    const rect = this.add.rectangle(x, y, w, h, color).setStrokeStyle(1, 0x111827, 0.6);
+    this.physics.add.existing(rect);
+    rect.body.setVelocityY(120 + this.points * 3);
+    if (isCargo) this.cargo.add(rect); else this.rocks.add(rect);
+  }
 
-    const finalTime = ((this.time.now - this.startTime) / 1000).toFixed(2);
-    let points = CONFIG.NORMAL_POINTS;
-    if (finalTime < CONFIG.EXCELLENT_TIME) points = CONFIG.EXCELLENT_POINTS;
-    else if (finalTime < CONFIG.GOOD_TIME) points = CONFIG.GOOD_POINTS;
-    else if (finalTime > CONFIG.SLOW_TIME) points = CONFIG.SLOW_POINTS;
+  tick() {
+    if (!this.active) return;
+    this.timeLeft -= 1;
+    this.timerText.setText(`${this.timeLeft}s`);
+    if (this.timeLeft <= 0) this.finish(this.points >= TARGET_POINTS);
+  }
 
-    this.onComplete(points, parseFloat(finalTime));
+  update() {
+    if (!this.active) return;
+    if (this.keys.left?.isDown) this.boat.x -= 5;
+    if (this.keys.right?.isDown) this.boat.x += 5;
+  }
+
+  finish(success) {
+    if (!this.active) return;
+    this.active = false;
+    if (this.spawnEvent) this.spawnEvent.remove();
+    if (this.timerEvent) this.timerEvent.remove();
+
+    if (success) {
+      const pts = Math.max(4, Math.min(10, Math.round(4 + (this.points / TARGET_POINTS) * 6)));
+      this.onComplete(pts);
+    } else {
+      this.onFail();
+    }
   }
 }

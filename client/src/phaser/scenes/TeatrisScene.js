@@ -1,97 +1,92 @@
 import Phaser from 'phaser';
 
-const HITS_NEEDED = 5;
-const MAX_MISS    = 3;
-const FADE_TIME   = 1500; // ms spotlight stays
+const QUESTIONS = [
+  { q: 'Kurā gadā dibināts Liepājas teātris?', a: '1907', opts: ['1888', '1907', '1925', '1940'] },
+  { q: 'Kādā stilā celta teātra ēka?', a: 'Jūgendstils', opts: ['Baroks', 'Klasicisms', 'Jūgendstils', 'Modernisms'] },
+  { q: 'Vai teātris ir vecākais profesionālais Latvijā?', a: 'Jā', opts: ['Jā', 'Nē', 'Daļēji', 'Nezināms'] },
+];
 
 export class TeatrisScene extends Phaser.Scene {
-  constructor() { super({ key: 'TeatrisScene' }); }
+  constructor() { super({ key: 'Teatris' }); }
 
   init(data) {
     this.onComplete = data.onComplete || (() => {});
-    this.onFail     = data.onFail     || (() => {});
-    this.isMobile   = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
   }
 
   create() {
     const { width, height } = this.scale;
-    this.hits       = 0;
-    this.misses     = 0;
-    this.gameActive = true;
+    this.correct = 0;
+    this.index = 0;
 
-    // Dark stage background
-    this.add.graphics().fillStyle(0x0d0d0d, 1).fillRect(0, 0, width, height);
-    // Stage floor stripe
-    this.add.graphics().fillStyle(0x3b2a1a, 1).fillRect(0, height * 0.78, width, height * 0.22);
-    // Curtain strips
-    this.add.graphics().fillStyle(0x5c1a1a, 1).fillRect(0, 0, 28, height * 0.78);
-    this.add.graphics().fillStyle(0x5c1a1a, 1).fillRect(width - 28, 0, 28, height * 0.78);
+    this.add.rectangle(width / 2, height / 2, width, height, 0x120f16);
+    this.add.rectangle(width / 2, height * 0.88, width, 60, 0x3b2a1a);
+    this.title = this.add.text(width / 2, 10, 'Teātra uzdevums', { color: '#fbbf24', fontSize: '15px' }).setOrigin(0.5, 0);
+    this.status = this.add.text(width / 2, 30, 'Punkti netiek atņemti par kļūdām', { color: '#d1d5db', fontSize: '12px' }).setOrigin(0.5, 0);
 
-    this.add.text(width / 2, 14, `Klikšķini uz gaismas apliem!`, {
-      fontFamily: 'Poppins, Arial', fontSize: '14px', color: '#ffdd88',
-    }).setOrigin(0.5, 0);
+    this.qText = this.add.text(width / 2, 66, '', { color: '#fff', fontSize: '13px', align: 'center', wordWrap: { width: width - 30 } }).setOrigin(0.5, 0);
+    this.buttons = [];
+    this.feedback = this.add.text(width / 2, height - 26, '', { color: '#fff', fontSize: '12px' }).setOrigin(0.5, 1);
 
-    this.hitsText = this.add.text(12, 14, `✓ 0/${HITS_NEEDED}`, {
-      fontFamily: 'Poppins, Arial', fontSize: '14px', color: '#4caf50',
-    });
-    this.missText = this.add.text(width - 12, 14, `✗ 0/${MAX_MISS}`, {
-      fontFamily: 'Poppins, Arial', fontSize: '14px', color: '#f44336',
-    }).setOrigin(1, 0);
-
-    this._scheduleNext();
+    this.renderQuestion();
   }
 
-  _scheduleNext() {
-    if (!this.gameActive) return;
-    const delay = Phaser.Math.Between(300, 900);
-    this.time.delayedCall(delay, this._spawnSpotlight, [], this);
-  }
+  renderQuestion() {
+    this.buttons.forEach(b => b.destroy());
+    this.buttons = [];
+    const { width } = this.scale;
+    const item = QUESTIONS[this.index];
+    this.qText.setText(`${this.index + 1}/${QUESTIONS.length}: ${item.q}`);
 
-  _spawnSpotlight() {
-    if (!this.gameActive) return;
-    const { width, height } = this.scale;
-    const r = this.isMobile ? 38 : 26;
-    const x = Phaser.Math.Between(40, width - 40);
-    const y = Phaser.Math.Between(46, height * 0.72);
-
-    const g = this.add.graphics();
-    g.fillStyle(0xffee88, 0.9);
-    g.fillCircle(0, 0, r);
-    g.fillStyle(0xffffff, 0.4);
-    g.fillCircle(-r * 0.3, -r * 0.3, r * 0.3);
-    g.x = x; g.y = y;
-
-    g.setInteractive(new Phaser.Geom.Circle(0, 0, r + (this.isMobile ? 14 : 8)), Phaser.Geom.Circle.Contains);
-
-    let clicked = false;
-    g.on('pointerdown', () => {
-      if (!this.gameActive || clicked) return;
-      clicked = true;
-      this.tweens.killTweensOf(g);
-      this.tweens.add({ targets: g, alpha: 0, scaleX: 1.8, scaleY: 1.8, duration: 180, onComplete: () => g.destroy() });
-      this.hits++;
-      this.hitsText.setText(`✓ ${this.hits}/${HITS_NEEDED}`);
-      if (this.hits >= HITS_NEEDED) { this._endGame(true); return; }
-      this._scheduleNext();
-    });
-
-    // Auto-fade (miss)
-    this.tweens.add({
-      targets: g, alpha: 0, duration: FADE_TIME, ease: 'Linear',
-      onComplete: () => {
-        if (clicked || !this.gameActive) return;
-        g.destroy();
-        this.misses++;
-        this.missText.setText(`✗ ${this.misses}/${MAX_MISS}`);
-        if (this.misses >= MAX_MISS) { this._endGame(false); return; }
-        this._scheduleNext();
-      },
+    item.opts.forEach((opt, i) => {
+      const y = 120 + i * 46;
+      const btn = this.add.rectangle(width / 2, y, width - 30, 36, 0x1f2937).setStrokeStyle(1, 0x6b7280, 0.8).setInteractive({ useHandCursor: true });
+      const txt = this.add.text(width / 2, y, opt, { color: '#fff', fontSize: '12px' }).setOrigin(0.5);
+      btn.on('pointerdown', () => this.answer(opt, item.a));
+      this.buttons.push(btn, txt);
     });
   }
 
-  _endGame(success) {
-    if (!this.gameActive) return;
-    this.gameActive = false;
-    if (success) this.onComplete(10); else this.onFail();
+  answer(value, correct) {
+    const ok = value === correct;
+    this.feedback.setText(ok ? 'Pareizi' : 'Nepareizi, mēģini nākamo');
+    this.feedback.setColor(ok ? '#22c55e' : '#f87171');
+    if (ok) this.correct += 1;
+    this.applause(ok);
+
+    this.time.delayedCall(500, () => {
+      this.index += 1;
+      if (this.index >= QUESTIONS.length) {
+        const pts = Math.max(4, Math.min(10, this.correct * 3));
+        this.onComplete(pts);
+      } else {
+        this.renderQuestion();
+      }
+    });
+  }
+
+  applause(ok) {
+    const { width } = this.scale;
+    for (let i = 0; i < 10; i++) {
+      const p = this.add.rectangle(20 + i * ((width - 40) / 9), 96, 4, 4, ok ? 0x22c55e : 0xf87171);
+      this.tweens.add({ targets: p, y: 50 + Math.random() * 120, alpha: 0, duration: 500, onComplete: () => p.destroy() });
+    }
+    this.soundBurst(ok);
+  }
+
+  soundBurst(ok) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      [0, 0.04, 0.08].forEach((off, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.frequency.value = ok ? 520 + i * 80 : 180 - i * 30;
+        o.type = ok ? 'triangle' : 'sawtooth';
+        g.gain.setValueAtTime(0.07, now + off);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + off + 0.12);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(now + off); o.stop(now + off + 0.12);
+      });
+    } catch {}
   }
 }

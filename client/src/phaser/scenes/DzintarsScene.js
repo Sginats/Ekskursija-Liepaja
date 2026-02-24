@@ -1,118 +1,90 @@
 import Phaser from 'phaser';
 
-const AMBER_NEEDED = 5;
-const GAME_TIME    = 20;
+const TARGET = 8;
+const GAME_TIME = 20;
+const NOTE_SET = [
+  { label: 'DO', f: 523.25, color: 0xf59e0b },
+  { label: 'RE', f: 587.33, color: 0x84cc16 },
+  { label: 'MI', f: 659.25, color: 0x38bdf8 },
+  { label: 'SOL', f: 783.99, color: 0xa78bfa },
+];
 
 export class DzintarsScene extends Phaser.Scene {
-  constructor() { super({ key: 'DzintarsScene' }); }
+  constructor() { super({ key: 'Dzintars' }); }
 
   init(data) {
     this.onComplete = data.onComplete || (() => {});
-    this.onFail     = data.onFail     || (() => {});
-    this.isMobile   = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    this.onFail = data.onFail || (() => {});
   }
 
   create() {
     const { width, height } = this.scale;
-    this.amberCaught = 0;
-    this.timeLeft    = GAME_TIME;
-    this.gameActive  = true;
-    this.objects     = [];
+    this.score = 0;
+    this.timeLeft = GAME_TIME;
+    this.active = true;
+    this.ctx = null;
+    this.master = null;
 
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a0800, 0x1a0800, 0x0d0400, 0x0d0400, 1);
-    bg.fillRect(0, 0, width, height);
+    this.add.rectangle(width / 2, height / 2, width, height, 0x1a0d05);
+    this.add.text(width / 2, 12, 'Nospied notis pareizā ritmā', { color: '#fbbf24', fontSize: '14px' }).setOrigin(0.5, 0);
+    this.scoreText = this.add.text(12, 12, `Notis: 0/${TARGET}`, { color: '#fff', fontSize: '14px' });
+    this.timerText = this.add.text(width - 12, 12, `${GAME_TIME}s`, { color: '#fff', fontSize: '14px' }).setOrigin(1, 0);
 
-    const border = this.add.graphics();
-    border.lineStyle(2, 0xff8800, 1);
-    border.strokeRect(2, 2, width - 4, height - 4);
-
-    this.add.text(width / 2, 14, 'Savāc 5 dzintarus!', {
-      fontFamily: 'Poppins, Arial', fontSize: '15px', color: '#ff8800',
-    }).setOrigin(0.5, 0);
-
-    this.timerText = this.add.text(12, 14, `${GAME_TIME}s`, {
-      fontFamily: 'Poppins, Arial', fontSize: '15px', color: '#ffcc00',
+    NOTE_SET.forEach((n, i) => {
+      const x = 55 + i * 70;
+      const y = height * 0.55;
+      const r = this.add.rectangle(x, y, 56, 56, n.color).setStrokeStyle(2, 0xffffff, 0.4).setInteractive({ useHandCursor: true });
+      const t = this.add.text(x, y, n.label, { color: '#111', fontSize: '14px', fontStyle: 'bold' }).setOrigin(0.5);
+      r.on('pointerdown', () => this.hitNote(r, n));
+      this.tweens.add({ targets: [r, t], y: y + 4, yoyo: true, repeat: -1, duration: 900 + i * 60, ease: 'Sine.easeInOut' });
     });
-    this.countText = this.add.text(width - 12, 14, `0/${AMBER_NEEDED}`, {
-      fontFamily: 'Poppins, Arial', fontSize: '15px', color: '#ffffff',
-    }).setOrigin(1, 0);
 
-    // Decoy stones
-    for (let i = 0; i < 6; i++) this._spawnStone();
-    // Initial ambers
-    for (let i = 0; i < 3; i++) this._spawnAmber();
-
-    // Periodic movement
-    this.time.addEvent({ delay: 1400, loop: true, callback: this._moveAll, callbackScope: this });
-
-    // Countdown
-    this.timerEvent = this.time.addEvent({
-      delay: 1000, repeat: GAME_TIME - 1,
-      callback: () => {
-        this.timeLeft--;
-        if (this.timerText) this.timerText.setText(`${this.timeLeft}s`);
-        if (this.timerText && this.timeLeft <= 5) this.timerText.setColor('#f44336');
-        if (this.timeLeft <= 0 && this.gameActive) this._endGame(false);
+    this.timer = this.time.addEvent({
+      delay: 1000, loop: true, callback: () => {
+        if (!this.active) return;
+        this.timeLeft -= 1;
+        this.timerText.setText(`${this.timeLeft}s`);
+        if (this.timeLeft <= 0) this.finish(false);
       },
     });
   }
 
-  _spawnStone() {
-    const { width, height } = this.scale;
-    const g = this.add.graphics();
-    g.fillStyle(0x555555, 1);
-    g.fillCircle(0, 0, 13);
-    g.fillStyle(0x777777, 0.6);
-    g.fillCircle(-4, -4, 5);
-    g.x = Phaser.Math.Between(35, width - 35);
-    g.y = Phaser.Math.Between(45, height - 20);
-    this.objects.push({ g, type: 'stone' });
+  hitNote(rect, note) {
+    if (!this.active) return;
+    this.score += 1;
+    this.scoreText.setText(`Notis: ${this.score}/${TARGET}`);
+    this.tweens.add({ targets: rect, scaleX: 1.12, scaleY: 1.12, yoyo: true, duration: 100 });
+    this.playTone(note.f);
+    if (this.score >= TARGET) this.finish(true);
   }
 
-  _spawnAmber() {
-    if (!this.gameActive) return;
-    const { width, height } = this.scale;
-    const r  = this.isMobile ? 20 : 14;
-    const g  = this.add.graphics();
-    g.fillStyle(0xff8800, 1);
-    g.fillCircle(0, 0, r);
-    g.fillStyle(0xffdd00, 0.7);
-    g.fillCircle(-3, -3, r * 0.45);
-    g.x = Phaser.Math.Between(40, width - 40);
-    g.y = Phaser.Math.Between(46, height - 22);
-
-    g.setInteractive(new Phaser.Geom.Circle(0, 0, r + (this.isMobile ? 14 : 7)), Phaser.Geom.Circle.Contains);
-    g.on('pointerdown', () => {
-      if (!this.gameActive) return;
-      this.amberCaught++;
-      this.countText.setText(`${this.amberCaught}/${AMBER_NEEDED}`);
-      const idx = this.objects.findIndex(o => o.g === g);
-      if (idx !== -1) this.objects.splice(idx, 1);
-      this.tweens.add({ targets: g, alpha: 0, scaleX: 2.2, scaleY: 2.2, duration: 200, onComplete: () => g.destroy() });
-      if (this.amberCaught >= AMBER_NEEDED) {
-        this._endGame(true);
-      } else {
-        this.time.delayedCall(400, this._spawnAmber, [], this);
+  playTone(freq) {
+    try {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = 0.08;
+        this.master.connect(this.ctx.destination);
       }
-    });
-    this.objects.push({ g, type: 'amber' });
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      osc.connect(gain);
+      gain.connect(this.master);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } catch {}
   }
 
-  _moveAll() {
-    if (!this.gameActive) return;
-    const { width, height } = this.scale;
-    this.objects.forEach(({ g }) => {
-      const nx = Phaser.Math.Between(35, width - 35);
-      const ny = Phaser.Math.Between(45, height - 20);
-      this.tweens.add({ targets: g, x: nx, y: ny, duration: 700, ease: 'Sine.easeInOut' });
-    });
-  }
-
-  _endGame(success) {
-    if (!this.gameActive) return;
-    this.gameActive = false;
-    if (this.timerEvent) this.timerEvent.remove();
+  finish(success) {
+    if (!this.active) return;
+    this.active = false;
+    if (this.timer) this.timer.remove();
     if (success) this.onComplete(10); else this.onFail();
   }
 }
