@@ -77,7 +77,7 @@ export default function EndGameModal({ open, score, startTime, playerName, onClo
       <div className={styles.root} data-game>
         <h2 className={styles.title}>{isGameOver ? 'Spēle beigusies!' : 'Apsveicam!'}</h2>
         <p className={styles.medalLine}>
-          {isGameOver ? '💔 Dzīvības beidzās' : medal + ' rezultāts'}
+          {isGameOver ? 'Dzīvības beidzās' : medal + ' rezultāts'}
         </p>
 
         <div className={styles.scoreBox}>

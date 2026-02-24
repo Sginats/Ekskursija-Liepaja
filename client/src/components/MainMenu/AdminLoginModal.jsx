@@ -24,7 +24,7 @@ export default function AdminLoginModal({ open, onClose }) {
   return (
     <Modal open={open} onClose={handleClose}>
       <div className={styles.root} data-game>
-        <div className={styles.icon}>🔐</div>
+        <div className={styles.icon}>Admin</div>
         <h2 className={styles.title}>Administratora pieslēgšanās</h2>
         <p className={styles.subtitle}>Ievadi administratora paroli, lai piekļūtu testa panelim</p>
         <form onSubmit={handleSubmit} className={styles.form}>

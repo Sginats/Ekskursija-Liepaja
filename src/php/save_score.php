@@ -89,7 +89,7 @@ if ($timeInSeconds < 30) {
     respond(false, 'Laiks ir pārāk īss (minimums: 30s)');
 }
 
-$name = preg_replace('/[^a-zA-Z0-9āčēģīķļņšūžĀČĒĢĪĶĻŅŠŪŽ\s]/u', '', $name);
+$name = preg_replace('/[^a-zA-Z0-9āčēģīķļņšūžĀČĒĢĪĶĻŅŠŪŽ\s\+]/u', '', $name);
 $name = trim(substr($name, 0, 8));
 if ($name === '') $name = 'Nezināms';
 $name = htmlspecialchars($name);

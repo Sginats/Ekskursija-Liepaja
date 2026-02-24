@@ -1,7 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 
-const WS_PORT = 8080;
 const WS_TIMEOUT = 2000;
 const MAX_RECONNECT = 5;
 const BASE_DELAY = 1000;
@@ -59,8 +58,9 @@ export function useWebSocket() {
 
   const connect = useCallback(() => {
     if (wsRef.current && wsRef.current.readyState <= 1) return;
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const url = `${protocol}//${location.hostname}:${WS_PORT}`;
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const baseHost = import.meta.env.VITE_WS_HOST || window.location.host;
+    const url = `${protocol}://${baseHost}`;
     try {
       wsRef.current = new WebSocket(url);
       wsRef.current.onopen = () => {
@@ -95,10 +95,9 @@ export function useWebSocket() {
           resolve(false);
         }, WS_TIMEOUT);
         try {
-          const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-          wsRef.current = new WebSocket(
-            `${protocol}//${location.hostname}:${WS_PORT}`
-          );
+          const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+          const baseHost = import.meta.env.VITE_WS_HOST || window.location.host;
+          wsRef.current = new WebSocket(`${protocol}://${baseHost}`);
           wsRef.current.onopen = () => {
             clearTimeout(timeout);
             reconnectAttempts.current = 0;

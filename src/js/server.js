@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const http       = require('http');
 const { Server } = require('socket.io');
 const { WebSocketServer, WebSocket: WsWebSocket } = require('ws');
@@ -11,9 +11,9 @@ const SUPABASE_SVC_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (SUPABASE_URL && SUPABASE_SVC_KEY) {
   const { createClient } = require('@supabase/supabase-js');
   supabase = createClient(SUPABASE_URL, SUPABASE_SVC_KEY);
-  console.log('[server] ✓ Supabase connected — DB writes enabled.');
+  console.log('[server] Supabase connected - DB writes enabled.');
 } else {
-  console.warn('[server] ⚠  SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY not set — DB writes disabled.');
+  console.warn('[server] SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY not set - DB writes disabled.');
 }
 
 /**
@@ -36,7 +36,7 @@ const PORT               = process.env.PORT        || 8080;
 const ADMIN_SECRET       = process.env.ADMIN_SECRET;
 
 if (!ADMIN_SECRET) {
-  console.warn('[server] ⚠  ADMIN_SECRET env var is not set. Admin namespace is DISABLED until it is provided.');
+  console.warn('[server] ADMIN_SECRET env var is not set. Admin namespace is DISABLED until it is provided.');
 }
 const LOBBY_IDLE_TIMEOUT = 3_600_000;  // 1 h
 const RECONNECT_GRACE    = 30_000;     // 30 s
@@ -879,6 +879,16 @@ function wsSend(conn, obj) {
   }
 }
 
+function buildLegacyRoute(lastLocation = 'Parks') {
+  const base = ['Dzintars', 'Teatris', 'Kanals', 'Osta', 'LSEZ', 'Mols', 'RTU', 'Cietums', 'Ezerkrasts', 'Parks'];
+  const pool = base.filter(x => x !== lastLocation);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return [...pool, lastLocation];
+}
+
 httpServer.on('upgrade', (req, socket, head) => {
   // Let Socket.IO handle its own upgrade requests
   if (req.url && req.url.startsWith('/socket.io')) return;
@@ -897,10 +907,12 @@ wss.on('connection', (wsConn) => {
       const code = String(Math.floor(1000 + Math.random() * 9000));
       lobbies.set(code, {
         code, host: wsConn, guest: null,
+        hostName: safeName(msg.name || 'Host'), guestName: null,
         hostReady: false, guestReady: false,
         hostDone: false, guestDone: false,
         lastActive: Date.now(), created: Date.now(),
         hostTimeout: null, guestTimeout: null,
+        route: buildLegacyRoute('Parks'),
         _isLegacy: true,
       });
       wsClients.set(wsConn, code);
@@ -913,6 +925,7 @@ wss.on('connection', (wsConn) => {
       if (!lobby || !lobby._isLegacy)    return wsSend(wsConn, { type: 'error', msg: 'Istaba nav atrasta.' });
       if (lobby.guest)                   return wsSend(wsConn, { type: 'error', msg: 'Istaba jau ir pilna.' });
       lobby.guest = wsConn;
+      lobby.guestName = safeName(msg.name || 'Guest');
       lobby.lastActive = Date.now();
       wsClients.set(wsConn, msg.code);
       wsSend(wsConn, { type: 'joined_lobby', code: msg.code });
@@ -927,8 +940,9 @@ wss.on('connection', (wsConn) => {
       if (msg.role === 'guest') lobby.guestReady = true;
       lobby.lastActive = Date.now();
       if (lobby.hostReady && lobby.guestReady) {
-        wsSend(lobby.host, { type: 'start_game', role: 'host' });
-        wsSend(lobby.guest, { type: 'start_game', role: 'guest' });
+        const teamName = [lobby.hostName, lobby.guestName].filter(Boolean).join(' + ');
+        wsSend(lobby.host, { type: 'start_game', role: 'host', route: lobby.route, teamName });
+        wsSend(lobby.guest, { type: 'start_game', role: 'guest', route: lobby.route, teamName });
       } else {
         const other = (wsConn === lobby.host) ? lobby.guest : lobby.host;
         wsSend(other, { type: 'player_ready' });
@@ -982,12 +996,11 @@ wss.on('connection', (wsConn) => {
 httpServer.listen(PORT, () => {
   console.log(`[server] Ekskursija socket server on :${PORT}`);
   if (!ADMIN_SECRET) {
-    console.warn('[server] ⚠  Admin panel is DISABLED — set ADMIN_SECRET env var to enable it.');
+    console.warn('[server] Admin panel is DISABLED - set ADMIN_SECRET env var to enable it.');
   } else {
-    console.log('[server] ✓ Admin namespace active.');
+    console.log('[server] Admin namespace active.');
   }
-  console.log('[server] ✓ Legacy WebSocket bridge active.');
+  console.log('[server] Legacy WebSocket bridge active.');
 });
 
 process.on('SIGTERM', () => io.close(() => httpServer.close(() => process.exit(0))));
-

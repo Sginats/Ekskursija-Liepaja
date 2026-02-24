@@ -6,7 +6,7 @@ const DIFFICULTIES = [
   {
     id: 'normal',
     label: 'Normāls',
-    icon: '♾️',
+    icon: '',
     color: '#4caf50',
     lives: null,
     tagline: 'Spēlē bez spiediena',
@@ -19,7 +19,7 @@ const DIFFICULTIES = [
   {
     id: 'hard',
     label: 'Grūts',
-    icon: '❤️❤️❤️',
+    icon: '',
     color: '#f44336',
     lives: 3,
     tagline: '3 dzīvības — katrai kļūdai ir cena!',

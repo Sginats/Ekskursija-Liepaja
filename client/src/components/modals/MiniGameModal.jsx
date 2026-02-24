@@ -60,8 +60,9 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
       const scene = new SceneClass();
       scene.init({
         onComplete: (pts, extra) => {
+          const awardedPoints = Math.max(0, Math.min(10, Number(pts) || 0));
           destroyGame();
-          const newScore = addScore(pts);
+          const newScore = addScore(awardedPoints);
           // Record score server-side so save_score.php uses the correct total
           if (gameTokenRef?.current) {
             fetch('../src/php/record_task_score.php', {
@@ -71,7 +72,7 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
               body: JSON.stringify({
                 gameToken: gameTokenRef.current,
                 taskId: location,
-                points: pts,
+                points: awardedPoints,
               }),
             }).catch(() => {
               // Fire-and-forget: a network failure here is not fatal for UX.
@@ -79,10 +80,10 @@ export default function MiniGameModal({ open, location, onComplete, onClose }) {
               // the user will see an error at that point.
             });
           }
-          setEarnedPoints(pts);
-          setResultText(buildSuccessText(location, pts, extra));
+          setEarnedPoints(awardedPoints);
+          setResultText(buildSuccessText(location, awardedPoints, extra));
           setPhase('result');
-          notify(`+${pts} punkti!`, 'success', 2000);
+          notify(`+${awardedPoints} punkti!`, 'success', 2000);
         },
         onFail: () => {
           destroyGame();

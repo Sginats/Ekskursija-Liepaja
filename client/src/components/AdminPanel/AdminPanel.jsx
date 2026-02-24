@@ -51,7 +51,7 @@ export default function AdminPanel() {
     <div className={`${styles.panel} ${collapsed ? styles.panelCollapsed : ''}`}>
       {/* Header */}
       <div className={styles.header}>
-        <span className={styles.headerTitle}>⚙ Admin</span>
+        <span className={styles.headerTitle}>Admin</span>
         <div className={styles.headerActions}>
           <button className={styles.iconBtn} title="Samazināt" onClick={() => setCollapsed(c => !c)}>
             {collapsed ? '▲' : '▼'}
@@ -80,7 +80,7 @@ export default function AdminPanel() {
                 className={`${styles.btn} ${styles.btnWide} ${styles.btnAnswer}`}
                 onClick={() => setShowAns(v => !v)}
               >
-                {showAns ? '🙈 Paslēpt' : '👁 Rādīt atbildi'}
+                {showAns ? 'Paslēpt' : 'Rādīt atbildi'}
               </button>
               {showAns && (
                 <div className={styles.answerReveal}>

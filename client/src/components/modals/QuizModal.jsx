@@ -100,7 +100,7 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
       let lifeMsg = '';
       if (state.difficulty === 'hard') {
         const remaining = loseLife();
-        lifeMsg = remaining > 0 ? ` Palicis ${remaining} ❤` : ' Dzīvības beidzās! 💔';
+        lifeMsg = remaining > 0 ? ` Palicis ${remaining} dzīvības` : ' Dzīvības beidzās.';
       }
       setResultMsg('Laiks beidzās! 0 punkti.');
       setPhase('result');
@@ -154,7 +154,7 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
           resetCombo();
           incrementCombo(); // restart combo at 1 after recovering with second attempt
         }
-        const comboSuffix = getComboMultiplier(newCombo) > 1 ? ` 🔥 x${getComboMultiplier(newCombo)} COMBO!` : '';
+        const comboSuffix = getComboMultiplier(newCombo) > 1 ? ` x${getComboMultiplier(newCombo)} COMBO` : '';
         setBubble(randomBubble(true));
         setEarnedPoints(pts);
         setResultMsg(`Pareizi! +${pts} punkti${comboSuffix}`);
@@ -171,7 +171,7 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
           let lifeMsg = '';
           if (state.difficulty === 'hard') {
             const remaining = loseLife();
-            lifeMsg = remaining > 0 ? ` Palicis ${remaining} ❤` : ' Dzīvības beidzās! 💔';
+            lifeMsg = remaining > 0 ? ` Palicis ${remaining} dzīvības` : ' Dzīvības beidzās.';
           }
           setResultMsg(`Nepareizi. Pareizā atbilde: ${data.correctAnswer || '—'}`);
           setPhase('result');
@@ -240,13 +240,13 @@ export default function QuizModal({ open, location, onComplete, onClose }) {
                 <h2 className={styles.locTitle}>{location}</h2>
                 {timeLeft !== null && (
                   <span className={timeLeft <= 10 ? styles.timerCritical : styles.timer}>
-                    ⏱ {timeLeft}s
+                    {timeLeft}s
                   </span>
                 )}
               </div>
               {state.combo >= 2 && (
                 <div className={styles.combo}>
-                  🔥 {state.combo >= 3
+                  {state.combo >= 3
                     ? `x${getComboMultiplier(state.combo + 1)} COMBO!`
                     : 'Vēl 1 pareiza atbilde → x2!'}
                 </div>

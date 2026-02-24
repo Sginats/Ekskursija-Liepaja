@@ -156,6 +156,7 @@ let currentTask = "";
 let startTime; 
 let myRole = '';
 let myLobbyCode = '';
+let myTeamName = '';
 let globalName = "Anonīms";
 let ws = null;
 let quizWrongCount = 0;
@@ -163,8 +164,8 @@ let _serverGameToken = null;
 
 
 // Network & multiplayer config
-const WS_PORT = 8080;
-const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const WS_HOST = window.location.host;
 const POLL_INTERVAL = 2000;
 const WS_TIMEOUT = 2000;
 
@@ -172,10 +173,63 @@ const CONNECTION_MODE_PHP = 'php-polling';
 const CONNECTION_MODE_WS = 'websocket';
 let connectionMode = CONNECTION_MODE_PHP;
 
-const taskSequence = [
-    'Parks', 'Dzintars', 'Teatris', 'Kanals', 'Osta', 
-    'LSEZ', 'Mols', 'RTU', 'Cietums', 'Ezerkrasts'
+const BASE_TASK_SEQUENCE = [
+    'Dzintars', 'Teatris', 'Kanals', 'Osta',
+    'LSEZ', 'Mols', 'RTU', 'Cietums', 'Ezerkrasts', 'Parks'
 ];
+const ROUTE_STORAGE_KEY = 'eksk_route_v1';
+
+let taskSequence = [];
+
+function shuffleArray(list) {
+    for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+}
+
+function buildRoute(lastLocation = 'Parks') {
+    const pool = BASE_TASK_SEQUENCE.filter(x => x !== lastLocation);
+    return [...shuffleArray(pool), lastLocation];
+}
+
+function loadRouteFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const routeParam = params.get('route');
+    if (!routeParam) return null;
+    const route = routeParam.split(',').map(x => x.trim()).filter(Boolean);
+    if (route.length !== TOTAL_TASKS) return null;
+    if (route[route.length - 1] !== 'Parks') return null;
+    const uniq = new Set(route);
+    if (uniq.size !== TOTAL_TASKS) return null;
+    return route;
+}
+
+function initTaskSequence() {
+    const fromUrl = loadRouteFromQuery();
+    if (fromUrl) {
+        taskSequence = fromUrl;
+        sessionStorage.setItem(ROUTE_STORAGE_KEY, JSON.stringify(fromUrl));
+        return;
+    }
+
+    const saved = sessionStorage.getItem(ROUTE_STORAGE_KEY);
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length === TOTAL_TASKS && parsed[parsed.length - 1] === 'Parks') {
+                taskSequence = parsed;
+                return;
+            }
+        } catch {}
+    }
+
+    taskSequence = buildRoute('Parks');
+    sessionStorage.setItem(ROUTE_STORAGE_KEY, JSON.stringify(taskSequence));
+}
+
+initTaskSequence();
 
 // Answer verification (hashed answers)
 const _k = [76,105,101,112,196,129,106,97];
@@ -418,32 +472,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Connection manager (WebSocket + PHP polling) ---
 
 async function initSmartConnection() {
-    console.log("Initializing multiplayer connection...");
     updateConnectionStatus('reconnecting');
     
-    const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    
-    if (isLocalhost) {
-        console.log("Localhost detected, trying WebSocket first...");
-        const wsAvailable = await tryWebSocketConnection();
-        
-        if (wsAvailable) {
-            console.log("WebSocket detected");
-            connectionMode = CONNECTION_MODE_WS;
-            updateConnectionStatus('connected');
-            showNotification('WebSocket detected', 'success', 2000);
-            if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
-                console.log(`Rejoining lobby ${myLobbyCode} as ${myRole}`);
-            }
-            return;
-        } else {
-            console.log("WebSocket unavailable, using PHP polling");
+    const wsAvailable = await tryWebSocketConnection();
+
+    if (wsAvailable) {
+        connectionMode = CONNECTION_MODE_WS;
+        updateConnectionStatus('connected');
+        showNotification('WebSocket detected', 'success', 2000);
+        if (myRole && myLobbyCode && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ action: 'rejoin', code: myLobbyCode, role: myRole }));
         }
+        return;
     }
-    
-    console.log("PHP fallback mode no websocket detected");
+
     connectionMode = CONNECTION_MODE_PHP;
     initPHPPolling();
     showNotification('Multiplayer gatavs!', 'success', 2000);
@@ -459,7 +501,7 @@ function tryWebSocketConnection() {
         }, WS_TIMEOUT);
         
         try {
-            const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
+            const wsUrl = `${WS_PROTOCOL}://${WS_HOST}`;
             ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
@@ -475,7 +517,6 @@ function tryWebSocketConnection() {
             
             ws.onclose = () => {
                 if (connectionMode === CONNECTION_MODE_WS) {
-                    console.log("WebSocket disconnected, attempting reconnection...");
                     setTimeout(() => {
                         if (connectionMode === CONNECTION_MODE_WS) {
                             connectWebSocket();
@@ -485,7 +526,6 @@ function tryWebSocketConnection() {
             };
         } catch (error) {
             clearTimeout(timeout);
-            console.error("WebSocket connection failed:", error);
             resolve(false);
         }
     });
@@ -497,7 +537,6 @@ function setupWebSocketHandlers() {
             const data = JSON.parse(event.data);
             handleWebSocketMessage(data);
         } catch (e) {
-            console.error("Error parsing WebSocket message:", e);
         }
     };
 }
@@ -537,13 +576,12 @@ function handleWebSocketMessage(data) {
     }
     else if (data.type === 'start_game') {
         myRole = data.role;
+        myTeamName = data.teamName || '';
         showNotification(`Spēle sākas! Tava loma: ${myRole}`, 'success');
         setTimeout(() => {
-            location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}`;
+            const routeParam = Array.isArray(data.route) ? `&route=${encodeURIComponent(data.route.join(','))}` : '';
+            location.href = `map.html?mode=multi&role=${myRole}&code=${myLobbyCode}&name=${encodeURIComponent(globalName)}${routeParam}`;
         }, 1500);
-    }
-    else if (data.type === 'rejoined') {
-        console.log(`Successfully rejoined lobby as ${data.role}`);
     }
     else if (data.type === 'sync_complete') {
         const statusEl = document.getElementById('partner-status');
@@ -552,9 +590,6 @@ function handleWebSocketMessage(data) {
     }
     else if (data.type === 'error') {
         showNotification(data.msg, 'error');
-    }
-    else if (data.type === 'pong') {
-        console.log('WebSocket alive');
     }
     else if (data.type === 'player_disconnected') {
         showNotification(data.msg, 'warning');
@@ -572,12 +607,11 @@ function connectWebSocket() {
     }
 
     try {
-        const wsUrl = `${WS_PROTOCOL}//${window.location.hostname || 'localhost'}:${WS_PORT}`;
+        const wsUrl = `${WS_PROTOCOL}://${WS_HOST}`;
         
         ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
-            console.log("WebSocket savienots!");
             wsReconnectAttempts = 0;
             updateConnectionStatus('connected');
         };
@@ -586,36 +620,30 @@ function connectWebSocket() {
             try {
                 const data = JSON.parse(event.data);
                 handleWebSocketMessage(data);
-            } catch (e) {
-                console.error("Error parsing WebSocket message:", e);
+            } catch {
             }
         };
         
-        ws.onerror = (error) => {
-            console.error("WebSocket error:", error);
+        ws.onerror = () => {
             updateConnectionStatus('error');
         };
         
-        ws.onclose = (event) => {
-            console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
+        ws.onclose = () => {
             updateConnectionStatus('disconnected');
             if (wsReconnectAttempts < wsMaxReconnectAttempts) {
                 const delay = wsBaseReconnectDelay * Math.pow(2, wsReconnectAttempts);
                 wsReconnectAttempts++;
                 
-                console.log(`Reconnecting in ${delay}ms... (Attempt ${wsReconnectAttempts}/${wsMaxReconnectAttempts})`);
                 updateConnectionStatus('reconnecting');
                 
                 wsReconnectTimeout = setTimeout(() => {
                     connectWebSocket();
                 }, delay);
             } else {
-                console.log("Max reconnection attempts reached");
                 showNotification("Nav iespējams izveidot savienojumu ar serveri. Lūdzu, pārlādējiet lapu.", 'error');
             }
         };
-    } catch (error) {
-        console.error("Failed to create WebSocket connection:", error);
+    } catch {
         updateConnectionStatus('error');
     }
 }
@@ -630,7 +658,7 @@ function updateConnectionStatus(status) {
         'connected': '● Savienots',
         'disconnected': '○ Atvienots',
         'reconnecting': '◐ Atjauno...',
-        'error': '⚠ Kļūda'
+        'error': 'Kļūda'
     };
     
     indicator.textContent = statusText[status] || '';
@@ -643,7 +671,6 @@ let pollInterval = null;
 let phpPolling = false;
 
 function initPHPPolling() {
-    console.log("PHP fallback mode no websocket detected");
     phpPolling = true;
     updateConnectionStatus('connected');
 }
@@ -664,7 +691,6 @@ function createLobbyPHP() {
             }
         })
         .catch(error => {
-            console.error('Error creating lobby:', error);
             showNotification('Neizdevās izveidot lobby', 'error');
         });
 }
@@ -685,7 +711,6 @@ function joinLobbyPHP(code) {
             }
         })
         .catch(error => {
-            console.error('Error joining lobby:', error);
             showNotification('Neizdevās pievienoties', 'error');
         });
 }
@@ -715,7 +740,6 @@ function startLobbyPolling() {
                     }, 1500);
                 }
             })
-            .catch(error => console.error('Polling error:', error));
     }, POLL_INTERVAL);
 }
 
@@ -725,7 +749,6 @@ function notifyPartnerPHP(role, code) {
         .then(() => {
             checkBothPlayersDonePHP(code);
         })
-        .catch(error => console.error('Error notifying partner:', error));
 }
 
 function checkBothPlayersDonePHP(code) {
@@ -743,14 +766,13 @@ function checkBothPlayersDonePHP(code) {
                         });
                 }
             })
-            .catch(error => console.error('Error checking state:', error));
     }, 1000);
     
     setTimeout(() => {
         clearInterval(checkInterval);
         const taskEl = document.querySelector('.task-section');
         if (taskEl && taskEl.innerHTML.includes('Gaidam')) {
-            taskEl.innerHTML = '<h2>Laiks beidzās</h2><p>Partneris neatbildēja laikā.</p><button class="btn btn-full" id="btn-timeout-continue">Turpināt →</button>';
+            taskEl.innerHTML = '<h2>Laiks beidzās</h2><p>Partneris neatbildēja laikā.</p><button class="btn btn-full" id="btn-timeout-continue">Turpināt</button>';
             const btn = document.getElementById('btn-timeout-continue');
             if (btn) btn.addEventListener('click', function() { showQuiz(currentTask); });
         }
@@ -789,7 +811,7 @@ function openLobby() {
     if (connectionMode === CONNECTION_MODE_PHP) {
         createLobbyPHP();
     } else if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ action: 'create' }));
+        ws.send(JSON.stringify({ action: 'create', name: globalName }));
     } else {
         showNotification("Savienojums nav pieejams! Lūdzu, uzgaidiet...", 'error');
     }
@@ -810,7 +832,7 @@ function joinGame() {
         joinLobbyPHP(codeInput);
     } else if (connectionMode === CONNECTION_MODE_WS && ws && ws.readyState === WebSocket.OPEN) {
         myLobbyCode = codeInput;
-        ws.send(JSON.stringify({ action: 'join', code: codeInput }));
+        ws.send(JSON.stringify({ action: 'join', code: codeInput, name: globalName }));
     } else {
         showNotification("Savienojums nav pieejams! Lūdzu, uzgaidiet...", 'error');
     }
@@ -994,7 +1016,7 @@ function finishBoatRace() {
         <p>Tavs laiks: ${finalTime} sekundes</p>
         <p style="color: #ffaa00;">+${points} punkti!</p>
         <p style="color:#ffaa00;font-style:italic;">${questions['Osta'].fact}</p>
-        <button class="btn btn-full" onclick="closeBoatGame()">Turpināt →</button>`;
+        <button class="btn btn-full" onclick="closeBoatGame()">Turpināt</button>`;
 }
 
 function closeBoatGame() { 
@@ -1107,7 +1129,7 @@ function finishAntGame(success) {
             <p>Noķerti kukaiņi: ${antsCaught}/${ANTS_REQUIRED}</p>
             <p style="color: #ffaa00;">+10 punkti</p>
             <p style="color: #ffaa00; font-style: italic;">${questions['RTU'].fact}</p>
-            <button class="btn btn-full" onclick="closeAntGame()">Turpināt →</button>
+            <button class="btn btn-full" onclick="closeAntGame()">Turpināt</button>
         `;
     } else {
         GameState.addScore(-5);
@@ -1198,7 +1220,7 @@ function checkHistorySequence() {
             </ol>
             <p style="color: #ffaa00;">+10 punkti</p>
             <p style="color: #ffaa00; font-style: italic;">${questions['Teatris'].fact}</p>
-            <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt →</button>
+            <button class="btn btn-full" onclick="closeHistoryGame()">Turpināt</button>
         `;
     } else {
         GameState.addScore(-5);
@@ -1267,7 +1289,6 @@ function sendReady() {
         document.querySelector('.task-section').innerHTML = "<h2>Gaidam otru...</h2>";
     } else {
         showNotification("Savienojums nav pieejams!", 'error');
-        console.error("sendReady failed: No valid connection mode available");
     }
 }
 
@@ -1342,7 +1363,7 @@ function checkAns(type) {
             <p style="color: #ffaa00; font-size: 18px;">Pareizi!</p>
             <p><strong>Atbilde:</strong> ${correct}</p>
             <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
-            <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
+            <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt</button>
         `;
     } else {
         quizWrongCount++;
@@ -1355,7 +1376,7 @@ function checkAns(type) {
                 <p style="color: #aaa; font-size: 14px;">2 nepareizas atbildes — 0 punkti</p>
                 <p><strong>Pareizā atbilde:</strong> ${correct}</p>
                 <p style="color: #ffaa00; font-style: italic;">${questions[type].fact}</p>
-                <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt →</button>
+                <button class="btn btn-full" onclick="closeQuizAndContinue()">Turpināt</button>
             `;
         } else {
             showNotification('Nepareiza atbilde! Vēl 1 mēģinājums.', 'error', 2000);
@@ -1449,6 +1470,20 @@ let _finalTestShown = false;
 let _kahootCurrentQ = 0;
 let _kahootScore = 0;
 let _kahootAnswers = [];
+let _kahootQuestions = [];
+
+function _buildShuffledFinalQuestions() {
+    const list = _finalTestQuestions.map((q) => {
+        const opts = q.options.map((text, idx) => ({ text, isCorrect: idx === q.correct }));
+        shuffleArray(opts);
+        return {
+            q: q.q,
+            options: opts.map(o => o.text),
+            correct: opts.findIndex(o => o.isCorrect),
+        };
+    });
+    return shuffleArray(list);
+}
 
 function _collectGameHints() {
     const hints = [];
@@ -1474,11 +1509,11 @@ function showFinalTest() {
 
     document.querySelector('.task-section').innerHTML = `
         <div class="before-final-test" style="text-align:center;">
-            <h2 style="color:#ffaa00; font-size:22px;">🎓 Vai esi gatavs noslēguma testam?</h2>
-            <p style="color:#ccc; font-size:14px; margin:15px 0;">Tests sastāv no <strong style="color:#ffaa00;">10 jautājumiem</strong> par Liepāju. Katra pareiza atbilde dod <strong style="color:#ffaa00;">+2 bonusa punktus</strong>.</p>
+            <h2 style="color:#ffaa00; font-size:22px;">Vai esi gatavs noslēguma testam?</h2>
+            <p style="color:#ccc; font-size:14px; margin:15px 0;">Tests sastāv no <strong style="color:#ffaa00;">10 jautājumiem</strong> par Liepāju. Katra pareiza atbilde dod <strong style="color:#ffaa00;">+1 bonusa punktu</strong>.</p>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
-                <button class="btn btn-full" id="btn-start-final-yes" style="background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">✅ Jā, sākt testu!</button>
-                <button class="btn btn-full" id="btn-start-final-no" style="font-size:16px;">📖 Nē, vēlos apskatīt padomus</button>
+                <button class="btn btn-full" id="btn-start-final-yes" style="background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">Jā, sākt testu</button>
+                <button class="btn btn-full" id="btn-start-final-no" style="font-size:16px;">Nē, vēlos apskatīt padomus</button>
             </div>
         </div>
     `;
@@ -1494,17 +1529,17 @@ function showFinalTest() {
 function showHintsReview(hints) {
     document.querySelector('.task-section').innerHTML = `
         <div style="text-align:center;">
-            <h2 style="color:#ffaa00; font-size:20px;">📖 Padomi un fakti</h2>
+            <h2 style="color:#ffaa00; font-size:20px;">Padomi un fakti</h2>
             <p style="color:#ccc; font-size:13px; margin-bottom:12px;">Šeit ir svarīgākā informācija no mini-spēlēm:</p>
             <div style="max-height:300px; overflow-y:auto; text-align:left; padding-right:5px;">
                 ${hints.map(h => `
                     <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,170,0,0.25); border-radius:8px; padding:10px; margin:6px 0;">
-                        <p style="color:#ffaa00; margin:0 0 4px; font-size:13px; font-weight:bold;">📍 ${h.name}</p>
+                        <p style="color:#ffaa00; margin:0 0 4px; font-size:13px; font-weight:bold;">${h.name}</p>
                         <p style="color:#ccc; margin:0; font-size:12px;">${h.fact}</p>
                     </div>
                 `).join('')}
             </div>
-            <button class="btn btn-full" id="btn-hints-ready" style="margin-top:16px; background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">✅ Esmu gatavs — sākt testu!</button>
+            <button class="btn btn-full" id="btn-hints-ready" style="margin-top:16px; background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">Esmu gatavs - sākt testu</button>
         </div>
     `;
     document.getElementById('btn-hints-ready').addEventListener('click', function() {
@@ -1516,12 +1551,13 @@ function startKahootTest() {
     _kahootCurrentQ = 0;
     _kahootScore = 0;
     _kahootAnswers = [];
+    _kahootQuestions = _buildShuffledFinalQuestions();
     showKahootQuestion();
 }
 
 function showKahootQuestion() {
-    const q = _finalTestQuestions[_kahootCurrentQ];
-    const total = _finalTestQuestions.length;
+    const q = _kahootQuestions[_kahootCurrentQ];
+    const total = _kahootQuestions.length;
     const progress = Math.round((_kahootCurrentQ / total) * 100);
     const colors = ['#e21b3c', '#1368ce', '#d89e00', '#26890c'];
     const shapes = ['▲', '◆', '●', '■'];
@@ -1530,7 +1566,7 @@ function showKahootQuestion() {
         <div class="kahoot-quiz">
             <div class="kahoot-header">
                 <span class="kahoot-counter">${_kahootCurrentQ + 1}/${total}</span>
-                <span class="kahoot-score">⭐ ${_kahootScore} p.</span>
+                <span class="kahoot-score">${_kahootScore} p.</span>
             </div>
             <div class="kahoot-progress-bar">
                 <div class="kahoot-progress-fill" style="width:${progress}%"></div>
@@ -1557,12 +1593,12 @@ function showKahootQuestion() {
 }
 
 function handleKahootAnswer(selected) {
-    const q = _finalTestQuestions[_kahootCurrentQ];
+    const q = _kahootQuestions[_kahootCurrentQ];
     const isCorrect = selected === q.correct;
     const colors = ['#e21b3c', '#1368ce', '#d89e00', '#26890c'];
 
     if (isCorrect) {
-        _kahootScore += 2;
+        _kahootScore += 1;
     }
     _kahootAnswers.push({ question: _kahootCurrentQ, selected: selected, correct: q.correct, isCorrect: isCorrect });
 
@@ -1587,14 +1623,14 @@ function handleKahootAnswer(selected) {
     const feedbackEl = document.createElement('div');
     feedbackEl.className = 'kahoot-feedback';
     feedbackEl.innerHTML = isCorrect
-        ? '<span style="color:#26890c; font-size:22px; font-weight:bold;">✅ Pareizi! +2 punkti</span>'
-        : '<span style="color:#e21b3c; font-size:22px; font-weight:bold;">❌ Nepareizi!</span>';
+        ? '<span style="color:#26890c; font-size:22px; font-weight:bold;">Pareizi! +1 punkts</span>'
+        : '<span style="color:#e21b3c; font-size:22px; font-weight:bold;">Nepareizi!</span>';
     const quizEl = document.querySelector('.kahoot-quiz');
     if (quizEl) quizEl.appendChild(feedbackEl);
 
     setTimeout(() => {
         _kahootCurrentQ++;
-        if (_kahootCurrentQ < _finalTestQuestions.length) {
+        if (_kahootCurrentQ < _kahootQuestions.length) {
             showKahootQuestion();
         } else {
             showKahootResults();
@@ -1604,33 +1640,29 @@ function handleKahootAnswer(selected) {
 
 function showKahootResults() {
     _finalTestScore = _kahootScore;
-    const total = _finalTestQuestions.length;
+    const total = _kahootQuestions.length;
     const correctCount = _kahootAnswers.filter(a => a.isCorrect).length;
-    const maxBonus = total * 2;
+    const maxBonus = total;
 
-    let emoji = '🥉';
-    if (correctCount >= 9) emoji = '🏆';
-    else if (correctCount >= 7) emoji = '🥇';
-    else if (correctCount >= 5) emoji = '🥈';
-
+    
     document.querySelector('.task-section').innerHTML = `
         <div class="kahoot-results" style="text-align:center;">
-            <h2 style="color:#ffaa00; font-size:28px; margin-bottom:10px;">${emoji} Noslēguma tests pabeigts!</h2>
+            <h2 style="color:#ffaa00; font-size:28px; margin-bottom:10px;">Noslēguma tests pabeigts</h2>
             <div style="background:rgba(0,0,0,0.3); border:2px solid #ffaa00; border-radius:12px; padding:20px; margin:15px 0;">
                 <p style="font-size:20px; color:#ffaa00; margin:5px 0;">Pareizas atbildes: <strong>${correctCount}</strong>/${total}</p>
                 <p style="font-size:22px; color:#ffaa00; margin:5px 0;">Bonusa punkti: <strong>${_kahootScore}</strong>/${maxBonus}</p>
             </div>
             <div style="text-align:left; max-height:200px; overflow-y:auto; margin:15px 0; padding-right:5px;">
                 ${_kahootAnswers.map((a, i) => {
-                    const q = _finalTestQuestions[i];
+                    const q = _kahootQuestions[i];
                     return `<div style="background:rgba(0,0,0,0.2); border-left:3px solid ${a.isCorrect ? '#26890c' : '#e21b3c'}; border-radius:4px; padding:6px 10px; margin:4px 0; font-size:12px;">
-                        <span style="color:${a.isCorrect ? '#26890c' : '#e21b3c'}; font-weight:bold;">${a.isCorrect ? '✅' : '❌'} ${i+1}.</span>
+                        <span style="color:${a.isCorrect ? '#26890c' : '#e21b3c'}; font-weight:bold;">${a.isCorrect ? 'Pareizi' : 'Nepareizi'} ${i+1}.</span>
                         <span style="color:#ccc;">${q.q}</span>
                         ${!a.isCorrect ? `<br><span style="color:#888; font-size:11px;">Pareizā: ${q.options[q.correct]}</span>` : ''}
                     </div>`;
                 }).join('')}
             </div>
-            <button class="btn btn-full" id="btn-kahoot-finish" style="background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">Turpināt →</button>
+            <button class="btn btn-full" id="btn-kahoot-finish" style="background:#ffaa00; color:#2a1a1a; border:none; font-weight:bold; font-size:18px;">Turpināt</button>
         </div>
     `;
 
@@ -1679,11 +1711,11 @@ function showEndGameScreen(finalScore, formattedTime) {
     else if (totalScore >= 60) medal = 'Sudrabs';
 
     const testLine = _finalTestShown
-        ? `<p style="font-size:17px;color:#ffaa00;margin:4px 0;">Bonusa punkti (tests): <strong>${_finalTestScore}</strong>/20</p>
+        ? `<p style="font-size:17px;color:#ffaa00;margin:4px 0;">Bonusa punkti (tests): <strong>${_finalTestScore}</strong>/10</p>
            <hr style="border-color:rgba(255,170,0,0.3);margin:10px 0;">`
         : '';
     const scoreLine = _finalTestShown
-        ? `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Kopā: <strong>${totalScore}</strong>/120</p>`
+        ? `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Kopā: <strong>${totalScore}</strong>/110</p>`
         : `<p style="font-size:22px;color:#ffaa00;margin:5px 0;">Punkti: <strong>${totalScore}</strong>/100</p>`;
 
     document.querySelector('.task-section').innerHTML = `
@@ -1743,7 +1775,10 @@ function finishGame(name, finalScore, time) {
 
     const token = _generateScoreToken(finalScore, time, _taskCompletionLog.length);
     const formData = new FormData();
-    formData.append('name', name);
+    const submitName = (myRole && myLobbyCode)
+        ? (myTeamName || `${name} + Partneris`)
+        : name;
+    formData.append('name', submitName);
     formData.append('score', finalScore);
     formData.append('time', time);
     formData.append('token', token);
@@ -1751,6 +1786,7 @@ function finishGame(name, finalScore, time) {
     formData.append('violations', _ac.violations);
     formData.append('gameToken', _serverGameToken || '');
     formData.append('testScore', _finalTestScore);
+    formData.append('mode', myRole && myLobbyCode ? 'multi' : 'single');
     
     fetch('src/php/save_score.php', {
         method: 'POST',
@@ -2192,14 +2228,7 @@ function showNotification(message, type = 'info', duration = 3000) {
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
     
-    const icon = {
-        'success': '✓',
-        'error': '✗',
-        'warning': '⚠',
-        'info': 'ℹ'
-    }[type] || 'ℹ';
-    
-    notification.innerHTML = `<span class="notification-icon">${icon}</span><span class="notification-text">${message}</span>`;
+    notification.innerHTML = `<span class="notification-text">${message}</span>`;
     
     container.appendChild(notification);
 
@@ -2537,7 +2566,7 @@ function finishFishing(success) {
                 <p>Laiks: ${elapsed} s</p>
                 <p style="color:#ffaa00; font-size:20px; font-weight:bold;">+${points} punkti!</p>
                 <p style="color:#ffaa00;font-style:italic;">${questions['Mols'].fact}</p>
-                <button class="btn btn-full" onclick="closeFishingGame()">Turpināt →</button>
+                <button class="btn btn-full" onclick="closeFishingGame()">Turpināt</button>
             </div>`;
     } else {
         container.innerHTML = `
@@ -2656,7 +2685,7 @@ function simonClick(color) {
             <h2>Lieliski!</h2>
             <p style="color: #ffaa00;">Visas kārtas pareizi! +10 punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Dzintars'].fact}</p>
-            <button class="btn btn-full" onclick="closeSimonGame()">Turpināt →</button>`;
+            <button class="btn btn-full" onclick="closeSimonGame()">Turpināt</button>`;
     } else {
         const msg = document.getElementById('simon-msg');
         if (msg) msg.textContent = 'Pareizi! Nākamā kārta...';
@@ -2814,7 +2843,7 @@ function finishKanalGame() {
             <p>Izvairīšanās: ${kanalDodges} | Trāpījumi: ${kanalHits}</p>
             <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Kanals'].fact}</p>
-            <button class="btn btn-full" onclick="closeKanalGame()">Turpināt →</button>`;
+            <button class="btn btn-full" onclick="closeKanalGame()">Turpināt</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
             <h2>Neizdevās!</h2>
@@ -2927,7 +2956,7 @@ function finishLSEZGame() {
             <p>Pareizi šķirots: ${lsezCorrect}/${LSEZ_TOTAL2}</p>
             <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['LSEZ'].fact}</p>
-            <button class="btn btn-full" onclick="closeLSEZGame()">Turpināt →</button>`;
+            <button class="btn btn-full" onclick="closeLSEZGame()">Turpināt</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
             <h2>Nepietiekami!</h2>
@@ -3039,9 +3068,9 @@ function cietMove() {
         cietGuardSpd = Math.min(1, 0.6 + cietSteps * 0.35);
         const st = document.getElementById('ciet-status');
         if (st) st.textContent = `Soļi: ${cietSteps}/${CIET_STEPS_NEEDED}`;
-        if (cietSteps >= CIET_STEPS_NEEDED) { finishEscapeGame(true); } else { showNotification('✓ Labi!', 'success', 700); }
+        if (cietSteps >= CIET_STEPS_NEEDED) { finishEscapeGame(true); } else { showNotification('Labi', 'success', 700); }
     } else {
-        showNotification('⚠ Sardze redz tevi!', 'error', 800);
+        showNotification('Sardze redz tevi', 'error', 800);
         cietSteps = Math.max(0, cietSteps - 1);
         const st = document.getElementById('ciet-status');
         if (st) st.textContent = `Soļi: ${cietSteps}/${CIET_STEPS_NEEDED}`;
@@ -3062,7 +3091,7 @@ function finishEscapeGame(success) {
             <h2>Aizbēgi!</h2>
             <p style="color: #ffaa00;">Tu veiksmīgi izvairījies no sardzēm! +10 punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Cietums'].fact}</p>
-            <button class="btn btn-full" onclick="closeEscapeGame()">Turpināt →</button>`;
+            <button class="btn btn-full" onclick="closeEscapeGame()">Turpināt</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
             <h2>Noķerts!</h2>
@@ -3166,7 +3195,7 @@ function finishBirdGame() {
             <p>Nofotografēti ${birdCaught} putni!</p>
             <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
             <p style="color:#ffaa00;font-style:italic;">${questions['Ezerkrasts'].fact}</p>
-            <button class="btn btn-full" onclick="closeBirdGame()">Turpināt →</button>`;
+            <button class="btn btn-full" onclick="closeBirdGame()">Turpināt</button>`;
     } else {
         document.querySelector('.task-section').innerHTML = `
             <h2>Nepietiekami!</h2>
@@ -3264,7 +3293,7 @@ function finishMemoryGame() {
         <p>Atrasti visi pāri ${memMoves} soļos!</p>
         <p style="color:#ffaa00;font-size:20px;font-weight:bold;">+${pts} punkti!</p>
         <p style="color:#ffaa00;font-style:italic;">${questions['Parks'].fact}</p>
-        <button class="btn btn-full" onclick="closeMemoryGame()">Turpināt →</button>`;
+        <button class="btn btn-full" onclick="closeMemoryGame()">Turpināt</button>`;
 }
 
 function closeMemoryGame() {

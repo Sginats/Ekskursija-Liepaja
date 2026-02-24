@@ -43,7 +43,7 @@ function LeaderboardTable({ data, sortMode, onSortTime, onSortScore }) {
           {top10.length === 0 ? (
             <tr><td colSpan={4} className={styles.empty}>Nav rezultātu</td></tr>
           ) : top10.map((row, i) => {
-            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+            const medal = i < 3 ? String(i + 1) : null;
             return (
               <tr key={i} className={i < 3 ? styles[`rank${i + 1}`] : ''}>
                 <td>{medal ? <span>{medal}</span> : i + 1}</td>
@@ -149,7 +149,7 @@ export default function Leaderboard() {
       <canvas ref={canvasRef} className={styles.bgCanvas} />
 
       <div className={styles.center}>
-        <h1 className={styles.title}>🏆 TOP 10</h1>
+        <h1 className={styles.title}>TOP 10</h1>
         <h2 className={styles.subtitle}>REZULTĀTI</h2>
 
         <div className={styles.tabs}>
@@ -157,13 +157,13 @@ export default function Leaderboard() {
             className={`${styles.tab} ${activeTab === 'single' ? styles.tabActive : ''}`}
             onClick={() => setActiveTab('single')}
           >
-            👤 Viens spēlētājs
+            Viens spēlētājs
           </button>
           <button
             className={`${styles.tab} ${activeTab === 'teams' ? styles.tabActive : ''}`}
             onClick={() => setActiveTab('teams')}
           >
-            👥 Komandas
+            Komandas
           </button>
         </div>
 

@@ -5,7 +5,7 @@ export default function AboutModal({ onClose }) {
     <div className="about-overlay" role="dialog" aria-modal="true">
       <div className="about-panel">
         <div className="panel-header">
-          <h2>ℹ Par Spēli</h2>
+          <h2>ℹ Par spēli</h2>
           <button className="close-btn" onClick={onClose} aria-label="Aizvērt">✕</button>
         </div>
 
@@ -17,6 +17,25 @@ export default function AboutModal({ onClose }) {
           </p>
         </section>
 
+
+        <section className="about-section">
+          <h3>🎮 Spēles gaita</h3>
+          <ul>
+            <li>10 lokācijas Liepājā jāizpilda secīgi.</li>
+            <li>Katrā lokācijā: mini-spēle + jautājums.</li>
+            <li>Punkti: +10 (1. mēģinājums), +5 (2. mēģinājums), pēc tam 0.</li>
+            <li>Noslēgumā: fināla tests ar 5 jautājumiem (+2 par katru pareizu atbildi).</li>
+            <li>Maksimālais rezultāts: 110 punkti.</li>
+          </ul>
+        </section>
+
+        <section className="about-section">
+          <h3>🌐 Multiplayer</h3>
+          <p>
+            Reāllaika režīms izmanto Socket.IO un WebSocket savienojumu.
+            Ir automātiska atjaunošana un savienojuma statusa pārvaldība.
+          </p>
+        </section>
         <section className="about-section">
           <h3>🛠 Izmantotās tehnoloģijas</h3>
           <ul>
