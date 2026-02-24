@@ -91,6 +91,8 @@ if ($timeInSeconds < 30) {
 
 $name = preg_replace('/[^a-zA-Z0-9āčēģīķļņšūžĀČĒĢĪĶĻŅŠŪŽ\s\+]/u', '', $name);
 $name = trim(substr($name, 0, 8));
+=======
+$name = trim(substr($name, 0, 32));
 if ($name === '') $name = 'Nezināms';
 $name = htmlspecialchars($name);
 
@@ -103,7 +105,7 @@ $normalizedTime = sprintf('%02d:%02d', floor($timeInSeconds / 60), $timeInSecond
 $_SESSION['game_submitted'] = true;
 
 $line = $name . '|' . $score . '|' . $normalizedTime . "\n";
-$file = ($mode === 'multi')
+$file = ($mode === 'multi' || $mode === 'teams')
     ? __DIR__ . '/../data/teams_leaderboard.txt'
     : __DIR__ . '/../data/leaderboard.txt';
 

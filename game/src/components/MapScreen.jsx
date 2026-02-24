@@ -13,7 +13,7 @@ const CATEGORY_COLORS = {
   industry:  { dot: '#f44336', label: 'Industrija & osta' },
 };
 
-export default function MapScreen({ completedLocations, onSelectLocation, score, windEnergy, ghostLocationId, ghostBestTime, startTime }) {
+export default function MapScreen({ completedLocations, onSelectLocation, score, windEnergy, ghostLocationId, ghostBestTime, startTime, routePlan }) {
   const { otherPlayers, occupiedLocations } = useCoopContext();
 
   return (
@@ -35,11 +35,11 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
 
       <div className="map-area-wrap">
         <div className="map-area">
-          <RouteOverlay completedLocations={completedLocations} />
+          <RouteOverlay completedLocations={completedLocations} routePlan={routePlan} />
           {/* Location pins */}
           {LOCATIONS.map(loc => {
             const done      = completedLocations.includes(loc.id);
-            const isNext    = !done && completedLocations.length === LOCATIONS.findIndex(l => l.id === loc.id);
+            const isNext    = !done && (routePlan || []).indexOf(loc.id) === completedLocations.length;
             const isOccupied = occupiedLocations.has(loc.id);
             const catColor  = CATEGORY_COLORS[loc.category]?.dot || '#ffffff';
 

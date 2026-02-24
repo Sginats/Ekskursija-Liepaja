@@ -37,7 +37,7 @@ const TTL_MS     = 4 * 60 * 60 * 1000; // 4 hours
 /** Allowed keys in the persisted game state (whitelist for safety) */
 const ALLOWED_KEYS = new Set([
   'playerName', 'score', 'windEnergy',
-  'completedLocations', 'currentLocationId', 'startTime',
+  'completedLocations', 'currentLocationId', 'startTime', 'routePlan',
 ]);
 
 export default function usePersistence() {

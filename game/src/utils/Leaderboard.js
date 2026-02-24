@@ -20,8 +20,8 @@ function _saveLocal(rows) {
 
 export async function saveScore({ name, score, timeSeconds, mode = 'single' }) {
   const entry = {
-    name: String(name).slice(0, 12),
-    score: Math.max(0, Math.min(100, Number(score))),
+    name: String(name).slice(0, 32),
+    score: Math.max(0, Math.min(220, Number(score))),
     time_seconds: Number(timeSeconds),
     mode,
     created_at: new Date().toISOString(),

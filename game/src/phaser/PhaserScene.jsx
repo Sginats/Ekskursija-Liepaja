@@ -4,6 +4,8 @@ import CatcherScene from './scenes/CatcherScene.js';
 import FlashlightScene from './scenes/FlashlightScene.js';
 import SequenceScene from './scenes/SequenceScene.js';
 import KeypadScene from './scenes/KeypadScene.js';
+import TowerScene from './scenes/TowerScene.js';
+import RegattaScene from './scenes/RegattaScene.js';
 import EnvironmentManager from './EnvironmentManager.js';
 
 const SCENE_MAP = {
@@ -11,6 +13,8 @@ const SCENE_MAP = {
   flashlight: FlashlightScene,
   sequence:   SequenceScene,
   keypad:     KeypadScene,
+  tower:      TowerScene,
+  regatta:    RegattaScene,
 };
 
 /** Fixed logical aspect ratio: 4:3 */

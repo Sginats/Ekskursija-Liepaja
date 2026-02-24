@@ -6,6 +6,7 @@
  */
 
 import { useCoopContext } from './CoopManager.jsx';
+import NotoEmoji from './NotoEmoji.jsx';
 
 export default function GlobalProgressBar() {
   const { cityProgress } = useCoopContext();
@@ -17,7 +18,10 @@ export default function GlobalProgressBar() {
 
   return (
     <div className={`global-progress-bar-wrap ${isGoalReached ? 'goal-reached' : ''}`}>
-      <span className="gp-label">🌆 Pilsētas progress</span>
+      <span className="gp-label">
+        <NotoEmoji emoji="🌆" size={16} style={{ marginRight: 5 }} />
+        Pilsētas progress
+      </span>
       <div className="gp-track">
         <div
           className="gp-fill"

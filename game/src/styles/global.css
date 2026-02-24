@@ -1815,3 +1815,259 @@ body[data-night='1']::after {
     font-size: 9px;
   }
 }
+
+/* ── FinaleQuiz ───────────────────────────────────────────────── */
+.finale-quiz-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.finale-quiz-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  max-width: 440px;
+  width: 94vw;
+  box-shadow: var(--shadow), 0 0 40px rgba(255, 170, 0, 0.15);
+  animation: slideUp 0.35s ease;
+}
+
+.finale-quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.finale-quiz-badge {
+  background: rgba(255, 170, 0, 0.2);
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 170, 0, 0.35);
+  letter-spacing: 0.5px;
+}
+
+.finale-quiz-progress-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.finale-quiz-timer {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  min-width: 44px;
+}
+
+.finale-quiz-timer.warning { color: #ffaa00; }
+.finale-quiz-timer.urgent  { color: #f44336; animation: pulse 0.5s infinite alternate; }
+
+.finale-quiz-timer-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.finale-quiz-timer-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 4px;
+}
+.finale-quiz-timer-fill.warning { background: #ffaa00; }
+.finale-quiz-timer-fill.urgent  { background: #f44336; }
+
+.finale-quiz-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+
+.finale-quiz-question {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.45;
+  margin-bottom: 20px;
+}
+
+.finale-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.finale-quiz-opt {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s;
+  text-align: left;
+}
+
+.finale-quiz-opt:hover {
+  background: rgba(255, 170, 0, 0.14);
+  border-color: rgba(255, 170, 0, 0.5);
+  transform: translateX(3px);
+}
+
+.finale-quiz-opt:active { transform: scale(0.97); }
+
+.finale-quiz-feedback {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+.finale-quiz-feedback.correct {
+  background: rgba(76, 175, 80, 0.18);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+}
+
+.finale-quiz-feedback.wrong {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.35);
+}
+
+.finale-quiz-feedback-line {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.finale-quiz-fact {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.finale-quiz-next-btn {
+  display: block;
+  width: 100%;
+  background: rgba(255, 170, 0, 0.2);
+  border: 1px solid rgba(255, 170, 0, 0.5);
+  border-radius: 8px;
+  color: var(--amber);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.finale-quiz-next-btn:hover {
+  background: rgba(255, 170, 0, 0.3);
+}
+
+/* Results screen */
+.finale-quiz-results {
+  text-align: center;
+}
+
+.finale-quiz-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--amber);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.finale-quiz-score-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.finale-quiz-score-big {
+  font-size: 52px;
+  font-weight: 800;
+  color: var(--amber);
+  line-height: 1;
+}
+
+.finale-quiz-score-label {
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.finale-quiz-correct-count {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.finale-quiz-perfect {
+  font-size: 15px;
+  color: var(--amber);
+  font-weight: 600;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.finale-quiz-done-btn {
+  margin: 16px auto 0;
+  display: block;
+}
+
+/* ── MainMenu "Par spēli" button ─────────────────────────────── */
+.menu-about-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* ── AboutModal footer buttons ───────────────────────────────── */
+.about-footer-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.about-footer-btns .menu-start-btn,
+.about-footer-btns .nav-btn {
+  flex: 1 1 140px;
+  max-width: 200px;
+}

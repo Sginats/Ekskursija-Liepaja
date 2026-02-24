@@ -298,10 +298,11 @@ export default class CatcherScene extends Phaser.Scene {
     this._coopUnsubs?.forEach(u => u());
 
     const { width, height } = this.scale;
-    // Bonus points: time bonus + combo bonus (1 extra pt per combo tier reached, max 2)
-    const timeBonus  = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 5 : 3) : 0;
+    // Bonus points: time bonus + combo bonus
+    // 10 pts if >50% time left AND good combo, else 5 pts for success.
+    const timeBonus  = success ? (this._timeLeft > this._cfg.timeLimit * 0.5 ? 8 : 4) : 0;
     const comboBonus = success ? Math.min(MAX_COMBO_BONUS, COMBO_THRESHOLDS.filter(t => this._maxCombo >= t).length) : 0;
-    const pts        = Math.min(5, timeBonus + comboBonus);
+    const pts        = Math.min(10, timeBonus + comboBonus);
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.6);
     this.add

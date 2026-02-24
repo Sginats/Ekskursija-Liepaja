@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import NotoEmoji from './NotoEmoji.jsx';
 
-export default function MainMenu({ onStart }) {
+export default function MainMenu({ onStart, onAbout }) {
   const [name, setName] = useState('');
   const [err, setErr] = useState('');
 
@@ -44,6 +44,10 @@ export default function MainMenu({ onStart }) {
 
         <button className="menu-start-btn" onClick={handleStart}>
           Sākt ekskursiju →
+        </button>
+
+        <button className="nav-btn menu-about-btn" onClick={onAbout}>
+          ℹ Par spēli
         </button>
 
         <p className="menu-hint">Nospied Enter lai sāktu</p>

@@ -26,8 +26,9 @@ import SocketManager from './utils/SocketManager.js';
 import { generateJournal, downloadJournal } from './utils/JournalGenerator.js';
 import GhostRun from './utils/GhostRun.js';
 import usePersistence from './hooks/usePersistence.js';
+import FinaleQuiz from './components/FinaleQuiz.jsx';
 
-const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', END: 'end' };
+const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', FINALE: 'finale', END: 'end' };
 const LAST_LOCATION_ID = 'parks';
 const SCORE_CAP = 110;
 
@@ -52,6 +53,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [emptyTravelPenalties, setEmptyTravelPenalties] = useState(0);
   const [unlockedCards, setUnlockedCards] = useState(getUnlockedCards());
   const [route, setRoute] = useState([]);
+  const [routePlan, setRoutePlan] = useState([]);
   // Live question overrides received from admin hot-swap
   const [questionOverrides, setQuestionOverrides] = useState({});
   // Ghost run: elapsedMs from map start for playback
@@ -61,7 +63,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const mapTimerRef = useRef(null);
 
   const { isNight } = getDayNightState();
-  const { coopMultiplier, coopPenalty, joinFinale } = useCoopContext();
+  const { coopMultiplier, coopPenalty, joinFinale, activeLobbyCode, finaleLobby } = useCoopContext();
   const { saveState, loadState, clearState } = usePersistence();
 
   useEffect(() => {
@@ -79,8 +81,9 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       completedLocations,
       currentLocationId: currentLocation?.id ?? null,
       startTime,
+      routePlan,
     });
-  }, [score, windEnergy, completedLocations, currentLocation, phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [score, windEnergy, completedLocations, currentLocation, phase, routePlan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Restore saved state on mount ─────────────────────────────────────────
   useEffect(() => {
@@ -91,6 +94,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setWindEnergy(saved.windEnergy ?? WIND_MAX);
     setCompletedLocations(saved.completedLocations ?? []);
     setStartTime(saved.startTime ?? Date.now());
+    setRoutePlan(saved.routePlan ?? []);
     SocketManager.joinGame(saved.playerName);
     onPlayerNameChange?.(saved.playerName);
     onScoreChange?.(saved.score ?? 0);
@@ -158,6 +162,13 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setRoute([]);
     setFinaleRank(null);
     setShowPreFinal(false);
+
+    // Shuffle locations excluding Atpūtas vieta (parks) which must be last
+    const pool = LOCATIONS.filter(l => l.id !== LAST_LOCATION_ID);
+    const shuffled = pool.sort(() => Math.random() - 0.5).map(l => l.id);
+    const newPlan = [...shuffled, LAST_LOCATION_ID];
+    setRoutePlan(newPlan);
+
     clearState();
     clearSession();
     SocketManager.joinGame(name);
@@ -174,9 +185,9 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     const loc = LOCATIONS.find(l => l.id === locationId);
     if (!loc || completedLocations.includes(locationId)) return;
 
-    const availableOrder = LOCATIONS.filter(l => !completedLocations.includes(l.id));
-    const isLast = availableOrder.length === 1;
-    if (isLast && locationId !== LAST_LOCATION_ID) return;
+    // Strict order based on randomized routePlan
+    const nextExpectedId = routePlan[completedLocations.length];
+    if (locationId !== nextExpectedId) return;
 
     let newEnergy = applyTravelCost(windEnergy);
     let penalty = emptyTravelPenalties;
@@ -249,23 +260,46 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
   const handlePreFinalReady = useCallback(() => {
     setShowPreFinal(false);
+    setPhase(PHASE.FINALE);
+  }, []);
+
+  const handleFinaleComplete = useCallback(({ bonusPoints }) => {
+    setScore(s => Math.min(SCORE_CAP, s + (bonusPoints || 0)));
     setPhase(PHASE.END);
   }, []);
 
   const handleSaveScore = useCallback(async () => {
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
-    await saveScore({ name: playerName, score, timeSeconds: elapsed, mode: 'single' });
+    
+    let finalName = playerName;
+    let finalScore = score;
+    let finalTime = elapsed;
+    let mode = 'single';
+
+    if (activeLobbyCode && finaleLobby.length > 1) {
+      mode = 'multi';
+      // Combine scores/names for everyone in the finale lobby
+      const names = finaleLobby.map(p => p.name).sort().join(' + ');
+      const totalScore = finaleLobby.reduce((sum, p) => sum + p.score, 0);
+      const maxTime = Math.max(...finaleLobby.map(p => p.timeSeconds));
+      
+      finalName = names;
+      finalScore = totalScore;
+      finalTime = maxTime;
+    }
+
+    await saveScore({ name: finalName, score: finalScore, timeSeconds: finalTime, mode });
     GhostRun.finish(elapsed * 1000, score);
     joinFinale(score, elapsed);
     clearState();
     // Fetch rank — score count+1 if not in top-10 list yet
     try {
-      const top = await getTopTen('single');
-      const idx = top.findIndex(r => r.name === playerName && r.score === score);
+      const top = await getTopTen(mode);
+      const idx = top.findIndex(r => r.name === finalName && r.score === finalScore);
       setFinaleRank(idx >= 0 ? idx + 1 : (top.length > 0 ? top.length + 1 : 1));
     } catch { /* non-critical */ }
     setShowLeaderboard(true);
-  }, [playerName, score, startTime, joinFinale, clearState]);
+  }, [playerName, score, startTime, joinFinale, clearState, activeLobbyCode, finaleLobby]);
 
   const handleDownloadJournal = useCallback(() => {
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
@@ -290,7 +324,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
   return (
     <div className={`app-root ${isNight ? 'night' : 'day'}`}>
-      {phase === PHASE.MENU && <MainMenu onStart={handleStart} />}
+      {phase === PHASE.MENU && <MainMenu onStart={handleStart} onAbout={() => setShowAbout(true)} />}
 
       {phase === PHASE.MAP && (
         <>
@@ -312,6 +346,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
             ghostLocationId={GhostRun.getGhostLocation(mapElapsedMs)}
             ghostBestTime={GhostRun.getBestTimeLabel()}
             startTime={startTime}
+            routePlan={routePlan}
           />
         </>
       )}
@@ -360,6 +395,10 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
         </div>
       )}
 
+      {phase === PHASE.FINALE && (
+        <FinaleQuiz onComplete={handleFinaleComplete} />
+      )}
+
       {phase === PHASE.END && (
         <div className="end-screen">
           <Confetti />
@@ -400,7 +439,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
       {showCards       && <CardCollection unlockedCards={unlockedCards} onClose={() => setShowCards(false)} />}
       {showLeaderboard && <LeaderboardView onClose={() => setShowLeaderboard(false)} />}
-      {showAbout       && <AboutModal onClose={() => setShowAbout(false)} />}
+      {showAbout       && <AboutModal onClose={() => setShowAbout(false)} onStart={phase === PHASE.MENU ? () => { setShowAbout(false); } : undefined} />}
       {showAdmin       && <AdminPanel onClose={() => setShowAdmin(false)} />}
       {showIntro       && <IntroModal onDismiss={() => setShowIntro(false)} />}
       {showPreFinal    && <PreFinalModal onReady={handlePreFinalReady} />}
