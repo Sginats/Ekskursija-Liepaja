@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Liepājas Karte</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js?v=<?php echo time(); ?>" defer></script>
+    <script src="js/script.js?v=FINAL" defer></script>
 </head>
 <body>
     <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
@@ -76,6 +76,13 @@
             <div class="lang-switch">
                 <button class="lang-btn" onclick="setLanguage('lv')">LATVIEŠU</button>
                 <button class="lang-btn" onclick="setLanguage('en')">ENGLISH</button>
+            </div>
+            <h3 class="section-title">Tēma</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn" style="width:100%; font-size:12px; padding:10px;" onclick="applyTheme('default')">Klasiskā</button>
+                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#442266;" onclick="applyTheme('violet')">Violeto</button>
+                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#660000;" onclick="applyTheme('darkred')">Tumši sarkanā</button>
+                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#002266;" onclick="applyTheme('blue')">Zilā</button>
             </div>
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
         </div>
