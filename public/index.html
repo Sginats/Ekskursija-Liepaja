@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <title>Liepājas Ekskursija</title>
     <link rel="stylesheet" href="style.css">
-    <script src="js/script.js?v=FINAL" defer></script>
+    <script src="core/scoring.js" defer></script>
+    <script src="script.js?v=FINAL" defer></script>
 </head>
 <body>
     <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
@@ -19,7 +20,7 @@
         <div class="button-group">
             <button class="btn" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
             <button class="btn" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button class="btn" id="btn-leaderboard" onclick="location.href='php/leaderboard.php'">Top 10</button>
+            <button class="btn" id="btn-leaderboard" onclick="location.href='leaderboard.php'">Top 10</button>
             <button class="btn" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
             <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
@@ -32,11 +33,11 @@
     <div id="mode-modal" class="modal">
         <div class="modal-content" style="text-align: center;">
             <h2 id="mode-title" style="color: #ffaa00;">Izvēlies režīmu</h2>
-            
-            <input type="text" id="start-player-name" placeholder="Tavs Vārds..." class="input-field" maxlength="15" style="text-align: center; width: 60%; margin-bottom: 10px; font-weight: bold;">
+
+            <input type="text" id="player-name-input" placeholder="Spēlētāja vārds" class="input-field" style="text-align: center; width: 240px; margin-bottom: 10px; font-weight: bold;">
 
             <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
-                <button id="btn-single" class="btn" onclick="startSingleGame()">Spēlēt vienam</button>
+                <button id="btn-single" class="btn" onclick="location.href='map.html'">Spēlēt vienam</button>
                 <button id="btn-lobby" class="btn" onclick="openLobby()">Spēlēt ar draugu</button>
                 <div style="margin-top: 10px; border-top: 1px solid #4a2c2c; width: 100%; padding-top: 10px;">
                     <input type="text" id="join-code" placeholder="Ievadi drauga kodu" class="input-field" style="text-align: center; width: 200px;">
@@ -49,11 +50,21 @@
 
     <div id="lobby-modal" class="modal">
         <div class="modal-content" style="text-align: center;">
-            <h2 style="color: #ffaa00;">Lobby</h2>
-            <p>Tavs istabas kods:</p>
-            <h1 id="lobby-code" style="font-size: 50px; margin: 10px 0;">0000</h1>
-            <p id="lobby-wait" style="color: yellow;">Gaidu otru spēlētāju...</p>
-            <button class="btn close-btn" onclick="location.reload()">Aizvērt</button>
+            <h2 id="lobby-title" style="color: #ffaa00;">Lobby</h2>
+            <p id="lobby-text">Tavs istabas kods:</p>
+            <h1 id="lobby-code" style="font-size: 60px; color: #4CAF50; letter-spacing: 5px; margin: 10px 0;">....</h1>
+
+            <div id="lobby-players" style="margin: 10px 0; text-align: left;"></div>
+            <p id="lobby-status" style="color: #ccc; font-size: 14px;">Gaidu otru spēlētāju...</p>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                <button id="btn-ready" class="btn" onclick="toggleReady()">Gatavs</button>
+                <button id="btn-start-game" class="btn" onclick="startMultiplayer()" disabled>Startēt</button>
+            </div>
+
+            <div id="loading-spinner" style="margin: 20px auto; width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #ffaa00; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+
+            <button id="btn-close-lobby" class="btn close-btn" onclick="toggleModal('lobby-modal')">Aizvērt</button>
         </div>
     </div>
 
@@ -74,19 +85,11 @@
                 <button class="lang-btn" onclick="setLanguage('en')">ENGLISH</button>
             </div>
 
-            <h3 id="theme-title" class="section-title">Tēma</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button class="btn" style="width:100%; font-size:12px; padding:10px;" onclick="applyTheme('default')">Klasiskā</button>
-                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#442266;" onclick="applyTheme('violet')">Violeto</button>
-                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#660000;" onclick="applyTheme('darkred')">Tumši sarkanā</button>
-                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#002266;" onclick="applyTheme('blue')">Zilā</button>
-            </div>
-
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
         </div>
     </div>
 
-        <div id="about-modal" class="modal">
+    <div id="about-modal" class="modal">
         <div class="modal-content about-layout">
             <h2 id="about-title" style="text-align: center; color: #ffaa00; text-transform: uppercase; margin-top: 0;">Par Spēli</h2>
             
@@ -135,9 +138,13 @@
                 </ul>
             </div>
 
-            <button id="btn-start-about" class="btn" onclick="toggleModal('about-modal'); toggleModal('mode-modal')" style="width: 100%; margin-top: 20px; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">SĀKT SPĒLI</button>
+            <button id="btn-start-about" class="btn" onclick="toggleModal('mode-modal')" style="width: 100%; margin-top: 20px; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">SĀKT SPĒLI</button>
             <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
         </div>
     </div>
+
+    <style>
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </body>
 </html>
