@@ -1,0 +1,75 @@
+{
+  "finalLocationId": "Atputa",
+  "locations": [
+    {
+      "id": "RTU",
+      "name": "RTU Liepājas akadēmija",
+      "category": "Eksperts",
+      "activityType": "minigame_tower",
+      "scoreCap": 10
+    },
+    {
+      "id": "Dzintars",
+      "name": "Lielais Dzintars",
+      "category": "Kultūra",
+      "activityType": "minigame_dzintars",
+      "scoreCap": 10
+    },
+    {
+      "id": "Teatris",
+      "name": "Liepājas Teātris",
+      "category": "Kultūra",
+      "activityType": "minigame_teatris",
+      "scoreCap": 10
+    },
+    {
+      "id": "Kanals",
+      "name": "Tirdzniecības kanāls",
+      "category": "Vēsture",
+      "activityType": "puzzle_kanals",
+      "scoreCap": 10
+    },
+    {
+      "id": "Osta",
+      "name": "Liepājas osta",
+      "category": "Industrija",
+      "activityType": "minigame_regate",
+      "scoreCap": 10
+    },
+    {
+      "id": "LSEZ",
+      "name": "LSEZ ražotne",
+      "category": "Industrija",
+      "activityType": "puzzle_lsez",
+      "scoreCap": 10
+    },
+    {
+      "id": "Cietums",
+      "name": "Karostas cietums",
+      "category": "Vēsture",
+      "activityType": "minigame_cietums",
+      "scoreCap": 10
+    },
+    {
+      "id": "Mols",
+      "name": "Ziemeļu mols",
+      "category": "Daba",
+      "activityType": "puzzle_mols",
+      "scoreCap": 10
+    },
+    {
+      "id": "Ezerkrasts",
+      "name": "Ezerkrasta taka",
+      "category": "Daba",
+      "activityType": "puzzle_ezerkrasts",
+      "scoreCap": 10
+    },
+    {
+      "id": "Atputa",
+      "name": "Atpūtas vieta",
+      "category": "Daba",
+      "activityType": "final_test",
+      "scoreCap": 10
+    }
+  ]
+}

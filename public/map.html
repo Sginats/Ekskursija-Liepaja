@@ -4,49 +4,40 @@
     <meta charset="UTF-8">
     <title>Liepājas Karte</title>
     <link rel="stylesheet" href="style.css">
-    <script src="js/script.js?v=FINAL" defer></script>
+    <script src="core/scoring.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js" defer></script>
+    <script src="minigames.js" defer></script>
+    <script src="script.js?v=FINAL" defer></script>
 </head>
 <body>
-    <audio id="hover-sound" src="skana/hover.mp3" preload="auto"></audio>
-    <audio id="bg-music" loop>
-        <source src="skana/music.mp3" type="audio/mpeg">
-    </audio>
-
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 2px solid #ffaa00;">
+    <div class="map-container">
         
-        <button id="btn-back" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="location.href='index.html'">Atpakaļ uz Menu</button>
-        
-        <div id="score-display" style="color: #ffaa00; font-size: 24px; font-weight: bold; text-shadow: 0 0 10px #ffaa00;">Punkti: 0</div>
+        <div class="ui-layer">
+            <button id="btn-back" class="btn back-btn" onclick="location.href='index.html'">Atpakaļ</button>
+            <div id="score-display">Punkti: 0</div>
+            <div id="progress-display">Maršruts: 0/10</div>
+            <button id="btn-rules" class="btn rules-btn" onclick="toggleModal('rules-modal')">Noteikumi</button>
 
-        <div style="display: flex; gap: 10px;">
-            <button id="btn-settings-map" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button id="btn-about-map" class="btn" style="padding: 5px 15px; font-size: 14px;" onclick="toggleModal('about-modal')">Par Spēli</button>
-        </div>
-    </div>
-
-    <div class="map-container" style="margin-top: 70px;">
-        
-        <div class="ui-layer" style="position: absolute; bottom: 20px; left: 20px; z-index: 100;">
-            <div class="difficulty-legend" style="background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #555;">
-                <h3 id="legend-map-title" style="margin: 0 0 10px 0; font-size: 16px; color: #ffaa00;">Apskates vietas</h3>
-                <div id="legend-map-green" class="legend-item"><span class="dot point-green"></span>Daba un atpūta</div>
-                <div id="legend-map-blue" class="legend-item"><span class="dot point-blue"></span>Kultūra un vēsture</div>
-                <div id="legend-map-yellow" class="legend-item"><span class="dot point-yellow"></span>RTU akadēmija</div>
-                <div id="legend-map-red" class="legend-item"><span class="dot point-red"></span>Industrija un osta</div>
+            <div class="difficulty-legend">
+                <h3 id="legend-map-title">Grūtības pakāpes</h3>
+                <div id="legend-map-green" class="legend-item"><span class="dot point-green"></span> Viegli: Daba un atpūta</div>
+                <div id="legend-map-blue" class="legend-item"><span class="dot point-blue"></span> Vidēji: Kultūra un vēsture</div>
+                <div id="legend-map-yellow" class="legend-item"><span class="dot point-yellow"></span> Eksperts: RTU akadēmija</div>
+                <div id="legend-map-red" class="legend-item"><span class="dot point-red"></span> Izaicinājums: Industrija un osta</div>
             </div>
         </div>
 
         <div class="map-area">
-            <div class="point point-yellow" style="top: 12%; left: 11%;" data-name="Ziemeļu mols" onclick="startActivity('Mols')"></div>
-            <div class="point point-green" style="top: 24%; left: 44%;"data-name="Karostas cietums" onclick="startActivity('Cietums')"></div>
-            <div class="point point-blue" style="top: 58%; left: 23%;" data-name="Tirdzniecības kanāls" onclick="startActivity('Kanals')"></div>
-            <div class="point point-blue" style="top: 61.5%; left: 30.5%;" data-name="Lielais Dzintars" onclick="startActivity('Dzintars')"></div>
-            <div class="point point-blue" style="top: 63%; left: 27%;" data-name="RTU Liepāja" onclick="startActivity('RTU')"></div>
-            <div class="point point-blue" style="top: 64%; left: 37%;" data-name="Liepājas Teātris" onclick="startActivity('Teatris')"></div>
-            <div class="point point-red" style="top: 60%; left: 33%;" data-name="Liepājas Osta" onclick="startActivity('Osta')"></div>
-            <div class="point point-green" style="top: 70%; left: 12%;" data-name="Jūrmalas parks" onclick="startActivity('Parks')"></div>
-            <div class="point point-red" style="top: 61.5%; left: 52.5%;" data-name="LSEZ" onclick="startActivity('LSEZ')"></div>
-            <div class="point point-green" style="top: 81%; left: 57%;" data-name="Ezerkrasta taka" onclick="startActivity('Ezerkrasts')"></div>
+            <div class="point point-green" style="top: 12%; left: 11%;" data-id="Mols" data-name="Ziemeļu mols" onclick="startActivity('Mols')"></div>
+            <div class="point point-green" style="top: 24%; left: 44%;" data-id="Cietums" data-name="Karostas cietums" onclick="startActivity('Cietums')"></div>
+            <div class="point point-blue" style="top: 58%; left: 23%;" data-id="Kanals" data-name="Tirdzniecības kanāls" onclick="startActivity('Kanals')"></div>
+            <div class="point point-blue" style="top: 61.5%; left: 30.5%;" data-id="Dzintars" data-name="Lielais Dzintars" onclick="startActivity('Dzintars')"></div>
+            <div class="point point-yellow" style="top: 63%; left: 27%;" data-id="RTU" data-name="RTU Liepājas akadēmija" onclick="startActivity('RTU')"></div>
+            <div class="point point-blue" style="top: 64%; left: 37%;" data-id="Teatris" data-name="Liepājas Teātris" onclick="startActivity('Teatris')"></div>
+            <div class="point point-red" style="top: 60%; left: 33%;" data-id="Osta" data-name="Liepājas osta" onclick="startActivity('Osta')"></div>
+            <div class="point point-green" style="top: 70%; left: 12%;" data-id="Atputa" data-name="Atpūtas vieta" onclick="startActivity('Atputa')"></div>
+            <div class="point point-red" style="top: 61.5%; left: 52.5%;" data-id="LSEZ" data-name="LSEZ ražotne" onclick="startActivity('LSEZ')"></div>
+            <div class="point point-green" style="top: 81%; left: 57%;" data-id="Ezerkrasts" data-name="Ezerkrasta taka" onclick="startActivity('Ezerkrasts')"></div>
         </div>
     </div>
 
@@ -60,48 +51,46 @@
                     <p id="guide-hint">Sveiks! Esmu tavs gids.</p>
                 </div>
             </div>
+            
             <div class="task-section">
-                </div>
+                <h2 id="task-title">Vieta</h2>
+                <p id="task-desc">Izvēlies punktu kartē, lai sāktu uzdevumu.</p>
+            </div>
+            <div id="phaser-container" class="phaser-container"></div>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal" style="z-index: 3000;">
+    <div id="minigame-overlay" class="minigame-overlay">
+        <div class="minigame-overlay-content">
+            <h3 data-overlay-title></h3>
+            <p data-overlay-body></p>
+            <div class="minigame-overlay-actions">
+                <button class="btn" data-overlay-primary>Turpināt</button>
+                <button class="btn" data-overlay-secondary>Atcelt</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rules-modal" class="modal">
         <div class="modal-content">
-            <h2 id="settings-title">Iestatījumi</h2>
-            <label id="vol-music">Mūzika</label>
-            <input type="range" min="0" max="100" value="30" oninput="setMusicVolume(this.value)">
-            <label id="vol-sfx">Skaņas efekti</label>
-            <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
-            <h3 id="lang-title">Valoda</h3>
-            <div class="lang-switch">
-                <button class="lang-btn" onclick="setLanguage('lv')">LATVIEŠU</button>
-                <button class="lang-btn" onclick="setLanguage('en')">ENGLISH</button>
-            </div>
-            <h3 class="section-title">Tēma</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button class="btn" style="width:100%; font-size:12px; padding:10px;" onclick="applyTheme('default')">Klasiskā</button>
-                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#442266;" onclick="applyTheme('violet')">Violeto</button>
-                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#660000;" onclick="applyTheme('darkred')">Tumši sarkanā</button>
-                <button class="btn" style="width:100%; font-size:12px; padding:10px; background:#002266;" onclick="applyTheme('blue')">Zilā</button>
-            </div>
-            <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
+            <h2>Noteikumi</h2>
+            <p>Maršruts tiek izlozēts katrai spēlei. Pēdējā vieta vienmēr ir Atpūtas vieta.</p>
+            <p>Katrā vietā ir uzdevums vai minispēle. Punkti tiek skaitīti centralizēti.</p>
+            <p>Fināla testā ir 10 jautājumi, un katrs pareizs dod 1 punktu.</p>
+            <button class="btn close-btn" onclick="toggleModal('rules-modal')">Aizvērt</button>
         </div>
     </div>
 
-    <div id="about-modal" class="modal" style="z-index: 3000;">
+    <div id="end-modal" class="modal">
         <div class="modal-content">
-            <h2 id="about-title">Par Spēli</h2>
-            <div class="info-box">
-                <p id="about-autori">Autori: Niks Šenvalds, Dans Bitenieks</p>
-            </div>
-            <h3 id="res-title">Resursi</h3>
-            <ul>
-                <li id="res-1">Karte: OpenStreetMap</li>
-                <li id="res-2">Kaija: Autoru zīmējums</li>
-            </ul>
-            <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
+            <h2 id="end-title">Spēle pabeigta!</h2>
+            <p><span id="end-score-text">Tavs rezultāts: </span><span id="final-score">0</span><span id="end-points"> punkti</span></p>
+            <hr>
+            <div id="end-multi-info" style="display: none; margin-bottom: 10px;"></div>
+            <input type="text" id="player-name" placeholder="Ievadi savu vārdu" class="btn" style="clip-path: none; width: 80%; margin-bottom: 15px;">
+            <br>
+            <button id="btn-save" class="btn" onclick="submitResult()">Saglabāt rezultātu</button>
         </div>
     </div>
-
 </body>
 </html>

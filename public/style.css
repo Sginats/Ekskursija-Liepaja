@@ -105,7 +105,9 @@ body {
 
 .ui-layer .btn, 
 .ui-layer .difficulty-legend,
-.ui-layer #score-display {
+.ui-layer #score-display,
+.ui-layer #progress-display,
+.ui-layer .rules-btn {
     pointer-events: auto; 
 }
 
@@ -198,6 +200,27 @@ body {
     border-radius: 5px;
     white-space: nowrap;
     border: 1px solid #ffaa00;
+}
+
+#progress-display {
+    position: absolute;
+    top: 140px;
+    left: 20px;
+    z-index: 10;
+    font-size: 18px;
+    color: #fff;
+    background: rgba(42, 26, 26, 0.8);
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 1px solid #553333;
+}
+
+.rules-btn {
+    position: absolute;
+    top: 200px;
+    left: 20px;
+    z-index: 10;
+    width: 180px;
 }
 
 .tooltip {
@@ -414,6 +437,7 @@ input[type=range] {
     z-index: 10;
     text-align: left;
 }
+
 #start-player-name:focus {
     background-color: #4a3333;
     outline: none;
@@ -431,7 +455,76 @@ input[type=range] {
     text-shadow: 1px 1px 2px black;
 }
 
-/* Leaderboard */
+.phaser-container {
+    flex: 2;
+    display: none;
+    width: 640px;
+    height: 600px;
+    border: 2px solid #553333;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1b0f0f;
+}
+
+.minigame-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 1200;
+}
+
+.minigame-overlay.visible {
+    display: flex;
+}
+
+.minigame-overlay-content {
+    background: #2a1a1a;
+    border: 2px solid #ffaa00;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+}
+
+.minigame-overlay-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.minigame-overlay-actions .btn {
+    width: 160px;
+}
+
+@media (max-width: 480px) {
+    .map-area {
+        transform: scale(0.8);
+    }
+
+    .quiz-layout {
+        flex-direction: column;
+    }
+
+    .phaser-container {
+        width: 100%;
+        height: 420px;
+    }
+
+    #score-display, #progress-display {
+        font-size: 16px;
+        min-width: 160px;
+    }
+
+    .rules-btn {
+        width: 150px;
+    }
+}
+
 .container p{
     color: #aaa; 
     margin-bottom: 20px; 
