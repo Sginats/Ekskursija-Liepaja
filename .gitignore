@@ -1,5 +1,10 @@
 # Dependencies
 node_modules/
+client/node_modules/
+game/node_modules/
+
+# Build output
+dist/
 
 # Logs
 *.log
@@ -21,3 +26,4 @@ Thumbs.db
 # Temporary files
 *.tmp
 /tmp/
+dist-game/

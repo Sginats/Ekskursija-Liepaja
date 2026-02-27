@@ -12,7 +12,6 @@ $role = $_GET['role'] ?? '';
 $lobbies = json_decode(file_get_contents($file), true) ?? [];
 
 if ($action == 'create') {
-    // Validate code is numeric and 4 digits
     $code = preg_replace('/[^0-9]/', '', $code);
     if (!$code || strlen($code) != 4) $code = rand(1000, 9999);
     

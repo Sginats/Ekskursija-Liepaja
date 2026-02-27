@@ -2,33 +2,46 @@
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Liepājas Ekskursija</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="src/js/script.js?v=FINAL" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260218153000">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+    <script src="src/js/minigame-fx.js?v=20260224" defer></script>
+    <script src="src/js/script.js?v=20260224" defer></script>
 </head>
 <body>
-    <audio id="hover-sound" src="assets/skana/hover.mp3" preload="auto"></audio>
-<audio id="bg-music" loop>
-    <source src="assets/skana/music.mp3" type="audio/mpeg">
-</audio>
+    <div class="wrap" id="bg-wrap"></div>
+    <canvas id="cursor-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;"></canvas>
+    <audio id="hover-sound" src="skana/hover.wav" preload="auto"></audio>
+    <audio id="bg-music" src="skana/music.wav" loop preload="auto"></audio>
 
-    <!-- Connection Status Indicator -->
     <div id="connection-status" class="connection-status" style="display: none;"></div>
 
     <div id="main-menu" class="container">
-        <h1 class="title" id="main-title">LIEPĀJAS KARTE</h1>
-        <h2 class="subtitle" id="subtitle">EKSKURSIJA</h2>
+        <h1 class="title" id="main-title">LIEPĀJAS EKSKURSIJA</h1>
+        <h2 class="subtitle" id="subtitle">Pilsētas puika</h2>
         
         <div class="button-group">
-            <button class="btn" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
-            <button class="btn" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
-            <button class="btn" id="btn-leaderboard" onclick="location.href='src/php/leaderboard.php'">Top 10</button>
-            <button class="btn" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
-            <button class="btn" id="btn-exit" onclick="exitGame()">Iziet</button>
+            <button class="btn btnMini" id="btn-start" onclick="toggleModal('mode-modal')">Sākt spēli</button>
+            <button class="btn btnMini" id="btn-settings" onclick="toggleModal('settings-modal')">Iestatījumi</button>
+            <button class="btn btnMini" id="btn-leaderboard" onclick="location.href='src/php/leaderboard.php'">Top 10</button>
+            <button class="btn btnMini" id="btn-about" onclick="toggleModal('about-modal')">Par spēli</button>
+            <button class="btn btnMini" id="btn-exit" onclick="exitGame()">Iziet</button>
         </div>
 
         <div class="authors-corner" id="authors-corner">
             Autori: Niks Šenvalds, Dans Bitenieks
+        </div>
+        <div style="position:fixed;bottom:12px;right:14px;z-index:50;">
+            <a href="src/php/admin.php" class="admin-corner-link">Admin</a>
         </div>
     </div>
 
@@ -36,14 +49,20 @@
         <div class="modal-content" style="text-align: center;">
             <h2 id="mode-title" style="color: #ffaa00;">Izvēlies režīmu</h2>
             
-            <input type="text" id="start-player-name" placeholder="Tavs Vārds..." class="input-field" style="text-align: center; width: 60%; margin-bottom: 10px; font-weight: bold;" maxlength="8">
+            <div class="input-wrapper">
+                <label class="input-label" for="start-player-name">Tavs Vārds</label>
+                <input type="text" id="start-player-name" placeholder="Ievadi savu vārdu..." class="input-field" maxlength="8">
+            </div>
 
             <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
-                <button id="btn-single" class="btn" onclick="startSingleGame()">Spēlēt vienam</button>
-                <button id="btn-lobby" class="btn" onclick="openLobby()">Spēlēt ar draugu</button>
-                <div style="margin-top: 10px; border-top: 1px solid #4a2c2c; width: 100%; padding-top: 10px;">
-                    <input type="text" id="join-code" placeholder="Ievadi drauga kodu" class="input-field" style="text-align: center; width: 200px;" maxlength="8">
-                    <button id="btn-join" class="btn" onclick="joinGame()" style="width: 200px; margin-top: 5px;">Pievienoties</button>
+                <button id="btn-single" class="btn btnMini" onclick="startSingleGame()">Spēlēt vienam</button>
+                <button id="btn-lobby" class="btn btnMini" onclick="openLobby()">Spēlēt ar draugu</button>
+                <div style="margin-top: 15px; border-top: 2px solid #4a2c2c; width: 100%; padding-top: 20px;">
+                    <div class="input-wrapper">
+                        <label class="input-label" for="join-code">Drauga Kods</label>
+                        <input type="text" id="join-code" placeholder="Ievadi drauga lobby kodu" class="input-field" maxlength="8">
+                    </div>
+                    <button id="btn-join" class="btn" onclick="joinGame()" style="width: 100%; margin-top: 10px;">Pievienoties</button>
                 </div>
             </div>
             <button id="btn-cancel-mode" class="btn close-btn" onclick="toggleModal('mode-modal')" style="margin-top: 20px;">Atcelt</button>
@@ -52,11 +71,13 @@
 
     <div id="lobby-modal" class="modal">
         <div class="modal-content" style="text-align: center;">
-            <h2 style="color: #ffaa00;">Lobby</h2>
-            <p>Tavs istabas kods:</p>
-            <h1 id="lobby-code" style="font-size: 50px; margin: 10px 0;">0000</h1>
-            <p id="lobby-wait" style="color: yellow;">Gaidu otru spēlētāju...</p>
-            <button class="btn close-btn" onclick="location.reload()">Aizvērt</button>
+            <h2 style="color: #ffaa00; margin-bottom: 20px;">Lobby</h2>
+            <p style="font-size: 16px; color: #ccc; margin-bottom: 10px;">Tavs istabas kods:</p>
+            <div style="background: linear-gradient(135deg, #2a1a1a, #1a1010); border: 3px solid #ffaa00; border-radius: 15px; padding: 20px; margin: 20px 0; box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);">
+                <h1 id="lobby-code" style="font-size: 50px; margin: 0; color: #ffaa00; letter-spacing: 8px; text-shadow: 0 0 20px rgba(255, 170, 0, 0.5);">0000</h1>
+            </div>
+            <p id="lobby-wait" style="color: #ffaa00; font-size: 16px; margin: 20px 0; animation: pulse 2s infinite;">Gaidu otru spēlētāju...</p>
+            <button class="btn close-btn" onclick="location.reload()" style="margin-top: 20px;">Aizvērt</button>
         </div>
     </div>
 
@@ -71,10 +92,35 @@
             <label id="vol-sfx">Skaņas efekti</label>
             <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
 
-            <h3 id="lang-title" class="section-title">Valoda</h3>
-            <div class="lang-switch">
-                <button class="lang-btn active" onclick="setLanguage('lv')">LATVIEŠU</button>
-                <button class="lang-btn" onclick="setLanguage('en')">ENGLISH</button>
+            <h3 class="section-title">Krāsu tēma</h3>
+            <div class="theme-selector">
+                <button class="theme-btn" onclick="setTheme('default')" data-theme="default">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #332222, #2a1a1a);"></span>
+                    Noklusējuma
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" data-theme="dark">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #2d1b4e, #1a0f30);"></span>
+                    Violeta
+                </button>
+                <button class="theme-btn" onclick="setTheme('light')" data-theme="light">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #4a0f0f, #3a0a0a);"></span>
+                    Tumši sarkana
+                </button>
+                <button class="theme-btn" onclick="setTheme('blue')" data-theme="blue">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #1e3a5f, #2c5f8d);"></span>
+                    Zila
+                </button>
+            </div>
+
+            <h3 class="section-title">Animācijas</h3>
+            <div class="animation-toggle">
+                <label class="toggle-label" for="animation-toggle">
+                    <span>Animācijas On/Off</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="animation-toggle" checked onchange="toggleAnimations(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </div>
+                </label>
             </div>
 
             <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
@@ -87,24 +133,28 @@
             
             <div class="info-box">
                 <p><strong id="about-game-label">Spēle:</strong> "Mācību ekskursija Liepājā"</p>
-                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīt Liepājas kultūrvēsturiskās vietas, uzņēmumus un RTU akadēmiju, pildot interaktīvus uzdevumus un sacenšoties par labākajiem rezultātiem.</span></p>
-                <p><strong>Īpašības:</strong></p>
-                <ul style="margin: 5px 0 0 20px; font-size: 14px;">
-                    <li>10 unikālas apmeklējuma vietas</li>
-                    <li>Interaktīvi jautājumi ar faktu uzrādīšanu</li>
-                    <li>Punktu sistēma (+10 par pareizu, -5 par nepareizu)</li>
-                    <li>Reāllaika vairāku spēlētāju režīms</li>
-                    <li>Top 10 rezultātu tabula</li>
-                    <li>Valodu atbalsts (LV/EN)</li>
+                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīstināt lietotājus ar Liepājas kultūrvēsturiskajām vietām, uzņēmumiem un izglītības iespējām, pildot dažādus uzdevumus.</span></p>
+                <p>Šis projekts tika izstrādāts kā mācību darbs. Spēle piedāvā virtuālu ekskursiju pa Liepāju, kurā spēlētājam jāatrod objekti kartē, jāatbild uz jautājumiem un jāsacenšas par labāko rezultātu.</p>
+            </div>
+
+            <h3 class="section-title">Funkcionalitāte</h3>
+            <div class="info-box">
+                <ul style="margin: 5px 0 0 20px; font-size: 14px; line-height: 1.8;">
+                    <li><strong>Interaktīva karte:</strong> Liepājas karte ar aktīviem punktiem.</li>
+                    <li><strong>Uzdevumu sistēma:</strong> Katrā vietā ir unikāls uzdevums.</li>
+                    <li><strong>Punktu skaitīšana:</strong> Pareiza atbilde: <strong>+10 punkti</strong>, kļūdaina: <strong>-5 punkti</strong>.</li>
+                    <li><strong>Laika uzskaite:</strong> Tiek fiksēts laiks, cik ilgi spēlētājs pavada spēlē.</li>
+                    <li><strong>Top 10 Rezultāti:</strong> Rezultāts tiek saglabāts un attēlots "Leaderboard" tabulā.</li>
+                    <li><strong>Iestatījumi:</strong> Iespēja mainīt mūzikas un skaņas efektu skaļumu.</li>
                 </ul>
             </div>
 
             <h3 id="legend-title" class="section-title">Objektu nozīme kartē</h3>
             <ul class="legend-list">
-                <li id="legend-green"><span class="dot point-green"></span> Zaļš: Daba un atpūta</li>
-                <li id="legend-blue"><span class="dot point-blue"></span> Zils: Kultūra un vēsture</li>
-                <li id="legend-yellow"><span class="dot point-yellow"></span> Dzeltens: RTU Liepājas akadēmija</li>
-                <li id="legend-red"><span class="dot point-red"></span> Sarkans: Industrija un osta</li>
+                <li id="legend-green"><span class="dot point-green"></span> Zaļš: Daba un atpūta (Viegli)</li>
+                <li id="legend-blue"><span class="dot point-blue"></span> Zils: Kultūra un vēsture (Vidēji)</li>
+                <li id="legend-yellow"><span class="dot point-yellow"></span> Dzeltens: RTU Liepājas akadēmija (Eksperts)</li>
+                <li id="legend-red"><span class="dot point-red"></span> Sarkans: Industrija un osta (Izaicinājums)</li>
             </ul>
 
             <div class="two-columns">
@@ -115,7 +165,7 @@
                         <li>JavaScript (ES6+)</li>
                         <li>PHP (Backend)</li>
                         <li>WebSocket (Real-time)</li>
-                        <li>Node.js (Server)</li>
+                        <li>Node.js</a> (Server)</li>
                     </ul>
                 </div>
                 <div>
@@ -131,18 +181,32 @@
             <div class="resources-list">
                 <p><strong>Attēli:</strong></p>
                 <ul>
-                    <li>Karte: OpenStreetMap</li>
-                    <li>Kaija (Gids): Autoru zīmējums</li>
-                    <li>Fons: Freepik</li>
+                    <li>Karte: <a href="https://www.apple.com/maps/" target="_blank" rel="noopener noreferrer">Apple Maps</a> (© Apple Inc.)</li>
+                    <li>Kaija (Gids): <a href="https://libresprite.github.io/#!/" target="_blank" rel="noopener noreferrer">LibreSprite</a> (Autoru zīmējums)</li>
+                </ul>
+                <p><strong>Audio:</strong></p>
+                <ul>
+                    <li>Fona mūzika: <a href="https://pixabay.com/" target="_blank" rel="noopener noreferrer">Pixabay</a></li>
+                    <li>Hover skaņa: <a href="https://pixabay.com/" target="_blank" rel="noopener noreferrer">Pixabay</a></li>
                 </ul>
                 <p><strong>Informācija:</strong></p>
                 <ul>
-                    <li>Fakti par Liepāju: liepaja.lv, rtu.lv</li>
+                    <li>Fakti par Liepāju: <a href="https://www.liepaja.lv" target="_blank" rel="noopener noreferrer">liepaja.lv</a>, <a href="https://www.rtu.lv" target="_blank" rel="noopener noreferrer">rtu.lv</a></li>
+                    <li>Vēsturiskie dati: <a href="https://www.liepajasmuzejs.lv/" target="_blank" rel="noopener noreferrer">Liepājas muzejs</a>, <a href="https://lv.wikipedia.org" target="_blank" rel="noopener noreferrer">wikipedia.org</a></li>
+                </ul>
+                <p><strong>Tehnoloģijas un bibliotēkas:</strong></p>
+                <ul>
+                    <li><a href="https://getbootstrap.com" target="_blank" rel="noopener noreferrer">Bootstrap 5.3.2</a></li>
+                    <li><a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node.js</a></li>
                 </ul>
             </div>
 
-            <button id="btn-start-about" class="btn" onclick="toggleModal('mode-modal')" style="width: 100%; margin-top: 20px; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">SĀKT SPĒLI</button>
-            <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
+            <p style="text-align: center; font-size: 12px; color: #777; margin-top: 15px;">© 2026 Niks Šenvalds, Dans Bitenieks.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+                <button id="btn-start-about" class="btn" onclick="toggleModal('about-modal'); toggleModal('mode-modal');" style="width: 100%; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold;">SĀKT SPĒLI</button>
+                <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
+            </div>
         </div>
     </div>
 </body>
