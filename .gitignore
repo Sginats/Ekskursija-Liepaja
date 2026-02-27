@@ -1,4 +1,13 @@
 node_modules/
 .idea/
-.env
+.vscode/
+.DS_Store
+Thumbs.db
 *.log
+*.tmp
+*.swp
+*.swo
+.env
+leaderboard_single.txt
+leaderboard_multi.txt
+lobbies.json

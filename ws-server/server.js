@@ -18,7 +18,7 @@ wss.on('close', function close() {
     clearInterval(interval);
 });
 
-console.log(`🚀 Serveris optimizēts un palaists uz ${port}!`);
+console.log(`Serveris optimizēts un palaists uz ${port}!`);
 
 wss.on('connection', (ws) => {
     ws.isAlive = true;
@@ -38,8 +38,9 @@ wss.on('connection', (ws) => {
             if (action === 'join') {
                 if (lobbies[code] && !lobbies[code].guest) {
                     lobbies[code].guest = ws;
-                    if(lobbies[code].host.readyState === WebSocket.OPEN) 
+                    if (lobbies[code].host.readyState === WebSocket.OPEN) {
                         lobbies[code].host.send(JSON.stringify({ type: 'start_game', role: 'host' }));
+                    }
                     ws.send(JSON.stringify({ type: 'start_game', role: 'guest' }));
                 } else {
                     ws.send(JSON.stringify({ type: 'error', msg: 'Istaba nav pieejama.' }));
@@ -56,13 +57,12 @@ wss.on('connection', (ws) => {
                         const msg = JSON.stringify({ type: 'sync_complete' });
                         lobbies[code].host.send(msg);
                         lobbies[code].guest.send(msg);
-                        // Reset
                         lobbies[code].hostDone = false;
                         lobbies[code].guestDone = false;
                     }
                 }
             }
-        } catch (e) { console.error("WS Error:", e); }
+        } catch (e) { console.error('WS Error:', e); }
     });
 });
 

@@ -1,53 +1,42 @@
-# 🗺️ Mācību ekskursija Liepājā
+# Mācību ekskursija Liepājā
 
-Interaktīva tīmekļa spēle, kuras mērķis ir iepazīstināt lietotājus ar Liepājas kultūrvēsturiskajām vietām, uzņēmumiem un izglītības iespējām, pildot dažādus uzdevumus.
+Interaktīva tīmekļa spēle, kas iepazīstina ar Liepājas kultūrvēsturiskajām vietām, uzņēmumiem un izglītības iespējām, pildot uzdevumus un minispēles.
 
-![title](https://i.ytimg.com/vi/pTI00QxgScI/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLBMQu4OX7XOQC2yuU-ApsFXK1TvHA)
+## Par projektu
 
----
+Šis projekts ir mācību darbs. Spēle piedāvā virtuālu ekskursiju pa Liepāju, kurā spēlētājam jāizpilda uzdevumi noteiktā maršrutā un jānokārto fināla tests.
 
-## 🚀 Funkcionalitāte
-* **Interaktīva karte:** Liepājas karte ar aktīviem punktiem un kategorijām.
-* **Uzdevumu sistēma:** Katrā vietā ir unikāls uzdevums. Iekļautas mini-spēles (Ostas regate, Vēsturiskā secība) un nejauši jautājumi.
-* **Noslēguma tests:** Pēc visu 10 vietu apmeklēšanas – bonusa Kahoot stila tests.
-* **Daudzspēlētāju režīms:** Iespēja spēlēt kopā ar draugu, izmantojot istabas kodu (WebSockets).
-* **Punktu un Laika uzskaite:** Rezultāts tiek fiksēts un saglabāts Top 10 tabulā, kārtojot pēc laika.
-* **Vizuālās tēmas:** Iespēja izvēlēties kādu no 4 krāsu režīmiem (Klasiskā, Violeta, Sarkana, Zila).
-* **Tulkošana:** Iebūvēta LV/EN valodu pārslēgšana ar DeepL API integrāciju.
-* **Responsivitāte:** Optimizēta lietošanai gan uz datora, gan mobilajām ierīcēm.
+Autori:
+- Niks Šenvalds (Grupa 2PT)
+- Dans Bitenieks (Grupa 2PT)
 
----
+## Funkcionalitāte
 
-## 🛠️ Uzstādīšana un Palaišana
+- Interaktīva karte ar 10 aktivitātēm
+- Nejauši ģenerēts maršruts katrai sesijai, pēdējā vieta vienmēr ir Atpūtas vieta
+- 5 Phaser minispēles un 5 interaktīvi uzdevumi
+- Fināla tests ar 10 jautājumiem, nejaušu secību un atbilžu jaukšanu
+- Punktu skaitīšana ar vienotu scoring sistēmu
+- Vienpēlētāja un multiplayer režīmi ar atsevišķiem līderu sarakstiem
 
-Projekts sastāv no divām daļām: PHP klients (Front-end) un Node.js WebSocket serveris (Lobby funkcionalitātei).
+## Tehnoloģijas
 
-### 1. Front-end (PHP)
-Nepieciešams PHP serveris (piemēram, XAMPP, Nginx vai Apache).
-1. Novietojiet projektu savā web servera direktorijā.
-2. Konfigurējiet `public/php/translate.php`, iestatot savu `DEEPL_API_KEY` vides mainīgajos vai tieši failā (produkcijā ieteicams izmantot vides mainīgos).
+- HTML, CSS, JavaScript
+- Phaser 3
+- PHP (rezultātu un lobby glabāšana failos)
 
-### 2. WebSocket Serveris (Node.js)
-Atrodas `ws-server/` direktorijā.
-1. Atveriet termināli `ws-server/` mapē.
-2. Izpildiet: `npm install`
-3. Izpildiet: `npm start` (pēc noklusējuma klausās uz porta 8080).
-4. Pārliecinieties, ka ports 8080 ir atvērts ugunsmūrī.
+## Struktūra
 
----
+- `public/data/` – jautājumi un lokāciju dati
+- `public/core/` – koplietoti palīgmoduļi
+- `docs/` – audita un testu dokumentācija
 
-## 📂 Projekta struktūra
-* `public/` - Visi klienta puses faili (HTML, CSS, JS, Attēli, Skaņa).
-  * `js/script.js` - Galvenā spēles loģika.
-  * `php/` - PHP endpoints rezultātu saglabāšanai un tulkošanai.
-  * `data/` - Jautājumi (JSON) un Leaderboard dati.
-* `ws-server/` - Node.js WebSocket serveris daudzspēlētāju režīmam.
+## Lokāla palaišana
 
----
+1. Ievieto projektu servera mapē (piemēram, XAMPP).
+2. Atver `public/index.html` pārlūkā.
+3. Multiplayer režīmam nepieciešams PHP serveris.
 
-## 📝 Autori
-* **Niks Šenvalds**
-* **Dans Bitenieks**
+## Licence
 
----
-> © 2026 Mācību darbs - Liepājas ekskursija.
+© 2026 Niks Šenvalds, Dans Bitenieks.
