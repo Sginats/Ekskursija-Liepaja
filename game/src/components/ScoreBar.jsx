@@ -20,9 +20,13 @@ export default function ScoreBar({ score, locationName, phase }) {
   useEffect(() => {
     const delta = score - prevScoreRef.current;
     prevScoreRef.current = score;
-    if (delta !== 0) {
+    if (delta > 0) {
       setPopDelta(delta);
       setPopKey(k => k + 1);
+    } else if (delta < 0) {
+      // For penalties, we can also shake or show negative pop
+      setShake(true);
+      setTimeout(() => setShake(false), 600);
     }
   }, [score]);
 

@@ -80,16 +80,22 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
       EventBridge.emit('ANSWER_CORRECT', { delta: pts });
       const newWind = applyAnswerRestore(windEnergy, nextAttempts);
       onWindUpdate?.(newWind);
+      
+      // Trigger haptic-like vibration if supported
+      if ('vibrate' in navigator) navigator.vibrate(50);
+
       setTimeout(() => onComplete({ points: pts, correct: true, attempts: nextAttempts }), 1800);
     } else if (nextAttempts >= 2) {
       setAttempts(nextAttempts);
       setFeedback({ type: 'revealed', answer: question.answer });
       setDone(true);
       EventBridge.emit('ANSWER_WRONG', {});
+      if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
       setTimeout(() => onComplete({ points: 0, correct: false, attempts: nextAttempts }), 2400);
     } else {
       setAttempts(nextAttempts);
       EventBridge.emit('ANSWER_WRONG', {});
+      if ('vibrate' in navigator) navigator.vibrate(100);
       const wrongFeedback = { type: 'wrong', remaining: 2 - nextAttempts };
       if (isMC) {
         setWrongOption(value);

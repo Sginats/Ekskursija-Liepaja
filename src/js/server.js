@@ -269,6 +269,10 @@ gameNS.on('connection', (socket) => {
 
   // ── Player registration ────────────────────────────────────────────────────
   socket.on('player:join', ({ name }) => {
+    if (typeof name !== 'string' || name.length < 2) {
+      socket.emit('error', { message: 'Vārdam jābūt vismaz 2 rakstzīmes garam.' });
+      return;
+    }
     const safeNm = safeName(name);
     if (!safeNm) return;
     players.set(socket.id, {
@@ -334,6 +338,12 @@ gameNS.on('connection', (socket) => {
 
   // ── player:complete (existing + coop multiplier) ──────────────────────────
   socket.on('player:complete', ({ locationId, score, elapsedSecs }) => {
+    // Shared validation for player:complete payloads
+    if (!locationId || typeof score !== 'number') {
+      console.warn(`[server] Invalid player:complete payload from ${socket.id}`);
+      return;
+    }
+
     const p = players.get(socket.id);
     if (!p) return;
 

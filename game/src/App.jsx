@@ -27,6 +27,7 @@ import { generateJournal, downloadJournal } from './utils/JournalGenerator.js';
 import GhostRun from './utils/GhostRun.js';
 import usePersistence from './hooks/usePersistence.js';
 import FinaleQuiz from './components/FinaleQuiz.jsx';
+import ConnectionStatus from './components/ConnectionStatus.jsx';
 
 const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', FINALE: 'finale', END: 'end' };
 const LAST_LOCATION_ID = 'parks';
@@ -324,6 +325,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
   return (
     <div className={`app-root ${isNight ? 'night' : 'day'}`}>
+      <ConnectionStatus />
       {phase === PHASE.MENU && <MainMenu onStart={handleStart} onAbout={() => setShowAbout(true)} />}
 
       {phase === PHASE.MAP && (

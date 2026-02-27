@@ -373,6 +373,70 @@ body[data-night='1']::after {
   padding: 8px;
 }
 
+/* ── Connection Error Overlay ─────────────────────────────────── */
+.connection-error-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.connection-error-card {
+  background: var(--surface);
+  border: 2px solid var(--error);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 0 30px rgba(244, 67, 54, 0.3);
+  animation: modalIn 0.3s ease-out;
+}
+
+.connection-error-card h3 {
+  color: var(--error);
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.connection-error-card p {
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.reconnect-text {
+  font-size: 14px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 10px;
+}
+
+.btn-retry {
+  background: var(--amber);
+  color: var(--deep);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+  margin-top: 15px;
+}
+
+.btn-retry:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* ── Game Screen ─────────────────────────────────────────────── */
 .game-screen {
   min-height: 100vh;
@@ -2046,6 +2110,29 @@ body[data-night='1']::after {
 .finale-quiz-done-btn {
   margin: 16px auto 0;
   display: block;
+}
+
+/* ── Responsiveness (Mobile First / Fixes) ───────────────────── */
+@media (max-width: 480px) {
+  .menu-card { padding: 30px 20px; }
+  .menu-title h1 { font-size: 32px; }
+  .score-bar { padding: 8px 12px; }
+  .score-val { font-size: 18px; }
+  .map-overlay-card { width: 95%; max-height: 85vh; padding: 20px; }
+  .map-title { font-size: 18px; }
+  .finale-quiz-score-big { font-size: 40px; }
+}
+
+@media (max-width: 320px) {
+  .menu-title h1 { font-size: 26px; }
+  .menu-btn { font-size: 15px; padding: 10px; }
+  .map-nav-btns { top: 10px; right: 10px; flex-direction: column; gap: 5px; }
+  .nav-btn { padding: 6px 10px; font-size: 12px; }
+  .score-loc-name { display: none; } /* Hide name on super narrow screens */
+}
+
+@media (min-width: 1024px) {
+  .map-overlay-card { width: 440px; }
 }
 
 /* ── MainMenu "Par spēli" button ─────────────────────────────── */
