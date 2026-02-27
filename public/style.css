@@ -18,26 +18,28 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     width: 100%;
     text-align: center; 
     text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .title { 
-    font-size: 80px; 
+    font-size: clamp(40px, 10vw, 80px); 
     margin: 0; 
     line-height: 1;
     animation: pulse 3s infinite ease-in-out;
 }
 
 .subtitle {
-    font-size: 40px;
+    font-size: clamp(20px, 5vw, 40px);
     color: #ffaa00;
     margin-top: 10px;
     margin-bottom: 40px;
     text-transform: uppercase;
-    letter-spacing: 8px;
+    letter-spacing: clamp(4px, 1vw, 8px);
     text-shadow: 2px 2px 5px rgba(0,0,0,1);
     font-weight: bold;
 }
@@ -64,6 +66,7 @@ body {
     font-size: 18px;
     cursor: pointer;
     width: 250px;
+    max-width: 90%;
     transition: 0.3s;
     border-radius: 10px; 
     text-transform: uppercase;
@@ -223,8 +226,62 @@ body {
     justify-content: center;
 }
 
-.modal[style*="display: block"] {
-    display: flex !important;
+/* --- THEMES --- */
+body.theme-violet { background: linear-gradient(rgba(40,20,60,0.7), rgba(40,20,60,0.7)), url('atteli/background.jpg'); background-size: cover; }
+body.theme-violet .btn { border-color: #bb88ff; }
+body.theme-violet .title, body.theme-violet .subtitle, body.theme-violet #score-display { color: #bb88ff; text-shadow: 0 0 10px #bb88ff; }
+
+body.theme-darkred { background: linear-gradient(rgba(60,0,0,0.7), rgba(60,0,0,0.7)), url('atteli/background.jpg'); background-size: cover; }
+body.theme-darkred .btn { border-color: #ff4444; }
+body.theme-darkred .title, body.theme-darkred .subtitle, body.theme-darkred #score-display { color: #ff4444; text-shadow: 0 0 10px #ff4444; }
+
+body.theme-blue { background: linear-gradient(rgba(0,30,80,0.7), rgba(0,30,80,0.7)), url('atteli/background.jpg'); background-size: cover; }
+body.theme-blue .btn { border-color: #44aaff; }
+body.theme-blue .title, body.theme-blue .subtitle, body.theme-blue #score-display { color: #44aaff; text-shadow: 0 0 10px #44aaff; }
+
+/* --- NEW GAME LAYOUTS --- */
+.history-item {
+    transition: 0.2s;
+}
+.history-item:hover {
+    background: rgba(255,170,0,0.1) !important;
+    border-color: #ffcc00 !important;
+}
+
+.kahoot-option {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s;
+    text-align: left;
+}
+.kahoot-option:active { transform: scale(0.95); }
+.kahoot-shape { font-size: 24px; opacity: 0.8; }
+
+.boat-canvas-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: #004488;
+    overflow: hidden;
+    border-radius: 10px;
+}
+#boatCanvas { width: 100%; height: 100%; }
+
+.input-field {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ffaa00;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    font-size: 16px;
 }
 
 .modal-content {

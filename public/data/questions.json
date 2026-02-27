@@ -1,0 +1,49 @@
+{
+  "RTU": [
+    { "q": "Kurā gadā dibināta Liepājas akadēmija?", "a": "1954", "fact": "Šeit mācās gudrākie prāti!" },
+    { "q": "Kāds ir RTU Liepājas akadēmijas saīsinājums?", "a": "RTU LA", "fact": "Akadēmija atrodas pašā pilsētas sirdī." }
+  ],
+  "Mols": [
+    { "q": "Cik metrus garš ir Ziemeļu mols?", "a": "1800", "fact": "Turi cepuri! Mols sargā ostu." },
+    { "q": "Kurā pilsētas daļā atrodas Ziemeļu mols?", "a": "Karostā", "fact": "Tas ir viens no pilsētas simboliem." }
+  ],
+  "Cietums": [
+    { "q": "Kā sauc Karostas tūrisma cietumu?", "a": "Karostas cietums", "fact": "Vienīgais militārais cietums atvērts tūristiem!" }
+  ],
+  "Dzintars": [
+    { "q": "Kā sauc Liepājas koncertzāli?", "a": "Lielais Dzintars", "fact": "Izskatās pēc milzīga dzintara!" }
+  ],
+  "Teatris": [
+    { "q": "Kurā gadā dibināts Liepājas Teātris?", "a": "1907", "fact": "Vecākais profesionālais teātris Latvijā!" }
+  ],
+  "Kanals": [
+    { "q": "Kā sauc kanālu starp ezeru un jūru?", "a": "Tirdzniecības", "fact": "Savieno ezeru ar jūru." }
+  ],
+  "Osta": [
+    { "q": "Kā sauc Liepājas speciālo zonu?", "a": "LSEZ", "fact": "Osta šeit neaizsalst." }
+  ],
+  "Parks": [
+    { "q": "Kā sauc parku pie jūras?", "a": "Jūrmalas", "fact": "Viens no lielākajiem parkiem Latvijā!" }
+  ],
+  "LSEZ": [
+    { "q": "Vai UPB ir Liepājas uzņēmums (Jā/Nē)?", "a": "Jā", "fact": "Būvē ēkas visā pasaulē!" }
+  ],
+  "Ezerkrasts": [
+    { "q": "Kāda ezera krastā ir taka?", "a": "Liepājas", "fact": "Piektais lielākais ezers Latvijā." }
+  ],
+  "historyEvents": [
+    { "year": 1253, "text": "Liepājas pirmo reizi minēta rakstos (Lyva)." },
+    { "year": 1625, "text": "Kurzemes hercogs Frīdrihs piešķir pilsētas tiesības." },
+    { "year": 1701, "text": "Ziemeļu kara laikā Liepāju ieņem zviedru karaspēks." },
+    { "year": 1890, "text": "Sāk būvēt Karostas cietoksni un kara ostu." },
+    { "year": 1919, "text": "Liepāja kļūst par Latvijas pagaidu valdības mājvietu." },
+    { "year": 1997, "text": "Izveidota Liepājas Speciālā ekonomiskā zona (LSEZ)." }
+  ],
+  "finalQuestions": [
+    { "q": "Kurš Liepājas objekts izskatās pēc 'milzīga dzintara'?", "options": ["Lielais Dzintars", "Karostas cietums", "Liepājas osta", "Pilsētas dome"], "correct": 0 },
+    { "q": "Kā sauc vecāko profesionālo teātri Latvijā?", "options": ["Dailes teātris", "Liepājas teātris", "Nacionālais teātris", "Operas nams"], "correct": 1 },
+    { "q": "Cik gara ir Ziemeļu mols?", "options": ["500 m", "1000 m", "1800 m", "3000 m"], "correct": 2 },
+    { "q": "Kāds ir RTU Liepājas akadēmijas dibināšanas gads?", "options": ["1954", "1918", "1991", "2000"], "correct": 0 },
+    { "q": "Kas ir 'Kaija' šajā spēlē?", "options": ["Ienaidnieks", "Tavs gids", "Spēlētājs", "Fona attēls"], "correct": 1 }
+  ]
+}
