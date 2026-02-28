@@ -539,6 +539,19 @@ document.addEventListener('contextmenu', function(e) {
                     ]
                 );
             }
+
+            _showMilestonePrompt() {
+                const continueBtn = document.getElementById('rtu-continue-btn');
+                if (continueBtn) continueBtn.disabled = false;
+                this._showOverlay(
+                    'Lieliski! 10 līmeņi!',
+                    'Vai vēlies turpināt būvēt vai pabeigt uzdevumu?',
+                    [
+                        { label: 'Turpināt būvēt', onClick: () => { this._hideOverlay(); } },
+                        { label: 'Pabeigt →', onClick: () => this.finish(true) }
+                    ]
+                );
+            }
         }
 
         rtuTowerActive = true;
@@ -1322,7 +1335,13 @@ function updateMapState() {
     const points = document.querySelectorAll('.point');
     const completed = GameState.getCompleted();
     points.forEach(point => {
-        const type = point.getAttribute('onclick').match(/'([^']+)'/)[1]; 
+        const onclickAttr = point.getAttribute('onclick');
+        if (!onclickAttr) return;
+        
+        const match = onclickAttr.match(/'([^']+)'/);
+        if (!match || !match[1]) return;
+        
+        const type = match[1];
         const sequenceIndex = taskSequence.indexOf(type);
         
         point.className = point.className.replace(/\b(active-point|inactive-point)\b/g, "");
@@ -2243,6 +2262,11 @@ const guideBubbles = {
 function getRandomBubble(isCorrect) {
     const arr = isCorrect ? guideBubbles.correct : guideBubbles.wrong;
     return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function setGuideHint(text) {
+    const guideHint = document.getElementById('guide-hint');
+    if (guideHint) guideHint.textContent = text;
 }
 
 function finishGame(name, finalScore, time) { 
