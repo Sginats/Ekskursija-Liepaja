@@ -211,7 +211,6 @@ document.addEventListener('contextmenu', function(e) {
     <div class="rtu-actions">
       <button id="rtu-start-btn" class="btn btn-full" style="background:#ffb000; color:#1a1100; border:none; font-weight:700;" onclick="initRTUTowerGame()">SĀKT BŪVĒT</button>
       <button id="rtu-continue-btn" class="btn btnMini" onclick="window.finishRTUTowerNow()" disabled>Turpināt →</button>
-      <button class="btn" onclick="window.finishRTUTowerNow()">Aizvērt</button>
     </div>
   `;
 
@@ -493,7 +492,7 @@ document.addEventListener('contextmenu', function(e) {
                 return btn;
             }
 
-            _showOverlay(title, subtitle, buttons) {
+            _showOverlay(title, subtitle) {
                 if (this.overlay) this.overlay.destroy(true);
                 this.isPaused = true;
                 const { width, height } = this.scale;
@@ -515,15 +514,6 @@ document.addEventListener('contextmenu', function(e) {
                     fill: '#cbd5f5'
                 }).setOrigin(0.5);
                 overlay.add([dim, panel, titleText, subtitleText]);
-                const btnY = height / 2 + 55;
-                const gap = 16;
-                const totalW = buttons.length * 200 + (buttons.length - 1) * gap;
-                let startX = width / 2 - totalW / 2 + 100;
-                buttons.forEach((b) => {
-                    const btn = this._makeUIButton(startX, btnY, b.label, b.onClick, { width: 200, height: 44 });
-                    overlay.add(btn);
-                    startX += 200 + gap;
-                });
                 overlay.setScrollFactor(0);
                 overlay.setDepth(1000);
                 this.overlay = overlay;
@@ -538,11 +528,7 @@ document.addEventListener('contextmenu', function(e) {
             _showLosePrompt() {
                 this._showOverlay(
                     'Oops! Nokrita',
-                    'Mēģināt vēlreiz vai turpināt?',
-                    [
-                        { label: 'Mēģināt vēlreiz', onClick: () => this.scene.restart() },
-                        { label: 'Turpināt →', onClick: () => this.finish(true, { multiplier: 0.6 }) }
-                    ]
+                    'Mēģināt vēlreiz vai turpināt?'
                 );
             }
 
@@ -551,11 +537,7 @@ document.addEventListener('contextmenu', function(e) {
                 if (continueBtn) continueBtn.disabled = false;
                 this._showOverlay(
                     'Lieliski! 10 līmeņi!',
-                    'Vai vēlies turpināt būvēt vai pabeigt uzdevumu?',
-                    [
-                        { label: 'Turpināt būvēt', onClick: () => { this._hideOverlay(); } },
-                        { label: 'Pabeigt →', onClick: () => this.finish(true) }
-                    ]
+                    'Vai vēlies turpināt būvēt vai pabeigt uzdevumu?'
                 );
             }
         }
@@ -658,8 +640,8 @@ const CONNECTION_MODE_WS = 'websocket';
 let connectionMode = CONNECTION_MODE_PHP;
 
 const BASE_TASK_SEQUENCE = [
-    'Dzintars', 'Teatris', 'Kanals', 'Osta',
-    'LSEZ', 'Mols', 'RTU', 'Cietums', 'Ezerkrasts', 'Parks'
+    'RTU', 'Teatris', 'Kanals', 'Osta',
+    'LSEZ', 'Mols', 'Dzintars', 'Cietums', 'Ezerkrasts', 'Parks'
 ];
 const ROUTE_STORAGE_KEY = 'eksk_route_v1';
 
@@ -3419,7 +3401,7 @@ function lsezNextItem() {
         <p style="text-align:center;font-size:12px;opacity:0.6;margin-bottom:8px;">Izvēlies pareizo tvertni:</p>
         <div style="display:flex;gap:6px;">
             ${LSEZ_TYPES2.map(function(t, i) {
-                return `<button class="btn btn-full" style="background:${t.color};border:2px solid ${t.color};font-size:13px;padding:10px 4px;" onclick="lsezSort(${i})">${t.label}</button>`;
+                return `<button class="btn btn-full btnLSEZ" style="background:${t.color};border:2px solid ${t.color};font-size:13px;padding:10px 4px;" onclick="lsezSort(${i})">${t.label}</button>`;
             }).join('')}
         </div>`;
     if (lsezItemTimer) clearInterval(lsezItemTimer);

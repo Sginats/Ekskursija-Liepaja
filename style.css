@@ -2056,3 +2056,8 @@ body[data-theme="blue"] #tabulaiTR {
     .rtu-card { padding: 15px; }
     .rtu-actions { flex-direction: column; }
 }
+
+.btnLSEZ{
+    width: 100%;
+    min-width: 75px;
+}
