@@ -408,7 +408,13 @@ document.addEventListener('contextmenu', function(e) {
                 this._cameraUp();
                 if (this.score === 10 && !this.milestoneShown) {
                     this.milestoneShown = true;
-                    this._showMilestonePrompt();
+                    if (typeof this._showMilestonePrompt === 'function') {
+                        this._showMilestonePrompt();
+                    } else {
+                        // Fallback: stale cache / prototype mismatch — enable continue button silently
+                        const continueBtn = document.getElementById('rtu-continue-btn');
+                        if (continueBtn) continueBtn.disabled = false;
+                    }
                     return;
                 }
                 this.time.delayedCall(100, () => this._spawnMoving(this.stack[this.stack.length - 1].w));
