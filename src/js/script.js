@@ -26,7 +26,7 @@ const GameState = (function() {
             if (!_verifyIntegrity()) { _score = 0; _completedTasks = 0; }
             _score += points;
             if (_score < 0) _score = 0;
-            if (_score > 120) _score = 120;
+            if (_score > 110) _score = 110;
             _updateChecksum();
             return _score;
         },
@@ -105,7 +105,7 @@ document.addEventListener('contextmenu', function(e) {
             },
             set: _noop
         });
-    } catch(e) {}
+    } catch(e) { /* Browser may block property override */ }
 })();
 
 (function() {
@@ -136,10 +136,11 @@ document.addEventListener('contextmenu', function(e) {
                 }),
                 keepalive: true,
             }).catch(function() {});
-        } catch(e) { }
+        } catch(e) { /* never throw inside an error handler */ }
     }
-
+// -------------------------------
 // RTU Tower Blocks game
+// -------------------------------
     let rtuTowerPhaserGame = null;
     let rtuTowerActive = false;
 
@@ -184,8 +185,8 @@ document.addEventListener('contextmenu', function(e) {
         speedStart: 210,
         speedStep: 14,
         maxSpeed: 550,
-        minPoints: 7,
-        maxPoints: 25,
+        minPoints: 5,
+        maxPoints: 10,
         infoLines: [
             'RTU Liepāja • Studiju programma: Būvniecība',
             'Budžeta vietas: 55',
@@ -409,6 +410,7 @@ document.addEventListener('contextmenu', function(e) {
                     if (typeof this._showMilestonePrompt === 'function') {
                         this._showMilestonePrompt();
                     } else {
+                        // Fallback: stale cache / prototype mismatch — enable continue button silently
                         const continueBtn = document.getElementById('rtu-continue-btn');
                         if (continueBtn) continueBtn.disabled = false;
                     }
@@ -596,6 +598,7 @@ document.addEventListener('contextmenu', function(e) {
         if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
     }
 
+    // expose RTU Tower functions to global scope (defined in this scope)
     window.startRTUTowerGame = startRTUTowerGame;
     window.initRTUTowerGame = initRTUTowerGame;
     window.finalizeRTUTowerTask = finalizeRTUTowerTask;
@@ -694,7 +697,7 @@ function initTaskSequence() {
 
 initTaskSequence();
 
-// Answer verification
+// Answer verification (hashed answers)
 const _k = [76,105,101,112,196,129,106,97];
 function _v(hex) {
     const b = [];
@@ -827,7 +830,7 @@ const locationInfo = {
     }
 };
 
-//Initialization
+// --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
     getQueryParams();
@@ -857,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if(document.querySelector('.point')) updateMapState();
 
-    
+    // Before-game intro modal
     const beforeGameModal = document.getElementById('before-game-modal');
     if (beforeGameModal) {
         beforeGameModal.style.display = 'block';
@@ -934,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-//Connection manager (WebSocket + PHP polling)
+// --- Connection manager (WebSocket + PHP polling) ---
 
 async function initSmartConnection() {
     updateConnectionStatus('reconnecting');
@@ -1141,7 +1144,7 @@ function updateConnectionStatus(status) {
     indicator.title = statusText[status] || '';
 }
 
-//PHP polling fallback
+// --- PHP polling fallback ---
 
 let pollInterval = null;
 let phpPolling = false;
@@ -1255,7 +1258,7 @@ function checkBothPlayersDonePHP(code) {
     }, 30000);
 }
 
-//Menu & navigation
+// --- Menu & navigation ---
 
 function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
@@ -1314,7 +1317,7 @@ function joinGame() {
     }
 }
 
-//Map state & game flow
+// --- Map state & game flow ---
 
 function updateMapState() {
     const points = document.querySelectorAll('.point');
@@ -1382,10 +1385,13 @@ function showLocationThenStart(type, callback) {
 
 const BOAT_RACE_CONFIG = {
     REQUIRED_PRESSES: 10,
+    EXCELLENT_TIME: 3,
     GOOD_TIME: 5,
     SLOW_TIME: 10,
-    NORMAL_POINTS: 10,
-    SLOW_POINTS: 5
+    EXCELLENT_POINTS: 10,
+    GOOD_POINTS: 7,
+    NORMAL_POINTS: 5,
+    SLOW_POINTS: 3
 };
 
 let boatRaceActive = false;
@@ -1478,7 +1484,9 @@ function finishBoatRace() {
     
     const finalTime = ((Date.now() - boatStartTime) / 1000).toFixed(2);
     let points = BOAT_RACE_CONFIG.NORMAL_POINTS;
-    if (finalTime < BOAT_RACE_CONFIG.GOOD_TIME) {
+    if (finalTime < BOAT_RACE_CONFIG.EXCELLENT_TIME) {
+        points = BOAT_RACE_CONFIG.EXCELLENT_POINTS;
+    } else if (finalTime < BOAT_RACE_CONFIG.GOOD_TIME) {
         points = BOAT_RACE_CONFIG.GOOD_POINTS;
     } else if (finalTime > BOAT_RACE_CONFIG.SLOW_TIME) {
         points = BOAT_RACE_CONFIG.SLOW_POINTS;
@@ -1887,7 +1895,7 @@ function closeQuizAndContinue() {
     if(GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-//Kahoot-style final test (10 questions, shown after all tasks)
+// --- Kahoot-style final test (10 questions, shown after all tasks) ---
 
 const _finalTestQuestions = [
     {
@@ -2300,7 +2308,7 @@ function setSFXVolume(v) {
     }
 }
 
-//Visual effects (cursor trail, theme, background)
+// --- Visual effects (cursor trail, theme, background) ---
 function getTrailColor() {
     const theme = document.body.getAttribute('data-theme') || 'default';
     const colors = {
@@ -2574,7 +2582,7 @@ function initBackground() {
             }
         }
 
-        
+        // Skyline silhouette & sea waves
         const skylineY = h * 0.72;
         bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.06)`;
         bgCtx.beginPath();
@@ -2727,7 +2735,7 @@ function showNotification(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-//Fishing mini-game
+// --- Fishing mini-game ---
 const FISHING_CONFIG = {
     TENSION_INCREASE: 0.6,
     TENSION_DECREASE: 0.4,
@@ -2739,7 +2747,9 @@ const FISHING_CONFIG = {
     FISH_PULL_STRENGTH: 0.5,
     EXCELLENT_TIME: 10,
     GOOD_TIME: 20,
-    GOOD_POINTS: 10,
+    EXCELLENT_POINTS: 10,
+    GOOD_POINTS: 7,
+    NORMAL_POINTS: 5
 };
 
 let fishingActive = false;
@@ -2864,6 +2874,7 @@ function drawFishing(ctx, canvas, fishPulling) {
     const H = canvas.height;
     ctx.clearRect(0, 0, W, H);
 
+    // Scene rendering: water, rod, fish, HUD
     const waterY = H * 0.45;
     ctx.fillStyle = 'rgba(30, 80, 140, 0.3)';
     ctx.beginPath();
@@ -3031,6 +3042,11 @@ function finishFishing(success) {
 
     if (success) {
         let points = FISHING_CONFIG.NORMAL_POINTS;
+        if (elapsed < FISHING_CONFIG.EXCELLENT_TIME) {
+            points = FISHING_CONFIG.EXCELLENT_POINTS;
+        } else if (elapsed < FISHING_CONFIG.GOOD_TIME) {
+            points = FISHING_CONFIG.GOOD_POINTS;
+        }
         const newScore = GameState.addScore(points);
         document.getElementById('score-display').innerText = 'Punkti: ' + newScore;
 
@@ -3070,6 +3086,7 @@ function closeFishingGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
+// --- Server-side score recording ---
 function recordMiniScore(taskId, points) {
     if (!_serverGameToken) return;
     fetch('src/php/record_task_score.php', {
@@ -3080,7 +3097,7 @@ function recordMiniScore(taskId, points) {
     }).catch(function() {});
 }
 
-//Mini-game: Simon Says (Dzintars)
+// --- Mini-game: Simon Says (Dzintars) ---
 const SIMON_COLORS = ['red', 'blue', 'green', 'yellow'];
 let simonSeq = [], simonIdx = 0, simonRound = 0;
 const SIMON_TOTAL_ROUNDS = 3;
@@ -3177,7 +3194,7 @@ function closeSimonGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-//Mini-game: Boat Dodge (Kanals)
+// --- Mini-game: Boat Dodge (Kanals) ---
 let kanalGameActive = false, kanalAnimId2 = null;
 let kanalPlayerX = 160, kanalHits = 0, kanalDodges = 0;
 let kanalFrames = 0, kanalTimeLeft = 0, kanalTimer2 = null;
@@ -3338,7 +3355,7 @@ function closeKanalGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-// Mini-game: Cargo Sort (LSEZ)
+// --- Mini-game: Cargo Sort (LSEZ) ---
 let lsezActive = false, lsezCorrect = 0, lsezWrong = 0, lsezRound2 = 0;
 let lsezCurrentBin = -1, lsezItemTimer = null;
 const LSEZ_TOTAL2 = 10;
@@ -3450,7 +3467,7 @@ function closeLSEZGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-//Mini-game: Guard Escape (Cietums)
+// --- Mini-game: Guard Escape (Cietums) ---
 let cietActive = false, cietSteps = 0, cietGuardPos = 0, cietGuardDir = 0.5;
 let cietGuardSpd = 1.2, cietAnimId3 = null;
 const CIET_STEPS_NEEDED = 5;
@@ -3585,7 +3602,7 @@ function closeEscapeGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-//Mini-game: Bird Spotting (Ezerkrasts)
+// --- Mini-game: Bird Spotting (Ezerkrasts) ---
 let birdActive = false, birdCaught = 0, birdTimeLeft = 0, birdTimer2 = null, birdSpawnInt = null;
 const BIRDS_NEEDED = 8;
 const BIRD_GAME_TIME = 22;
@@ -3688,7 +3705,7 @@ function closeBirdGame() {
     if (GameState.getCompleted() === TOTAL_TASKS) showFinalTest();
 }
 
-//Mini-game: Memory Cards (Parks)
+// --- Mini-game: Memory Cards (Parks) ---
 let memActive = false, memCards = [], memFlipped2 = [], memMatched2 = 0, memMoves = 0, memLock = false;
 const MEM_PAIRS2 = ['🌲', '🌳', '🌴', '🌿'];
 
