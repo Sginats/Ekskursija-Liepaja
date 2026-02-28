@@ -1,13 +1,29 @@
+# Dependencies
 node_modules/
-.idea/
-.vscode/
+client/node_modules/
+game/node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+
+# OS files
 .DS_Store
 Thumbs.db
-*.log
-*.tmp
+
+# IDE files
+.vscode/
+.idea/
 *.swp
 *.swo
-.env
-leaderboard_single.txt
-leaderboard_multi.txt
-lobbies.json
+
+# Temporary files
+*.tmp
+/tmp/
+dist-game/

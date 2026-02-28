@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Liepājas Karte</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260218153000">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+    <script src="src/js/minigame-fx.js?v=20260224" defer></script>
+    <script src="src/js/script.js?v=20260224" defer></script>
+</head>
+<body>
+    <div class="wrap" id="bg-wrap"></div>
+    <canvas id="cursor-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;"></canvas>
+    <audio id="hover-sound" src="skana/hover.wav" preload="auto"></audio>
+    <audio id="bg-music" src="skana/music.wav" loop preload="auto"></audio>
+
+    <div id="connection-status" class="connection-status" style="display: none;"></div>
+
+    <div class="map-topbar">
+        
+        <button id="btn-back" class="btn topbar-btn" onclick="location.href='index.html'">← Menu</button>
+        
+        <div id="score-display" class="topbar-score">Punkti: 0</div>
+
+        <div class="topbar-right">
+            <button id="btn-settings-map" class="btn topbar-btn" onclick="toggleModal('settings-modal')">⚙</button>
+            <button id="btn-about-map" class="btn topbar-btn" onclick="toggleModal('about-modal')">ℹ</button>
+        </div>
+    </div>
+
+    <div class="map-container" style="margin-top: 70px;">
+        
+        <div class="ui-layer" style="position: absolute; bottom: 20px; left: 20px; z-index: 100;">
+            <div class="difficulty-legend" style="background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #555;">
+                <h3 id="legend-map-title" style="margin: 0 0 10px 0; font-size: 16px; color: #ffaa00;">Apskates vietas</h3>
+                <div id="legend-map-green" class="legend-item"><span class="dot point-green"></span>Daba un atpūta</div>
+                <div id="legend-map-blue" class="legend-item"><span class="dot point-blue"></span>Kultūra un vēsture</div>
+                <div id="legend-map-yellow" class="legend-item"><span class="dot point-yellow"></span>RTU akadēmija</div>
+                <div id="legend-map-red" class="legend-item"><span class="dot point-red"></span>Industrija un osta</div>
+            </div>
+        </div>
+
+        <div class="map-area">
+            <div class="point point-green" style="top: 12%; left: 11%;" data-name="Ziemeļu mols" onclick="startActivity('Mols')"></div>
+            <div class="point point-blue" style="top: 24%; left: 44%;" data-name="Karostas cietums" onclick="startActivity('Cietums')"></div>
+            <div class="point point-blue" style="top: 58%; left: 23%;" data-name="Tirdzniecības kanāls" onclick="startActivity('Kanals')"></div>
+            <div class="point point-blue" style="top: 61.5%; left: 30.5%;" data-name="Lielais Dzintars" onclick="startActivity('Dzintars')"></div>
+            <div class="point point-yellow" style="top: 63%; left: 27%;" data-name="RTU Liepāja" onclick="startActivity('RTU')"></div>
+            <div class="point point-blue" style="top: 64%; left: 37%;" data-name="Liepājas Teātris" onclick="startActivity('Teatris')"></div>
+            <div class="point point-red" style="top: 60%; left: 33%;" data-name="Liepājas Osta" onclick="startActivity('Osta')"></div>
+            <div class="point point-green" style="top: 70%; left: 12%;" data-name="Jūrmalas parks" onclick="startActivity('Parks')"></div>
+            <div class="point point-red" style="top: 61.5%; left: 52.5%;" data-name="LSEZ" onclick="startActivity('LSEZ')"></div>
+            <div class="point point-green" style="top: 81%; left: 57%;" data-name="Ezerkrasta taka" onclick="startActivity('Ezerkrasts')"></div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <div id="before-game-modal" class="modal" style="z-index: 4000;">
+        <div class="modal-content" style="text-align: center;">
+            <h2 style="color: #ffaa00; font-size: 24px; margin-bottom: 15px;">Pirms spēles sākuma</h2>
+            <div class="info-box" style="text-align: left;">
+                <p style="font-size: 15px; margin-bottom: 12px;"> Pēc visu vietu apmeklēšanas tevi sagaida <strong style="color: #ffaa00;">noslēguma tests</strong> — 10 jautājumi par Liepāju!</p>
+                <p style="font-size: 15px; margin-bottom: 12px;"> Pēc katra mini-spēles uzdevuma tu saņemsi <strong style="color: #ffaa00;">padomus un faktus</strong>. Lasi tos uzmanīgi — tie palīdzēs noslēguma testā!</p>
+                <p style="font-size: 15px; color: #ffaa00; font-weight: bold;"> Iegaumē svarīgāko informāciju, lai iegūtu maksimālo rezultātu!</p>
+            </div>
+            <button class="btn btn-full" id="btn-before-game-continue" style="margin-top: 20px; background: #ffaa00; color: #2a1a1a; border: none; font-weight: bold; font-size: 18px;">Sākt ekskursiju →</button>
+        </div>
+    </div>
+
+    <div id="game-modal" class="modal">
+        <div class="modal-content quiz-layout">
+            <div class="guide-wrapper">
+                <img src="atteli/kaija.png" alt="Gids" class="guide-sprite">
+                <div class="speech-bubble">
+                    <p id="guide-hint">Sveiks! Esmu tavs gids.</p>
+                </div>
+            </div>
+            <div class="task-section">
+                </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal" style="z-index: 3000;">
+        <div class="modal-content">
+            <h2 id="settings-title">Iestatījumi</h2>
+            
+            <h3 class="section-title">Audio</h3>
+            <label id="vol-music">Mūzika</label>
+            <input type="range" min="0" max="100" value="30" oninput="setMusicVolume(this.value)">
+            <label id="vol-sfx">Skaņas efekti</label>
+            <input type="range" min="0" max="100" value="50" oninput="setSFXVolume(this.value)">
+            
+            <h3 class="section-title">Krāsu tēma</h3>
+            <div class="theme-selector">
+                <button class="theme-btn" onclick="setTheme('default')" data-theme="default">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #332222, #2a1a1a);"></span>
+                    Noklusējuma
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" data-theme="dark">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #2d1b4e, #1a0f30);"></span>
+                    Violeta
+                </button>
+                <button class="theme-btn" onclick="setTheme('light')" data-theme="light">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #4a0f0f, #3a0a0a);"></span>
+                    Tumši sarkana
+                </button>
+                <button class="theme-btn" onclick="setTheme('blue')" data-theme="blue">
+                    <span class="theme-preview" style="background: linear-gradient(135deg, #1e3a5f, #2c5f8d);"></span>
+                    Zila
+                </button>
+            </div>
+            
+            <h3 class="section-title">Animācijas</h3>
+            <div class="animation-toggle">
+                <label class="toggle-label" for="animation-toggle">
+                    <span>Animācijas On/Off</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="animation-toggle" checked onchange="toggleAnimations(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </div>
+                </label>
+            </div>
+            
+            <button id="btn-close-settings" class="btn close-btn" onclick="toggleModal('settings-modal')">Aizvērt</button>
+        </div>
+    </div>
+
+    <div id="about-modal" class="modal">
+        <div class="modal-content about-layout">
+            <h2 id="about-title" style="text-align: center; color: #ffaa00; text-transform: uppercase; margin-top: 0;">Par Spēli</h2>
+            
+            <div class="info-box">
+                <p><strong id="about-game-label">Spēle:</strong> "Mācību ekskursija Liepājā"</p>
+                <p><strong id="about-goal-label">Mērķis:</strong> <span id="about-goal-text">Iepazīstināt lietotājus ar Liepājas kultūrvēsturiskajām vietām, uzņēmumiem un izglītības iespējām, pildot dažādus uzdevumus.</span></p>
+                <p>Šis projekts tika izstrādāts kā mācību darbs. Spēle piedāvā virtuālu ekskursiju pa Liepāju, kurā spēlētājam jāatrod objekti kartē, jāatbild uz jautājumiem un jāsacenšas par labāko rezultātu.</p>
+            </div>
+
+            <h3 class="section-title">Funkcionalitāte</h3>
+            <div class="info-box">
+                <ul style="margin: 5px 0 0 20px; font-size: 14px; line-height: 1.8;">
+                    <li><strong>Interaktīva karte:</strong> Liepājas karte ar aktīviem punktiem.</li>
+                    <li><strong>Uzdevumu sistēma:</strong> Katrā vietā ir unikāls uzdevums.</li>
+                    <li><strong>Punktu skaitīšana:</strong> Pareiza atbilde: <strong>+10 punkti</strong>, kļūdaina: <strong>-5 punkti</strong>.</li>
+                    <li><strong>Laika uzskaite:</strong> Tiek fiksēts laiks, cik ilgi spēlētājs pavada spēlē.</li>
+                    <li><strong>Top 10 Rezultāti:</strong> Rezultāts tiek saglabāts un attēlots "Leaderboard" tabulā.</li>
+                    <li><strong>Iestatījumi:</strong> Iespēja mainīt mūzikas un skaņas efektu skaļumu.</li>
+                </ul>
+            </div>
+
+            <h3 id="legend-title" class="section-title">Objektu nozīme kartē</h3>
+            <ul class="legend-list">
+                <li id="legend-green"><span class="dot point-green"></span> Zaļš: Daba un atpūta (Viegli)</li>
+                <li id="legend-blue"><span class="dot point-blue"></span> Zils: Kultūra un vēsture (Vidēji)</li>
+                <li id="legend-yellow"><span class="dot point-yellow"></span> Dzeltens: RTU Liepājas akadēmija (Eksperts)</li>
+                <li id="legend-red"><span class="dot point-red"></span> Sarkans: Industrija un osta (Izaicinājums)</li>
+            </ul>
+
+            <div class="two-columns">
+                <div>
+                    <h3 id="tech-title" class="section-title">Tehnoloģijas</h3>
+                    <ul class="tech-list">
+                        <li>HTML5 / CSS3</li>
+                        <li>JavaScript (ES6+)</li>
+                        <li>PHP (Backend)</li>
+                        <li>WebSocket (Real-time)</li>
+                        <li>Node.js</a> (Server)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 id="dev-title" class="section-title">Izstrādātāji (2PT)</h3>
+                    <ul class="author-list">
+                        <li>Niks Šenvalds</li>
+                        <li>Dans Bitenieks</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 id="res-title" class="section-title" style="margin-top: 15px;">Izmantotie resursi</h3>
+            <div class="resources-list">
+                <p><strong>Attēli:</strong></p>
+                <ul>
+                    <li>Karte: <a href="https://www.apple.com/maps/" target="_blank" rel="noopener noreferrer">Apple Maps</a> (© Apple Inc.)</li>
+                    <li>Kaija (Gids): <a href="https://libresprite.github.io/#!/" target="_blank" rel="noopener noreferrer">LibreSprite</a> (Autoru zīmējums)</li>
+                </ul>
+                <p><strong>Audio:</strong></p>
+                <ul>
+                    <li>Fona mūzika: <a href="https://pixabay.com/" target="_blank" rel="noopener noreferrer">Pixabay</a></li>
+                    <li>Hover skaņa: <a href="https://pixabay.com/" target="_blank" rel="noopener noreferrer">Pixabay</a></li>
+                </ul>
+                <p><strong>Informācija:</strong></p>
+                <ul>
+                    <li>Fakti par Liepāju: <a href="https://www.liepaja.lv" target="_blank" rel="noopener noreferrer">liepaja.lv</a>, <a href="https://www.rtu.lv" target="_blank" rel="noopener noreferrer">rtu.lv</a></li>
+                    <li>Vēsturiskie dati: <a href="https://www.liepajasmuzejs.lv/" target="_blank" rel="noopener noreferrer">Liepājas muzejs</a>, <a href="https://lv.wikipedia.org" target="_blank" rel="noopener noreferrer">wikipedia.org</a></li>
+                </ul>
+                <p><strong>Tehnoloģijas un bibliotēkas:</strong></p>
+                <ul>
+                    <li><a href="https://getbootstrap.com" target="_blank" rel="noopener noreferrer">Bootstrap 5.3.2</a></li>
+                    <li><a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node.js</a></li>
+                </ul>
+            </div>
+
+            <p style="text-align: center; font-size: 12px; color: #777; margin-top: 15px;">© 2026 Niks Šenvalds, Dans Bitenieks.</p>
+
+            <button id="btn-close-about" class="btn close-btn" onclick="toggleModal('about-modal')">Aizvērt</button>
+        </div>
+    </div>
+
+</body>
+</html>

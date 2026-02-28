@@ -1,0 +1,8 @@
+# Deny direct access to all data files
+Order Allow,Deny
+Deny from all
+
+# But allow PHP scripts to read these files
+<FilesMatch "\.php$">
+    Allow from all
+</FilesMatch>

@@ -1,0 +1,36 @@
+# Prevent directory listing
+Options -Indexes
+
+# Enable mod_rewrite
+RewriteEngine On
+
+# Protect sensitive files from direct access
+<FilesMatch "\.(txt|json|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Security headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # XSS protection
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Prevent MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Cache Control - Prevent caching of HTML, CSS, and JavaScript files
+    # This ensures users always get the latest version
+    <FilesMatch "\.(html|htm|css|js)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # Allow caching for static assets like images and audio files
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|mp3|wav|ogg)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>
