@@ -1,8 +1,25 @@
-# Macību ekskursija Liepājā
+# Mācību ekskursija Liepājā
+### Izglītojoša interaktīva tīmekļa spēle
 
-Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izpēti 10 apmeklējuma punktus kartē, atbildi uz jautājumiem un sacenšoties par vietu Top 10!
+Projekts izstrādāts konkursam  
+**"Spēļu laboratorija" — Liepājas Datorzinātņu olimpiāde 2026**
 
-**Autori:** Niks Šenvalds, Dans Bitenieks (Grupa 2PT)
+**Autori:** Niks Šenvalds, Dans Bitenieks (Grupa Pilsētas puika)
+
+---
+
+## Projekta ideja
+
+"Mācību ekskursija Liepājā" ir interaktīva tīmekļa spēle, kurā spēlētājs dodas virtuālā ekskursijā pa Liepāju, apmeklējot dažādas pilsētas vietas un izpildot izglītojošas aktivitātes.
+
+Spēle apvieno:
+- pilsētas iepazīšanu,
+- zināšanu pārbaudi,
+- mini-spēles,
+- progresijas sistēmu,
+- punktu uzskaiti.
+
+Mērķis — padarīt mācīšanos par Liepāju interaktīvu un saistošu.
 
 ---
 
@@ -18,63 +35,200 @@ Interaktīva tīmekļa spēle par Liepājas kultūrvēsturiskajām vietām. Izp�
 
 ---
 
-## Spēles noteikumi
+## Spēles mērķis
 
-1. Apmeklē **10 vietas** Liepājā noteiktā secībā.
-2. Katrā vietā saņem informāciju un **uzdevumu** (jautājums, mini-spēle vai secības uzdevums).
-3. **Punkti:** pareiza atbilde 1. mēģinājumā → **+10 pkt**, pēc kļūdas → **+5 pkt**, 2 kļūdas → **0 pkt** (atbilde parādās automātiski).
-4. **Noslēguma tests:** 5 jautājumi par Liepāju (katra pareiza atbilde: +2 bonusa punkti, maks. +10).
-5. Maksimālais rezultāts: **110 punkti**. Saglabā rezultātu un iekļūsti **Top 10**!
+Spēlētājam jāiziet pilna ekskursija:
 
----
-
-## Galvenās funkcijas
-
-- **Viena spēlētāja** un **multiplayer** režīms (reālā laika co-op ar draugu)
-- **Mini-spēles:** laivas sacīkstes, kukaiņu ķeršana, vēstures secības kārtošana
-- **Flash viktorīna** (≥3 spēlētāji, 20s limits) ar kopīgiem bonusa punktiem
-- **4 krāsu tēmas**, animēts daļiņu fons, mūzikas/SFX iestatījumi
-- **Top 10 tabula** ar kombinētu punktu + laika vērtējumu
-- **Anti-cheat** un **admin panelis** jautājumu maiņai un spēlētāju pārvaldībai
+1. Apmeklēt Liepājas objektus kartē
+2. Iepazīt katras vietas informāciju
+3. Izpildīt aktivitāti vai mini-spēli
+4. Krāt punktus
+5. Pabeigt noslēguma pārbaudījumu
+6. Saņemt gala rezultātu
 
 ---
 
-## Tehnoloģijas
+## Spēles struktūra
 
-| Slānis | Rīki |
-|--------|------|
-| Frontend | React, Vite, HTML, CSS, JavaScript, Bootstrap 5.3.2 |
-| Spēļu dzinējs | Phaser 3 (mini-spēles) |
-| Backend | Node.js + PHP (leaderboard, multiplayer lobby) |
-| Real-time | Socket.IO 4.8 + raw WebSocket |
-| Datubāze | Supabase (PostgreSQL) |
+Spēle sastāv no:
+- titullapas ar navigāciju,
+- spēles apraksta sadaļas,
+- interaktīvas Liepājas kartes,
+- vismaz 10 apmeklējuma vietām,
+- aktivitātēm un mini-spēlēm,
+- punktu sistēmas,
+- noslēguma testa,
+- gala rezultāta ekrāna,
+- Top 10 rezultātu tabulas.
 
 ---
 
-## Struktūra
+## Atbilstība nolikumam
 
+### Obligātās funkcijas
+
+Projektā realizēts:
+
+- Titullogs ar navigāciju
+- Spēles noteikumu sadaļa
+- Vismaz 10 apmeklējuma vietas kartē
+- Informācija par katru objektu
+- Aktivitāte katrā vietā
+- Punktu uzskaites sistēma
+- Punktu samazināšana kļūdu gadījumā
+- Katru vietu iespējams apmeklēt vienu reizi
+- Datu ielāde no ārējiem JSON failiem
+- Noslēguma aktivitāte (tests)
+- Gala rezultāta aprēķins un attēlošana
+
+### Papildu funkcionalitāte
+
+Papildus realizēts:
+
+- Interaktīva karte ar progresijas sistēmu
+- Phaser.js mini-spēles
+- Nejauši ģenerēts maršruts katrai spēlei
+- Spēlē pavadītā laika uzskaite
+- Rezultātu saglabāšana serverī
+- Top 10 rezultātu tabula
+- Multiplayer režīma pamati
+- Skaņas un iestatījumu sistēma
+- Responsīvs dizains dažādām ierīcēm
+
+Piezīme: multiplayer režīms var būt nestabils dažādās hostinga vidēs.
+
+---
+
+## Aktivitāšu veidi
+
+Spēlē iekļauti dažādi uzdevumu tipi:
+- zināšanu testi,
+- reakcijas mini-spēles,
+- loģikas uzdevumi,
+- interaktīvas aktivitātes,
+- izglītojoši fakti par Liepāju.
+
+Katrs objekts piedāvā unikālu pieredzi.
+
+---
+
+## Punktu sistēma
+
+- Punkti tiek piešķirti par veiksmīgi izpildītiem uzdevumiem.
+- Kļūdaini mēģinājumi samazina maksimāli iegūstamos punktus.
+- Uzdevumus iespējams atkārtot ar ierobežotu rezultātu.
+- Gala rezultāts tiek aprēķināts ekskursijas beigās.
+
+---
+
+## Izmantotās tehnoloģijas
+
+| Slānis | Tehnoloģijas |
+|--------|--------------|
+| Frontend | HTML5, CSS3, JavaScript |
+| Spēļu dzinējs | Phaser 3 |
+| Backend | PHP |
+| Multiplayer | Node.js / WebSocket |
+| Datu struktūra | JSON |
+| Versiju kontrole | Git |
+
+---
+
+## Projekta struktūra
+```Ekskursija-Liepaja/
+│
+├── public/ # Spēles publiskā daļa (frontend)
+│ ├── index.html # Titullapa
+│ ├── map.html # Interaktīvā karte
+│ ├── style.css # Globālie stili
+│ ├── script.js # Galvenā spēles loģika
+│ ├── minigames.js # Mini-spēļu funkcionalitāte
+│ │
+│ ├── atteli/ # Grafiskie resursi
+│ ├── skana/ # Audio faili
+│ └── data/ # JSON dati (jautājumi, objekti u.c.)
+│
+├── public/api/ # PHP backend funkcijas
+│ ├── leaderboard.php # Rezultātu tabula
+│ ├── lobby.php # Multiplayer lobijs
+│ └── save_score.php # Rezultātu saglabāšana
+│
+├── ws-server/ # Multiplayer serveris
+│ └── server.js # WebSocket / Node.js serveris
+│
+├── docs/ # Projekta dokumentācija
+│
+└── README.md # Projekta apraksts
 ```
-Ekskursija-Liepaja/
-├── index.html / map.html          # Galvenā izvēlne un karte
-├── style.css                      # Globālie stili
-├── atteli/ / skana/               # Attēli un audio
-├── src/
-│   ├── js/script.js               # Spēles loģika
-│   ├── js/server.js               # Socket.IO + raw WS serveris
-│   ├── php/                       # Backend (leaderboard, lobby, anti-cheat)
-│   └── data/                      # JSON dati (jautājumi, atbildes, lobbies)
-├── client/                        # React + Phaser — viena spēlētāja režīms
-└── game/                          # React + Phaser — multiplayer režīms
-    └── src/utils/SocketManager.js  # Socket.IO klients
-```
 
-## Resursi
+## Kā palaist projektu
 
-- **Karte:** https://maps.apple.com/
-- **Gida attēls (Kaija):** Autoru zīmējums (https://libresprite.github.io/#!/)
-- **Informācija:** liepaja.lv, rtu.lv, Liepājas muzejs, wikipedia.org
-- **Audio:** https://pixabay.com/
+### Tiešsaistē (ieteicamais variants)
+
+Spēle pieejama:
+
+https://liepajaprojekts.gamer.gd  
+(alternative hosting)
+---
+
+### Lokāli (izstrādei)
+
+Nepieciešams:
+- PHP serveris (XAMPP vai līdzīgs)
+- Node.js (multiplayer funkcijai)
+
+1. Ievieto projektu servera mapē (piemēram `htdocs`)
+2. Palaid PHP serveri
+3. Atver pārlūkā:
+http://localhost/Ekskursija-Liepaja/public/
+4. Multiplayer režīmam (neobligāti):
+node ws-server/server.js
 
 ---
 
-© 2026 Niks Šenvalds, Dans Bitenieks — izglītības projekts.
+## Izmantotie avoti
+
+### Informācijas avoti
+
+- Liepājas oficiālā mājaslapa — https://www.liepaja.lv/
+- RTU Liepājas akadēmija — https://www.rtu.lv/
+- Liepājas muzejs — https://www.liepajasmuzejs.lv/
+- Wikipedia — https://www.wikipedia.org/
+
+---
+
+### Kartes un ģeogrāfiskie dati
+
+- Apple Maps — https://maps.apple.com/
+
+---
+
+### Audio resursi
+
+- Pixabay Audio Library — https://pixabay.com/sound-effects/
+
+---
+
+### Grafiskie resursi
+
+- Gida tēls (“Kaija”) — autoru veidots attēls  
+  Izstrādāts ar LibreSprite: https://libresprite.github.io/
+
+- Spēles interfeisa grafika — autoru izstrādāta.
+
+---
+
+### Programmatūra un bibliotēkas
+
+- Phaser 3 — https://phaser.io/
+- Node.js — https://nodejs.org/
+- WebSocket API — https://developer.mozilla.org/
+- PHP — https://www.php.net/
+- Git — https://git-scm.com/
+- AI — [Gemini](https://gemini.google.com/app), [Claude](https://claude.ai/), [Codex](https://chatgpt.com/codex). 
+
+Izmantotas spēles loģikas, mini-spēļu un multiplayer funkcionalitātes realizācijai.
+
+---
+
+© 2026 Niks Šenvalds, Dans Bitenieks
