@@ -135,30 +135,24 @@ Katrs objekts piedāvā unikālu pieredzi.
 ---
 
 ## Projekta struktūra
-```Ekskursija-Liepaja/
-│
-├── public/ # Spēles publiskā daļa (frontend)
-│ ├── index.html # Titullapa
-│ ├── map.html # Interaktīvā karte
-│ ├── style.css # Globālie stili
-│ ├── script.js # Galvenā spēles loģika
-│ ├── minigames.js # Mini-spēļu funkcionalitāte
-│ │
-│ ├── atteli/ # Grafiskie resursi
-│ ├── skana/ # Audio faili
-│ └── data/ # JSON dati (jautājumi, objekti u.c.)
-│
-├── public/api/ # PHP backend funkcijas
-│ ├── leaderboard.php # Rezultātu tabula
-│ ├── lobby.php # Multiplayer lobijs
-│ └── save_score.php # Rezultātu saglabāšana
-│
-├── ws-server/ # Multiplayer serveris
-│ └── server.js # WebSocket / Node.js serveris
-│
-├── docs/ # Projekta dokumentācija
-│
-└── README.md # Projekta apraksts
+
+```
+Ekskursija-Liepaja/
+├── atteli/            # Attēli (ikonas, spēles grafika, UI elementi)
+├── skana/             # Skaņas faili (mūzika, skaņas efekti)
+├── game/              # Spēles loģika un aktivitāšu faili
+├── src/               # Avota skripti (JavaScript / backend vai palīgmoduļi)
+├── db/                # Datu faili (jautājumi, konfigurācijas, dati u.c.)
+├── client/            # Node.js / WebSocket klienta vai servera loģika
+├── docs/              # Projekta dokumentācija un papildu materiāli
+├── index.html         # Sākuma lapa / galvenā izvēlne
+├── map.html           # Kartes skats / ekskursijas interfeiss
+├── style.css          # Galvenie stili (CSS)
+├── package.json       # NPM konfigurācija un atkarības
+├── package-lock.json  # Precīzas NPM versijas
+├── .htaccess          # Servera konfigurācija (Apache)
+├── .gitignore         # Git ignorētie faili
+└── README.md          # Projekta apraksts
 ```
 
 ## Kā palaist projektu
@@ -167,8 +161,7 @@ Katrs objekts piedāvā unikālu pieredzi.
 
 Spēle pieejama:
 
-https://liepajaprojekts.gamer.gd  
-(alternative hosting)
+kristovskis.lv/senvalds-bitenieks/
 ---
 
 ### Lokāli (izstrādei)
