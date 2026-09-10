@@ -1,7 +1,8 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: https://kristovskis.lv');
+header('Vary: Origin');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -23,7 +24,6 @@ $tasks      = isset($_REQUEST['tasks'])      ? intval($_REQUEST['tasks'])      :
 $violations = isset($_REQUEST['violations']) ? intval($_REQUEST['violations']) : 0;
 $mode       = isset($_REQUEST['mode'])       ? $_REQUEST['mode']              : 'single';
 $gameToken  = isset($_REQUEST['gameToken'])  ? $_REQUEST['gameToken']         : null;
-$testScore  = isset($_REQUEST['testScore'])  ? max(0, min(10, intval($_REQUEST['testScore']))) : 0;
 
 if ($name === null) {
     $json = file_get_contents('php://input');
@@ -36,7 +36,6 @@ if ($name === null) {
         $tasks      = isset($data['tasks'])      ? intval($data['tasks'])      : 0;
         $violations = isset($data['violations']) ? intval($data['violations']) : 0;
         $mode       = $data['mode']       ?? 'single';
-        $testScore  = isset($data['testScore']) ? max(0, min(10, intval($data['testScore']))) : 0;
         $gameToken  = $data['gameToken']  ?? null;
     }
 }
@@ -57,18 +56,12 @@ if (!empty($_SESSION['game_submitted'])) {
     respond(false, 'Rezultāts jau ir saglabāts');
 }
 
-if ($tasks < 10) {
+if ((int)($_SESSION['game_tasks'] ?? 0) < 10) {
     respond(false, 'Spēle nav pabeigta — nepieciešami visi 10 uzdevumi');
 }
 
 // Use server-tracked score if available, otherwise clamp client score
-$serverScore = isset($_SESSION['game_score']) ? intval($_SESSION['game_score']) : null;
-if ($serverScore !== null) {
-    $score = $serverScore;
-} else {
-    $score = intval($score);
-}
-$score = max(0, min(110, $score + $testScore));
+$score = max(0, min(110, (int)($_SESSION['game_score'] ?? 0)));
 
 // Compute time from server-side start time
 $serverStartTime = isset($_SESSION['game_start_time']) ? intval($_SESSION['game_start_time']) : null;

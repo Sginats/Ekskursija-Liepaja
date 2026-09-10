@@ -157,6 +157,74 @@ Ekskursija-Liepaja/
 
 ## Kā palaist projektu
 
+### Drošības konfigurācija
+
+Servera noslēpumus glabā tikai vides mainīgajos, nevis repozitorijā:
+
+```text
+PORT=8080
+ALLOWED_ORIGINS=https://kristovskis.lv,http://localhost:3000
+ADMIN_PASSWORD_HASH=scrypt$<salt>$<derived-key>
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<server-only-key>
+```
+
+PHP admin panelim Apache/PHP vidē jāiestata `ADMIN_PASSWORD_HASH` ar
+`password_hash()` ģenerētu vērtību. Node hash ģenerē ar
+`node -e "console.log(require('./src/js/security').hashAdminPassword('...'))"`.
+`game/admin.html` izsniedz 15 minūšu HttpOnly sesijas cookie; admin parole
+nekad nenonāk pārlūka bundle. Nekad nepublicē `.env`, service-role atslēgas vai
+datu failus.
+
+### Product decisions and deployment model
+
+- The supported game languages are Latvian, English, and Russian. The language
+  picker stores the anonymous player's preference locally.
+- Multiplayer and offline play are required features. The client keeps progress
+  locally and reconnects to the Node Socket.IO service when available.
+- Players can start anonymously. Leaderboard publishing remains optional and
+  should be presented as the incentive to create an account; account identity
+  must never be required to play.
+- Node.js is the canonical realtime/API layer. PHP endpoints remain as a
+  compatibility adapter for existing Apache hosting and should not become a
+  second source of game truth.
+- The admin UI is not linked from the public game. Deploy `game/admin.html` as
+  a separate protected entry using the `/admin` Socket.IO namespace and a
+  server-issued short-lived HttpOnly admin session; never ship an admin
+  secret in a public Vite bundle.
+- Leaderboard names are validated server-side and rejected when they contain
+  slurs, markup, control characters, or unsupported length. Public display is
+  the default, with moderation and deletion available to administrators.
+
+For a Node deployment, run the root server and serve `game/dist-game` behind
+HTTPS. For Apache/PHP hosting, serve the existing PHP adapter and static build,
+and reverse-proxy `/socket.io` and `/api` to the Node process. In both modes,
+the Node service and database are authoritative for authenticated game results.
+
+### Ātra uzstādīšana un struktūra
+
+Prasības: Node.js 20+, npm, PHP 8+ (legacy adapterim), Apache ar
+`mod_headers` (ja PHP tiek lietots), un Supabase/PostgreSQL produkcijas
+datubāzei. No repozitorijas saknes:
+
+```bash
+npm run setup
+npm run dev
+npm --prefix game run dev
+```
+
+`game/` ir kanoniska React/Phaser spēle, `src/js/` ir kanoniska Node
+reāllaika/API autoritāte, `src/php/` ir Apache saderības adapteris, bet
+`client/`, saknes HTML un `dist*/` ir legacy/build varianti. Jaunu kodu liek
+`game/` + Node servisā; PHP/legacy maina tikai saderībai. `db/schema.sql`
+jāpalaiž Supabase SQL editorā. Service-role atslēga drīkst būt tikai Node
+procesa vidē.
+
+CI palaiž Node testus, ESLint, Prettier, `npm audit`, abus Vite buildus un
+Gitleaks secret scan. Phaser ainas tiek lazy-loadotas tikai mini-spēles
+atvēršanas brīdī; lieliem attēliem izmanto WebP/AVIF un `loading="lazy"`,
+audio — saspiestu OGG/MP3 ar lietotāja skaņas/klusuma iestatījumu.
+
 ### Tiešsaistē (ieteicamais variants)
 
 Spēle pieejama:

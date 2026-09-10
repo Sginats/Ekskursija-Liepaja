@@ -1,5 +1,6 @@
 <?php
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: https://kristovskis.lv");
+header("Vary: Origin");
 header("Content-Type: application/json");
 
 $action = $_GET['action'] ?? '';

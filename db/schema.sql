@@ -102,11 +102,35 @@ ALTER TABLE finale_sessions    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE question_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resources          ENABLE ROW LEVEL SECURITY;
 
--- Public read for leaderboard
-CREATE POLICY "leaderboard_read"  ON leaderboard  FOR SELECT USING (true);
-CREATE POLICY "leaderboard_insert" ON leaderboard FOR INSERT WITH CHECK (true);
+-- Public clients may read only. All inserts/updates/deletes go through the
+-- Node service using the server-only service_role key.
+DROP POLICY IF EXISTS "leaderboard_read" ON leaderboard;
+CREATE POLICY "leaderboard_read" ON leaderboard FOR SELECT TO anon, authenticated USING (true);
+REVOKE INSERT, UPDATE, DELETE ON leaderboard FROM anon, authenticated;
 
 -- Public read for resources (info sources)
-CREATE POLICY "resources_read"   ON resources    FOR SELECT USING (true);
+DROP POLICY IF EXISTS "resources_read" ON resources;
+CREATE POLICY "resources_read" ON resources FOR SELECT TO anon, authenticated USING (true);
+REVOKE INSERT, UPDATE, DELETE ON resources FROM anon, authenticated;
 
--- Server-side service role handles all other writes (use service_role key on the server)
+-- Explicitly deny direct client reads/writes for operational/event tables.
+REVOKE ALL ON coop_sessions, loot_events, flash_quiz_results, finale_sessions,
+  question_overrides FROM anon, authenticated;
+
+-- Server-side service role handles all writes. Never expose this key to Vite.
+
+-- Structured audit stream. Keep detailed events for 90 days, then purge with
+-- the scheduled job below (or the hosting provider's retention mechanism).
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  level      VARCHAR(10) NOT NULL,
+  message    TEXT NOT NULL,
+  metadata   JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS audit_logs_created_at ON audit_logs (created_at);
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON audit_logs FROM anon, authenticated;
+
+-- Run daily using pg_cron or a managed scheduler:
+-- DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '90 days';
