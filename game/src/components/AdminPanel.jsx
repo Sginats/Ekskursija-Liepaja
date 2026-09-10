@@ -9,7 +9,8 @@
  *   5. Resursi    – CRUD for information source links
  *
  * Connects to the /admin Socket.io namespace.
- * Authentication: requires VITE_ADMIN_SECRET env variable.
+ * Authentication: the separate admin entry obtains a short-lived HttpOnly
+ * session from the Node server before this component mounts.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -17,7 +18,6 @@ import { io }        from 'socket.io-client';
 import { LOCATIONS } from '../data/LocationData.js';
 
 const SERVER_URL    = import.meta.env.VITE_SOCKET_URL    || window.location.origin;
-const ADMIN_SECRET  = import.meta.env.VITE_ADMIN_SECRET  || 'admin1234';
 
 const TABS = ['Spēlētāji', 'Anti-Cheat', 'Žurnāls', 'Jautājumi', 'Resursi'];
 
@@ -54,8 +54,8 @@ export default function AdminPanel({ onClose }) {
   // ── Connect to admin namespace ─────────────────────────────────────────────
   useEffect(() => {
     const sock = io(`${SERVER_URL}/admin`, {
-      auth:       { secret: ADMIN_SECRET },
       transports: ['websocket', 'polling'],
+      withCredentials: true,
     });
 
     sock.on('connect',    () => setConnected(true));

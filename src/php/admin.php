@@ -1,8 +1,18 @@
 <?php
+session_set_cookie_params([
+    'lifetime' => 900,
+    'path' => '/',
+    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+    'samesite' => 'Strict',
+]);
 session_start();
 
-// Admin password hash – change this to your own password using password_hash('yourpassword', PASSWORD_DEFAULT)
-define('ADMIN_PASSWORD_HASH', '$2y$10$3EovJLK0HIVeKIl.ECuNUuhiMU5PiEtdz1odHcomITw3NpZux4NMi'); // default: admin123
+$adminPasswordHash = getenv('ADMIN_PASSWORD_HASH');
+if (!$adminPasswordHash) {
+    http_response_code(503);
+    exit('Admin authentication is not configured.');
+}
 
 $error = '';
 $action = isset($_POST['action']) ? $_POST['action'] : '';
@@ -22,8 +32,10 @@ function verifyCsrfToken(string $token): bool {
 // Handle login
 if ($action === 'login') {
     $password = $_POST['password'] ?? '';
-    if (password_verify($password, ADMIN_PASSWORD_HASH)) {
+    if (password_verify($password, $adminPasswordHash)) {
+        session_regenerate_id(true);
         $_SESSION['admin_logged_in'] = true;
+        $_SESSION['admin_expires_at'] = time() + 900;
         header('Location: admin.php');
         exit;
     } else {
@@ -40,7 +52,12 @@ if ($action === 'logout') {
 }
 
 // Require login for all admin actions
-$loggedIn = !empty($_SESSION['admin_logged_in']);
+$loggedIn = !empty($_SESSION['admin_logged_in'])
+    && !empty($_SESSION['admin_expires_at'])
+    && (int)$_SESSION['admin_expires_at'] > time();
+if (!$loggedIn && !empty($_SESSION['admin_logged_in'])) {
+    session_destroy();
+}
 
 if ($loggedIn) {
     $csrfToken = generateCsrfToken();

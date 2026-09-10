@@ -7,7 +7,6 @@ import ScoreBar from './components/ScoreBar.jsx';
 import CardCollection from './components/CardCollection.jsx';
 import LeaderboardView from './components/LeaderboardView.jsx';
 import AboutModal from './components/AboutModal.jsx';
-import AdminPanel from './components/AdminPanel.jsx';
 import IntroModal from './components/IntroModal.jsx';
 import PreFinalModal from './components/PreFinalModal.jsx';
 import CoopProvider, { useCoopContext } from './components/CoopManager.jsx';
@@ -27,6 +26,9 @@ import { generateJournal, downloadJournal } from './utils/JournalGenerator.js';
 import GhostRun from './utils/GhostRun.js';
 import usePersistence from './hooks/usePersistence.js';
 import FinaleQuiz from './components/FinaleQuiz.jsx';
+import ClueCabinet from './components/ClueCabinet.jsx';
+import { getClue } from './data/Clues.js';
+import ConnectionBanner from './components/ConnectionBanner.jsx';
 
 const PHASE = { MENU: 'menu', MAP: 'map', MINIGAME: 'minigame', QUESTION: 'question', CARD: 'card', FINALE: 'finale', END: 'end' };
 const LAST_LOCATION_ID = 'parks';
@@ -46,9 +48,10 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
   const [showCards, setShowCards] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
   const [showPreFinal, setShowPreFinal] = useState(false);
+  const [showClues, setShowClues] = useState(false);
+  const [clues, setClues] = useState([]);
   const [startTime, setStartTime] = useState(null);
   const [emptyTravelPenalties, setEmptyTravelPenalties] = useState(0);
   const [unlockedCards, setUnlockedCards] = useState(getUnlockedCards());
@@ -82,8 +85,9 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       currentLocationId: currentLocation?.id ?? null,
       startTime,
       routePlan,
+      clues,
     });
-  }, [score, windEnergy, completedLocations, currentLocation, phase, routePlan]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [score, windEnergy, completedLocations, currentLocation, phase, routePlan, clues]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Restore saved state on mount ─────────────────────────────────────────
   useEffect(() => {
@@ -95,6 +99,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
     setCompletedLocations(saved.completedLocations ?? []);
     setStartTime(saved.startTime ?? Date.now());
     setRoutePlan(saved.routePlan ?? []);
+    setClues(saved.clues ?? []);
     SocketManager.joinGame(saved.playerName);
     onPlayerNameChange?.(saved.playerName);
     onScoreChange?.(saved.score ?? 0);
@@ -129,6 +134,13 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       setPhase(PHASE.QUESTION);
     });
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = SocketManager.on('score:authoritative', ({ score: serverScore }) => {
+      if (Number.isFinite(serverScore)) setScore(serverScore);
+    });
+    return unsubscribe;
   }, []);
 
   // ── Apply co-op penalty if any ────────────────────────────────────────────
@@ -236,6 +248,12 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       }
       return next;
     });
+    const clue = getClue(currentLocation.id);
+    if (clue) {
+      setClues(prev => prev.some(item => item.id === currentLocation.id)
+        ? prev
+        : [...prev, { id: currentLocation.id, ...clue }]);
+    }
 
     const isNew = unlockCard(locId);
     setUnlockedCards(getUnlockedCards());
@@ -324,6 +342,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
 
   return (
     <div className={`app-root ${isNight ? 'night' : 'day'}`}>
+      <ConnectionBanner />
       {phase === PHASE.MENU && <MainMenu onStart={handleStart} onAbout={() => setShowAbout(true)} />}
 
       {phase === PHASE.MAP && (
@@ -332,11 +351,13 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
             <button className="nav-btn" onClick={() => setShowCards(true)}>
               <NotoEmoji emoji="🃏" size={18} style={{ marginRight: 5 }} />Kartītes
             </button>
+            <button className="nav-btn" onClick={() => setShowClues(true)}>
+              <NotoEmoji emoji="🧩" size={18} style={{ marginRight: 5 }} />Pavedieni ({clues.length})
+            </button>
             <button className="nav-btn" onClick={() => setShowLeaderboard(true)}>
               <NotoEmoji emoji="🏆" size={18} style={{ marginRight: 5 }} />TOP 10
             </button>
             <button className="nav-btn" onClick={() => setShowAbout(true)}>ℹ Par spēli</button>
-            <button className="nav-btn admin-nav-btn" onClick={() => setShowAdmin(true)}>⚙ Admin</button>
           </div>
           <MapScreen
             completedLocations={completedLocations}
@@ -396,7 +417,7 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       )}
 
       {phase === PHASE.FINALE && (
-        <FinaleQuiz onComplete={handleFinaleComplete} />
+        <FinaleQuiz clues={clues} onComplete={handleFinaleComplete} />
       )}
 
       {phase === PHASE.END && (
@@ -438,9 +459,9 @@ function GameRoot({ onPlayerNameChange, onLocationChange, onScoreChange }) {
       )}
 
       {showCards       && <CardCollection unlockedCards={unlockedCards} onClose={() => setShowCards(false)} />}
+      {showClues       && <ClueCabinet clues={clues} onClose={() => setShowClues(false)} />}
       {showLeaderboard && <LeaderboardView onClose={() => setShowLeaderboard(false)} />}
       {showAbout       && <AboutModal onClose={() => setShowAbout(false)} onStart={phase === PHASE.MENU ? () => { setShowAbout(false); } : undefined} />}
-      {showAdmin       && <AdminPanel onClose={() => setShowAdmin(false)} />}
       {showIntro       && <IntroModal onDismiss={() => setShowIntro(false)} />}
       {showPreFinal    && <PreFinalModal onReady={handlePreFinalReady} />}
     </div>

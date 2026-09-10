@@ -5,12 +5,24 @@
   "main": "src/js/server.js",
   "scripts": {
     "start": "node src/js/server.js",
-    "dev": "node --watch src/js/server.js"
+    "dev": "node --watch src/js/server.js",
+    "setup": "node scripts/setup.mjs",
+    "test": "node --test test/**/*.test.js",
+    "build": "npm run build:client && npm run build:game",
+    "build:client": "npm --prefix client run build",
+    "build:game": "npm --prefix game run build",
+    "lint": "eslint src/js/server.js src/js/security.js test",
+    "format:check": "prettier --check src/js/server.js src/js/security.js test/security.test.js",
+    "audit": "npm audit --audit-level=high"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
     "dotenv": "^17.3.1",
     "socket.io": "^4.8.3",
     "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2"
   }
 }

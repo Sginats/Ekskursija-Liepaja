@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { LOCATIONS } from '../data/LocationData.js';
 import WindEnergyBar from './WindEnergyBar.jsx';
 import { useCoopContext } from './CoopManager.jsx';
@@ -15,6 +16,20 @@ const CATEGORY_COLORS = {
 
 export default function MapScreen({ completedLocations, onSelectLocation, score, windEnergy, ghostLocationId, ghostBestTime, startTime, routePlan }) {
   const { otherPlayers, occupiedLocations } = useCoopContext();
+  const [category, setCategory] = useState('all');
+  const visibleLocations = useMemo(
+    () => LOCATIONS.filter(loc => category === 'all' || loc.category === category),
+    [category],
+  );
+  const nextLocation = LOCATIONS.find(loc => loc.id === routePlan?.[completedLocations.length]);
+
+  function playGuide() {
+    if (!nextLocation || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(
+      `${nextLocation.name}. ${nextLocation.description}`,
+    ));
+  }
 
   return (
     <div className="map-screen">
@@ -33,11 +48,22 @@ export default function MapScreen({ completedLocations, onSelectLocation, score,
 
       <PlayerAnalytics completedLocations={completedLocations} score={score} startTime={startTime} />
 
+      <div className="map-controls" aria-label="Kartes vadīklas">
+        <label htmlFor="map-category">Kategorija</label>
+        <select id="map-category" value={category} onChange={event => setCategory(event.target.value)}>
+          <option value="all">Visas vietas</option>
+          {Object.entries(CATEGORY_COLORS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+        </select>
+        <button type="button" onClick={playGuide} disabled={!nextLocation} aria-label="Atskaņot audio gidu nākamajai vietai">
+          🔊 Audio gids
+        </button>
+      </div>
+
       <div className="map-area-wrap">
         <div className="map-area">
           <RouteOverlay completedLocations={completedLocations} routePlan={routePlan} />
           {/* Location pins */}
-          {LOCATIONS.map(loc => {
+          {visibleLocations.map(loc => {
             const done      = completedLocations.includes(loc.id);
             const isNext    = !done && (routePlan || []).indexOf(loc.id) === completedLocations.length;
             const isOccupied = occupiedLocations.has(loc.id);

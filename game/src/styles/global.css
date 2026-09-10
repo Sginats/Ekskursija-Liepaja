@@ -18,6 +18,92 @@
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
 }
 
+/* Shared accessible focus treatment for the game and the separate admin entry. */
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid #ffd166;
+  outline-offset: 3px;
+}
+
+.admin-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #090d1a;
+  color: #f7f9ff;
+}
+
+.admin-login-card {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid #52607a;
+  border-radius: 14px;
+  background: #141c31;
+}
+
+.admin-login-card input,
+.admin-login-card button {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid #71809d;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px auto;
+}
+
+.map-controls select,
+.map-controls button {
+  min-height: 40px;
+  border: 1px solid #71809d;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #141c31;
+  color: #f7f9ff;
+  font: inherit;
+}
+
+.map-controls button:not(:disabled) { cursor: pointer; }
+.map-controls button:disabled { opacity: 0.55; }
+
+.connection-banner {
+  position: fixed;
+  z-index: 20;
+  inset: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #6b2d2d;
+  color: #fff;
+  font-size: 13px;
+}
+
+.connection-banner button {
+  border: 1px solid #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.admin-login-card button {
+  cursor: pointer;
+  background: #ffd166;
+  color: #101521;
+  font-weight: 700;
+}
+
 body {
   font-family: 'Poppins', Arial, sans-serif;
   background: var(--deep);
@@ -1817,6 +1903,52 @@ body[data-night='1']::after {
 }
 
 /* ── FinaleQuiz ───────────────────────────────────────────────── */
+.language-picker {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.language-picker select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 5px 7px;
+}
+
+.clue-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.clue-panel {
+  width: min(680px, 96vw);
+  max-height: 88vh;
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.clue-intro, .clue-empty { color: var(--text-dim); line-height: 1.5; }
+.clue-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.clue-card { display: flex; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.04); }
+.clue-icon { font-size: 25px; }
+.clue-card strong { color: var(--amber); }
+.clue-card p { margin: 5px 0 0; color: var(--text-dim); font-size: 13px; line-height: 1.4; }
+
 .finale-quiz-overlay {
   position: fixed;
   inset: 0;
