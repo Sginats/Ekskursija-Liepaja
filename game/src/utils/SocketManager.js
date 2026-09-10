@@ -32,6 +32,7 @@ const PING_INTERVAL_MS = 10_000;
 let _playerName   = null;
 let _locationId   = null;
 let _coopRoomId   = null;
+let _sessionToken = null;
 
 const SocketManager = {
   /** @returns {boolean} */
@@ -73,6 +74,11 @@ const SocketManager = {
       this._stopPing();
     });
 
+    _socket.on('session:issued', ({ token }) => {
+      _sessionToken = token;
+      try { sessionStorage.setItem('eksk_session_token', token); } catch {}
+    });
+
     _socket.on('session:refresh', () => {
       window.location.reload();
     });
@@ -92,6 +98,7 @@ const SocketManager = {
     _playerName = null;
     _locationId = null;
     _coopRoomId = null;
+    _sessionToken = null;
   },
 
   /**
@@ -129,6 +136,22 @@ const SocketManager = {
    */
   reportComplete(locationId, score, elapsedSecs) {
     this._emit('player:complete', { locationId, score, elapsedSecs });
+  },
+
+  /**
+   * Ask the server to validate an answer. The callback response is authoritative
+   * for online games; a null result lets the UI keep its offline fallback.
+   */
+  answerQuestion(locationId, questionIdx, answer) {
+    const socket = this.connect();
+    if (!socket.connected) return Promise.resolve(null);
+    return new Promise(resolve => {
+      socket.timeout(5000).emit(
+        'question:answer',
+        { locationId, questionIdx, answer },
+        (error, result) => resolve(error ? null : result),
+      );
+    });
   },
 
   /**

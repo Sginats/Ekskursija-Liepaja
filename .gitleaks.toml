@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documented example placeholders are not credentials"
+paths = ['''(^|/)\.env\.example$''']
+regexTarget = "match"
+regexes = ['''your-project\.supabase\.co''', '''your-anon-key-here''']

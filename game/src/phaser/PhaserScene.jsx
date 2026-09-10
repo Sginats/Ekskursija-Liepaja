@@ -1,24 +1,18 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 
-import CatcherScene from './scenes/CatcherScene.js';
-import FlashlightScene from './scenes/FlashlightScene.js';
-import SequenceScene from './scenes/SequenceScene.js';
-import KeypadScene from './scenes/KeypadScene.js';
-import TowerScene from './scenes/TowerScene.js';
-import RegattaScene from './scenes/RegattaScene.js';
-
 import EnvironmentManager from './EnvironmentManager.js';
 
-const SCENE_ENTRY_MAP = {
-  catcher:    { key: 'CatcherScene',    scene: CatcherScene },
-  flashlight: { key: 'FlashlightScene', scene: FlashlightScene },
-  sequence:   { key: 'SequenceScene',   scene: SequenceScene },
-  keypad:     { key: 'KeypadScene',     scene: KeypadScene },
-  tower:      { key: 'TowerScene',      scene: TowerScene },
-  regatta:    { key: 'RegattaScene',    scene: RegattaScene },
+// Mini-games are split into route-level chunks so the map/menu do not load all
+// Phaser scenes and their assets before the player starts an activity.
+const SCENE_LOADERS = {
+  catcher:    { key: 'CatcherScene',    load: () => import('./scenes/CatcherScene.js') },
+  flashlight: { key: 'FlashlightScene', load: () => import('./scenes/FlashlightScene.js') },
+  sequence:   { key: 'SequenceScene',   load: () => import('./scenes/SequenceScene.js') },
+  keypad:     { key: 'KeypadScene',     load: () => import('./scenes/KeypadScene.js') },
+  tower:      { key: 'TowerScene',      load: () => import('./scenes/TowerScene.js') },
+  regatta:    { key: 'RegattaScene',    load: () => import('./scenes/RegattaScene.js') },
 };
-z
 const ASPECT_W = 4;
 const ASPECT_H = 3;
 const MAX_W    = 480;
@@ -37,70 +31,56 @@ export default function PhaserScene({ miniGame, locationId, score = 0 }) {
     if (!containerRef.current) return;
     if (!miniGame?.type) return;
 
-    const entry = SCENE_ENTRY_MAP[miniGame.type];
+    const entry = SCENE_LOADERS[miniGame.type];
     if (!entry) return;
 
-    const { key, scene: SceneClass } = entry;
+    let cancelled = false;
+    let ro;
+    let resizeTimer = null;
 
-    const sceneData = { ...miniGame, locationId };
-    const { width, height } = getCanvasSize(containerRef.current.offsetWidth);
-
-    if (gameRef.current) {
-      gameRef.current.destroy(true);
-      gameRef.current = null;
-    }
-
-    const game = new Phaser.Game({
-      type: Phaser.AUTO,
-      parent: containerRef.current,
-      width,
-      height,
-      backgroundColor: '#0a0a1a',
-      roundPixels: true,
-      scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
+    entry.load().then(({ default: SceneClass }) => {
+      if (cancelled || !containerRef.current) return;
+      const { key } = entry;
+      const sceneData = { ...miniGame, locationId };
+      const { width, height } = getCanvasSize(containerRef.current.offsetWidth);
+      const game = new Phaser.Game({
+        type: Phaser.AUTO,
+        parent: containerRef.current,
         width,
         height,
-      },
-      physics: {
-        default: 'arcade',
-        arcade: { gravity: { y: 300 }, debug: false },
-      },
+        backgroundColor: '#0a0a1a',
+        roundPixels: true,
+        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width, height },
+        physics: { default: 'arcade', arcade: { gravity: { y: 300 }, debug: false } },
+        scene: [{ key, scene: SceneClass, active: true, data: sceneData }],
+      });
+      game.events.once('step', () => {
+        const activeScene = game.scene.getScene(key);
+        if (activeScene) activeScene._env = new EnvironmentManager(activeScene, { score });
+      });
+      gameRef.current = game;
 
-      scene: [{ key, scene: SceneClass, active: true, data: sceneData }],
-    });
-
-    game.events.once('step', () => {
-      const activeScene = game.scene.getScene(key);
-      if (activeScene) {
-        activeScene._env = new EnvironmentManager(activeScene, { score });
+      ro = new ResizeObserver(entries => {
+        const e = entries[0];
+        if (!e || !gameRef.current) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (!gameRef.current) return;
+          const newW = Math.min(e.contentRect.width, MAX_W);
+          gameRef.current.scale.resize(newW, Math.round((newW / ASPECT_W) * ASPECT_H));
+        }, 120);
+      });
+      ro.observe(containerRef.current);
+    }).catch(() => {
+      if (!cancelled && containerRef.current) {
+        containerRef.current.textContent = 'Mini-spēli neizdevās ielādēt. Atgriezies kartē un mēģini vēlreiz.';
       }
     });
 
-    gameRef.current = game;
-
-    let resizeTimer = null;
-    const ro = new ResizeObserver(entries => {
-      const e = entries[0];
-      if (!e || !gameRef.current) return;
-
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (!gameRef.current) return;
-
-        const newW = Math.min(e.contentRect.width, MAX_W);
-        const newH = Math.round((newW / ASPECT_W) * ASPECT_H);
-
-        gameRef.current.scale.resize(newW, newH);
-      }, 120);
-    });
-
-    ro.observe(containerRef.current);
-
     return () => {
+      cancelled = true;
       clearTimeout(resizeTimer);
-      ro.disconnect();
+      ro?.disconnect();
       if (gameRef.current) {
         gameRef.current.destroy(true);
         gameRef.current = null;
@@ -110,16 +90,18 @@ export default function PhaserScene({ miniGame, locationId, score = 0 }) {
 
   return (
       <div
-          ref={containerRef}
-          style={{
-            width: '100%',
-            maxWidth: MAX_W,
-            margin: '0 auto',
-            borderRadius: 16,
-            overflow: 'hidden',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-            aspectRatio: `${ASPECT_W} / ${ASPECT_H}`,
-          }}
+        ref={containerRef}
+        role="img"
+        aria-label={`Interaktīva mini-spēle: ${miniGame.label || miniGame.type}`}
+        style={{
+          width: '100%',
+          maxWidth: MAX_W,
+          margin: '0 auto',
+          borderRadius: 16,
+          overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          aspectRatio: `${ASPECT_W} / ${ASPECT_H}`,
+        }}
       />
   );
 }

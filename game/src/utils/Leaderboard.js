@@ -8,6 +8,14 @@ const _client = SUPABASE_URL && SUPABASE_ANON
   : null;
 
 const LS_KEY = 'eksk_leaderboard_v1';
+const BLOCKED_NAME_PARTS = ['fuck', 'shit', 'bitch', 'nigger', 'nigga', 'slut', 'kike', 'cunt', 'хуй', 'пизд', 'еба', 'бляд', 'жид'];
+
+function validPublicName(value) {
+  const name = String(value || '').trim().slice(0, 32);
+  if (!name || /[<>`"'\\\u0000-\u001f]/.test(name)) return false;
+  const normalized = name.toLocaleLowerCase();
+  return !BLOCKED_NAME_PARTS.some(part => normalized.includes(part));
+}
 
 function _loadLocal() {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
@@ -19,6 +27,7 @@ function _saveLocal(rows) {
 }
 
 export async function saveScore({ name, score, timeSeconds, mode = 'single' }) {
+  if (!validPublicName(name)) throw new Error('Name is not allowed on the public leaderboard');
   const entry = {
     name: String(name).slice(0, 32),
     score: Math.max(0, Math.min(220, Number(score))),

@@ -3,6 +3,7 @@ import { applyAnswerRestore } from '../utils/WindEnergy.js';
 import DynamicDifficulty from '../utils/DynamicDifficulty.js';
 import EventBridge from '../utils/EventBridge.js';
 import NotoEmoji from './NotoEmoji.jsx';
+import SocketManager from '../utils/SocketManager.js';
 
 export default function QuestionOverlay({ question, locationName, locationId, questionIdx, onComplete, windEnergy, onWindUpdate }) {
   const [input, setInput] = useState('');
@@ -67,14 +68,17 @@ export default function QuestionOverlay({ question, locationName, locationId, qu
   }
 
   // ── Shared answer logic ──────────────────────────────────────────────────────
-  function _handleAnswer(value) {
-    const correct = isMatch(value);
+  async function _handleAnswer(value) {
+    const serverResult = await SocketManager.answerQuestion(locationId, questionIdx ?? 0, value);
+    // Offline play remains available, but online scoring always uses the
+    // server response rather than trusting this component's points.
+    const correct = serverResult ? serverResult.correct : isMatch(value);
     const nextAttempts = attempts + 1;
 
     DynamicDifficulty.record(locationId, questionIdx ?? 0, correct);
 
     if (correct) {
-      const pts = attempts === 0 ? basePoints : secondAttemptPts;
+      const pts = serverResult ? serverResult.points : (attempts === 0 ? basePoints : secondAttemptPts);
       setFeedback({ type: 'success', pts });
       setDone(true);
       EventBridge.emit('ANSWER_CORRECT', { delta: pts });

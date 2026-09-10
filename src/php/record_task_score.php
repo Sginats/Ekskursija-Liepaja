@@ -1,7 +1,8 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: https://kristovskis.lv');
+header('Vary: Origin');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -15,6 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'Method not allowed']);
     exit;
 }
+
+// Score mutations are authoritative in the Node API. This compatibility
+// endpoint remains only to return an explicit migration response to old clients.
+http_response_code(410);
+echo json_encode(['error' => 'Deprecated: submit answers and task completion through the Node API.']);
+exit;
 
 $raw  = file_get_contents('php://input');
 $data = json_decode($raw, true);
